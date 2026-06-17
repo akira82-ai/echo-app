@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Lark Assistant</string>
+    <key>CFBundleDisplayName</key>
+    <string>Lark Assistant</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.akira82.lark-assistant</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleExecutable</key>
+    <string>LarkAssistant</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <!-- 作为菜单栏后台 App，不显示在 Dock -->
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 akira82-ai. MIT License.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Lark Assistant 需要监听键盘以检测三连 ⌘+C 手势。</string>
+</dict>
+</plist>

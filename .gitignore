@@ -1,0 +1,27 @@
+# Swift / Xcode
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Build artifacts
+*.o
+*.a
+*.dylib
+*.exe
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Logs
+*.log
+
+# Local distribution builds
+dist/
