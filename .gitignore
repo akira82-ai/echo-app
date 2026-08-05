@@ -25,3 +25,6 @@ Icon?
 
 # Local distribution builds
 dist/
+
+# ZCode tool (plans cache etc.)
+.zcode/
