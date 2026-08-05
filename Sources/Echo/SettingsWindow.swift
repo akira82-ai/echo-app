@@ -35,6 +35,7 @@ struct SettingsView: View {
     @State private var hotkeyModifiers: UInt32 = AppSettings.shared.hotkeyModifiers
     @State private var hotkeyKeyCode: UInt32 = AppSettings.shared.hotkeyKeyCode
     @State private var autoPasteEnabled: Bool = AppSettings.shared.autoPasteEnabled
+    @State private var hotkeyPresetIndex: Int = 0
 
     // AX 权限状态
     @State private var axGranted: Bool = AXIsProcessTrusted()
@@ -50,131 +51,178 @@ struct SettingsView: View {
     ]
 
     var body: some View {
-        Form {
-            // MARK: - 通用
-            Section {
-                LabeledContent("历史上限") {
-                    Stepper(value: $historyLimit, in: 10...200, step: 10) {
-                        Text("\(historyLimit)")
-                            .font(.system(.body, design: .monospaced))
-                            .frame(minWidth: 40)
-                    }
-                    .onChange(of: historyLimit) { newValue in
-                        AppSettings.shared.historyLimit = newValue
-                    }
-                }
-                Text("文本/图片/文件共享名额。超出后最旧条目被淘汰,图片同步删盘。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } header: {
-                Text("通用")
-            }
-
-            // MARK: - 全局热键
-            Section {
-                Picker("呼出快捷键", selection: selectedHotkeyBinding) {
-                    ForEach(hotkeyPresets.indices, id: \.self) { idx in
-                        Text(hotkeyPresets[idx].label).tag(idx)
-                    }
-                }
-                .onChange(of: selectedHotkeyBinding.wrappedValue) { _ in
-                    applyHotkey()
-                }
-
-                Text("在任意 App 中按此快捷键呼出历史选择面板。⌘\\ 为默认(两键、左手区、系统几乎不占用)。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } header: {
-                Text("全局热键")
-            }
-
-            // MARK: - 粘贴
-            Section {
-                Toggle("启用自动粘贴", isOn: $autoPasteEnabled)
-                    .onChange(of: autoPasteEnabled) { newValue in
-                        AppSettings.shared.autoPasteEnabled = newValue
-                    }
-                Text(autoPasteEnabled
-                     ? "选中历史项后自动模拟 ⌘V 粘到当前 App。需要辅助功能权限(见下方)。"
-                     : "关闭后 App 完全零权限运行。选中项只写回剪贴板,你回目标 App 自己按 ⌘V。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if autoPasteEnabled {
-                    HStack {
-                        if axGranted {
-                            Label("辅助功能权限:已授予", systemImage: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                                .font(.caption)
-                        } else {
-                            Label("辅助功能权限:未授予(自动粘贴将降级)", systemImage: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
-                                .font(.caption)
-                            Button("打开设置") {
-                                PermissionsManager.shared.openSystemSettings()
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                settingsSection(title: "通用") {
+                    settingRow(title: "历史上限") {
+                        Stepper(value: $historyLimit, in: 10...200, step: 10) {
+                            Text("\(historyLimit)")
+                                .font(.system(.body, design: .monospaced))
+                                .frame(minWidth: 44, alignment: .trailing)
+                        }
+                        .onChange(of: historyLimit) { newValue in
+                            AppSettings.shared.historyLimit = newValue
                         }
                     }
-                }
-            } header: {
-                Text("粘贴")
-            }
 
-            // MARK: - 数据
-            Section {
-                LabeledContent("当前历史") {
-                    Text("\(historyCount) / \(historyLimit) 条")
-                        .font(.system(.body, design: .monospaced))
-                        .foregroundStyle(.secondary)
+                    settingNote("文本/图片/文件共享名额。超出后最旧条目被淘汰,图片同步删盘。")
                 }
-                Button(role: .destructive) {
-                    HistoryStore.shared.clearAll()
-                    historyCount = 0
-                } label: {
-                    Label("清空所有历史", systemImage: "trash")
+
+                settingsSection(title: "全局热键") {
+                    settingRow(title: "呼出快捷键") {
+                        Picker("", selection: $hotkeyPresetIndex) {
+                            ForEach(hotkeyPresets.indices, id: \.self) { idx in
+                                Text(hotkeyPresets[idx].label).tag(idx)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .onChange(of: hotkeyPresetIndex) { newValue in
+                            applyHotkey(index: newValue)
+                        }
+                    }
+
+                    settingNote("在任意 App 中按此快捷键呼出历史选择面板。⌘\\ 为默认(两键、左手区、系统几乎不占用)。")
                 }
-                Text("历史纯内存,App 重启也会清空。此处立即清空并删除图片缓存文件。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } header: {
-                Text("数据")
-            } footer: {
+
+                settingsSection(title: "粘贴") {
+                    settingRow(title: "启用自动粘贴", subtitle: autoPasteEnabled ? "选中后自动模拟 ⌘V。需要辅助功能权限。" : "关闭后只写回剪贴板。") {
+                        Toggle("", isOn: $autoPasteEnabled)
+                            .labelsHidden()
+                            .onChange(of: autoPasteEnabled) { newValue in
+                                AppSettings.shared.autoPasteEnabled = newValue
+                            }
+                    }
+
+                    if autoPasteEnabled {
+                        permissionRow
+                    }
+                }
+
+                settingsSection(title: "数据") {
+                    settingRow(title: "当前历史") {
+                        Text("\(historyCount) / \(historyLimit) 条")
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    settingRow(title: "清空所有历史", subtitle: "立即删除历史和图片缓存。") {
+                        Button(role: .destructive) {
+                            HistoryStore.shared.clearAll()
+                            historyCount = 0
+                        } label: {
+                            Text("清空")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+
                 Text("Echo · 剪贴板历史管理器 · 本地运行,数据不出本机")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 2)
             }
+            .padding(18)
         }
-        .formStyle(.grouped)
         .frame(width: 520, height: 560)
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.96))
         .onAppear {
+            syncHotkeyPresetIndex()
             axGranted = AXIsProcessTrusted()
             historyCount = HistoryStore.shared.count
         }
+        .onReceive(NotificationCenter.default.publisher(for: HistoryStore.didChangeNotification)) { _ in
+            historyCount = HistoryStore.shared.count
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            axGranted = AXIsProcessTrusted()
+            historyCount = HistoryStore.shared.count
+            syncHotkeyPresetIndex()
+        }
     }
 
-    /// 热键 Picker 的双向绑定:读时匹配当前配置到预设索引,写时由 onChange 处理。
-    private var selectedHotkeyBinding: Binding<Int> {
-        Binding(
-            get: {
-                // 找当前配置匹配的预设索引,无则默认第一个
-                hotkeyPresets.firstIndex {
-                    $0.modifiers == hotkeyModifiers && $0.keycode == hotkeyKeyCode
-                } ?? 0
-            },
-            set: { _ in }
-        )
+    private var permissionRow: some View {
+        HStack(spacing: 12) {
+            if axGranted {
+                Label("辅助功能权限:已授予", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            } else {
+                Label("辅助功能权限:未授予(自动粘贴将降级)", systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                Button("打开设置") {
+                    PermissionsManager.shared.openSystemSettings()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            Spacer(minLength: 0)
+        }
+        .font(.caption)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.black.opacity(0.2))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    /// 设置页分组,贴近 design-plan.html 的 set-section 结构。
+    private func settingsSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.system(size: 11, weight: .bold))
+                .tracking(0.08)
+                .foregroundStyle(Color.accentColor)
+
+            content()
+        }
+    }
+
+    /// 单行设置项:左侧标题/副标题,右侧控件。
+    private func settingRow<Accessory: View>(title: String, subtitle: String? = nil, @ViewBuilder accessory: () -> Accessory) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: subtitle == nil ? 0 : 2) {
+                Text(title)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.primary)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer(minLength: 16)
+
+            accessory()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(Color.black.opacity(0.2))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    private func settingNote(_ text: String) -> some View {
+        Text(text)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// 根据当前配置同步热键预设索引。
+    private func syncHotkeyPresetIndex() {
+        hotkeyPresetIndex = hotkeyPresets.firstIndex {
+            $0.modifiers == hotkeyModifiers && $0.keycode == hotkeyKeyCode
+        } ?? 0
     }
 
     /// 把选中的预设应用到 AppSettings 并重新注册热键。
-    private func applyHotkey() {
-        let idx = selectedHotkeyBinding.wrappedValue
-        let preset = hotkeyPresets[idx]
+    private func applyHotkey(index: Int) {
+        let clampedIndex = hotkeyPresets.indices.contains(index) ? index : 0
+        let preset = hotkeyPresets[clampedIndex]
+        hotkeyPresetIndex = clampedIndex
         hotkeyModifiers = preset.modifiers
         hotkeyKeyCode = preset.keycode
         AppSettings.shared.hotkeyModifiers = preset.modifiers

@@ -101,6 +101,28 @@ final class HistoryStore {
         }
     }
 
+    // MARK: - 删除单条
+
+    /// 删除指定 id 的条目;图片条目同步删盘文件。
+    /// 走与 append/clearAll 相同的串行队列,保证线程安全。
+    func remove(id: UUID) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            guard let idx = self.entries.firstIndex(where: { $0.id == id }) else { return }
+            let removed = self.entries.remove(at: idx)
+            // 图片被删 → 删盘文件(照搬 evictIfNeeded / clearAll 的模式)
+            if case .image(let ref) = removed.kind {
+                ImageCache.shared.remove(at: ref.diskPath)
+            }
+            // 若删的恰好是队首(最近一条),清掉去重锚点,
+            // 否则下一条与已删条目内容相同时会被误判为连续重复而跳过采集
+            if idx == 0 {
+                self.lastDeduplicationKey = nil
+            }
+            self.notifyChange()
+        }
+    }
+
     // MARK: - 清空
 
     /// 清空所有历史,并删除所有图片盘文件。
