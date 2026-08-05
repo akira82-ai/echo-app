@@ -705,7 +705,7 @@ struct QuickPanelView: View {
             Text(keys).font(.system(size: 10.5, design: .monospaced))
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 // 设计稿:panel-solid(#1c202a)实心深底 + 文字 text-dim(比 tertiary 亮一档)
-                .background(Color(red: 28.0 / 255.0, green: 32.0 / 255.0, blue: 42.0 / 255.0))
+                .background(Color(red: 230.0 / 255.0, green: 233.0 / 255.0, blue: 238.0 / 255.0))
                 .foregroundStyle(.secondary)
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.primary.opacity(0.16), lineWidth: 1))
                 .cornerRadius(4)
