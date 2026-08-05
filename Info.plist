@@ -3,19 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Lark Assistant</string>
+    <string>Echo</string>
     <key>CFBundleDisplayName</key>
-    <string>Lark Assistant</string>
+    <string>Echo</string>
     <key>CFBundleIdentifier</key>
-    <string>com.akira82.lark-assistant</string>
+    <string>com.akira82.echo</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
     <key>CFBundlePackageType</key>
-    <string>APPL</string>
+    <string>APPL</key>
     <key>CFBundleExecutable</key>
-    <string>LarkAssistant</string>
+    <string>Echo</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <!-- 作为菜单栏后台 App，不显示在 Dock -->
@@ -24,6 +24,6 @@
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2026 akira82-ai. MIT License.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Lark Assistant 需要监听键盘以检测三连 ⌘+C 手势。</string>
+    <string>Echo 需要辅助功能权限以在选中历史项后自动粘贴到当前 App。未授权时仍可工作(降级为仅写剪贴板)。</string>
 </dict>
 </plist>

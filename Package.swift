@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "LarkAssistant",
+    name: "Echo",
     platforms: [
         .macOS(.v13)
     ],
     targets: [
         .executableTarget(
-            name: "LarkAssistant",
-            path: "Sources/LarkAssistant"
+            name: "Echo",
+            path: "Sources/Echo"
         )
     ]
 )
