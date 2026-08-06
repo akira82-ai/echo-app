@@ -26,18 +26,20 @@
 
 ## 📦 下载
 
-前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载 `Echo.app.zip`,解压后拖进「应用程序」即可。
+前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载 `Echo.app.zip`,解压后拖进「应用程序」即可。当前版本为 `1.1.2`。
 
-> 首次打开若被 Gatekeeper 拦截:**右键 → 打开**(因未签名)。
+> 当前 Release 是本机开发验证包,使用 `Echo Self-Sign` 自签名。在其他 Mac 上可能仍被 Gatekeeper 拦截;面向公众正式发布时需要 Apple Developer ID 签名和 notarization。
 > 首次使用"自动粘贴"时,系统会弹辅助功能授权引导——授权后选中条目即自动粘;不授权也能用,只是需回目标 App 自己按 `⌘V`。
 
 ## 🚀 快速上手
 
 ```bash
-# 也可以自己编译
-swift build -c release
-.build/release/Echo
+# 编译、打包、签名,并生成 dist/Echo.app.zip
+./build-app.sh
+open dist/Echo.app
 ```
+
+`build-app.sh` 会自动使用本机的 `Echo Self-Sign` 证书。后续优化后重复执行即可,不需要手工重新签名;请始终启动 `dist/Echo.app`,不要直接运行 `.build/.../Echo`。
 
 ```
 ① 正常复制(⌘C / 右键 / 拖拽)   →  Echo 自动记录进历史
@@ -46,6 +48,10 @@ swift build -c release
 ```
 
 **系统要求**:macOS 13(Ventura)及以上。
+
+### 自动粘贴排查
+
+如果选中历史项后没有自动粘贴,先确认正在运行的是 `dist/Echo.app`,然后在「系统设置 → 隐私与安全性 → 辅助功能」中确认 Echo 已授权,并检查设置页的「启用自动粘贴」开关。即使没有权限,Echo 仍会把内容写回剪贴板,用户可以回到目标 App 手动按 `⌘V`。
 
 ---
 

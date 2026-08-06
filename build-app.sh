@@ -9,6 +9,7 @@ APP_NAME="Echo"
 BUNDLE_ID="com.akira82.echo"
 DIST_DIR="dist"
 APP_BUNDLE="$DIST_DIR/${APP_NAME}.app"
+ZIP_ARCHIVE="$DIST_DIR/${APP_NAME}.app.zip"
 
 # 签名身份:优先用固定自签证书(见 setup-codesign.sh),回退到 adhoc。
 # 两者都会固定 identifier=com.akira82.echo —— 这点是 TCC 识别 App 的关键,
@@ -48,8 +49,13 @@ codesign --force \
 # 清除 quarantine,避免本机构建被 Gatekeeper 拦截
 xattr -cr "$APP_BUNDLE" 2>/dev/null || true
 
+# 同步生成 Release 可上传的压缩包,避免沿用旧产物。
+rm -f "$ZIP_ARCHIVE"
+ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" "$ZIP_ARCHIVE"
+
 echo
 echo "✅ 完成 → $APP_BUNDLE"
+echo "📦 Release 资产 → $ZIP_ARCHIVE"
 echo "   签名验证:"
 codesign -dv "$APP_BUNDLE" 2>&1 | grep -E "Identifier|Signature|TeamIdentifier" | sed 's/^/     /'
 echo

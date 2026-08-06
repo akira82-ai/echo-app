@@ -228,6 +228,156 @@
     display:flex;align-items:center;gap:10px;
   }
   .mockup-label::after{content:"";flex:1;height:1px;background:var(--border)}
+  .theme-switcher{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:18px;
+    flex-wrap:wrap;margin-bottom:18px;
+  }
+  .theme-tabs{
+    display:flex;gap:6px;background:var(--panel);
+    padding:5px;border-radius:10px;border:1px solid var(--border);
+    width:fit-content;
+  }
+  .theme-tab{
+    padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;
+    border-radius:7px;color:var(--text-dim);transition:all .2s;border:none;background:transparent;
+    font-family:var(--sans);
+  }
+  .theme-tab.active{background:var(--accent);color:#fff}
+  .theme-content{display:none;animation:fadeIn .3s}
+  .theme-content.active{display:block}
+  .theme-note{
+    font-size:12px;color:var(--text-faint);line-height:1.7;max-width:480px;
+  }
+  .ui-theme-pane{
+    --bg:#0b0d12;
+    --bg-soft:#11141b;
+    --panel:rgba(28,32,42,0.72);
+    --panel-solid:#1c202a;
+    --panel-hover:#232838;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.16);
+    --text:#e8eaf0;
+    --text-dim:#9aa3b2;
+    --text-faint:#6b7385;
+    --accent:#4aa8ff;
+    --accent-soft:rgba(74,168,255,0.14);
+    --green:#34d399;
+    --green-soft:rgba(52,211,153,0.14);
+    --red:#f87171;
+    --red-soft:rgba(248,113,113,0.14);
+    --yellow:#fbbf24;
+    --yellow-soft:rgba(251,191,36,0.14);
+    --purple:#a78bfa;
+    --purple-soft:rgba(167,139,250,0.14);
+    --shadow:0 20px 60px -20px rgba(0,0,0,0.6);
+    --ui-window-bg: rgba(30,33,42,0.92);
+    --ui-titlebar-bg: rgba(0,0,0,0.25);
+    --ui-border: var(--border);
+    --ui-border-strong: var(--border-strong);
+    --ui-footer-bg: rgba(0,0,0,0.15);
+    --ui-chip-bg: rgba(0,0,0,0.3);
+    --ui-chip-text: var(--text-faint);
+    --ui-hover: var(--panel-hover);
+    --ui-selected: var(--accent-soft);
+    --ui-selected-border: rgba(74,168,255,0.3);
+    --ui-thumb-bg: #2a2f3d;
+    --ui-menubar-bg: linear-gradient(180deg,rgba(40,44,56,0.95),rgba(30,33,42,0.95));
+    --ui-row-bg: rgba(0,0,0,0.2);
+    --ui-input-bg: rgba(0,0,0,0.3);
+    --ui-kbd-bg: #1c202a;
+    --ui-kbd-text: var(--text-dim);
+    --ui-toggle-off: #3a3f4d;
+  }
+  .ui-theme-pane.theme-day{
+    --bg:#f6f7f9;
+    --bg-soft:#ffffff;
+    --panel:rgba(255,255,255,0.82);
+    --panel-solid:#e6e9ee;
+    --panel-hover:rgba(74,168,255,0.08);
+    --border:rgba(15,23,42,0.08);
+    --border-strong:rgba(15,23,42,0.14);
+    --text:#1f2937;
+    --text-dim:#4b5563;
+    --text-faint:#6b7280;
+    --accent:#3b82f6;
+    --accent-soft:rgba(59,130,246,0.10);
+    --green:#059669;
+    --green-soft:rgba(5,150,105,0.12);
+    --red:#ef4444;
+    --red-soft:rgba(239,68,68,0.10);
+    --yellow:#d97706;
+    --yellow-soft:rgba(217,119,6,0.10);
+    --purple:#8b5cf6;
+    --purple-soft:rgba(139,92,246,0.10);
+    --shadow:0 20px 50px -24px rgba(15,23,42,0.14);
+    --ui-window-bg: rgba(252,252,253,0.96);
+    --ui-titlebar-bg: rgba(247,249,252,0.96);
+    --ui-border: rgba(15,23,42,0.08);
+    --ui-border-strong: rgba(15,23,42,0.14);
+    --ui-footer-bg: rgba(247,248,250,0.92);
+    --ui-chip-bg: rgba(15,23,42,0.06);
+    --ui-chip-text: #5c6574;
+    --ui-hover: rgba(74,168,255,0.08);
+    --ui-selected: rgba(74,168,255,0.12);
+    --ui-selected-border: rgba(74,168,255,0.28);
+    --ui-thumb-bg: #eef1f6;
+    --ui-menubar-bg: linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,246,250,0.98));
+    --ui-row-bg: rgba(15,23,42,0.035);
+    --ui-input-bg: rgba(255,255,255,0.9);
+    --ui-kbd-bg: #e6e9ee;
+    --ui-kbd-text: #2f3642;
+    --ui-toggle-off: #d7dce5;
+  }
+  .ui-theme-pane .mac-window{
+    background:var(--ui-window-bg);
+    border:1px solid var(--ui-border-strong);
+    box-shadow:var(--shadow);
+  }
+  .ui-theme-pane .mac-titlebar{
+    background:var(--ui-titlebar-bg);
+    border-bottom:1px solid var(--ui-border);
+  }
+  .ui-theme-pane .qp-search{border-bottom:1px solid var(--ui-border)}
+  .ui-theme-pane .qp-hint{
+    background:var(--ui-chip-bg);
+    color:var(--ui-chip-text);
+  }
+  .ui-theme-pane .qp-item:hover{background:var(--ui-hover)}
+  .ui-theme-pane .qp-item.selected{
+    background:var(--ui-selected);
+    border:1px solid var(--ui-selected-border);
+  }
+  .ui-theme-pane .qp-item .thumb{
+    background:var(--ui-thumb-bg);
+    border:1px solid var(--ui-border);
+  }
+  .ui-theme-pane .qp-footer{
+    background:var(--ui-footer-bg);
+    border-top:1px solid var(--ui-border);
+  }
+  .ui-theme-pane .kbd{
+    background:var(--ui-kbd-bg);
+    color:var(--ui-kbd-text);
+    border:1px solid var(--ui-border-strong);
+  }
+  .ui-theme-pane .menubar{
+    background:var(--ui-menubar-bg);
+    border:1px solid var(--ui-border-strong);
+  }
+  .ui-theme-pane .menu-status{border-bottom:1px solid var(--ui-border)}
+  .ui-theme-pane .menu-sep{background:var(--ui-border)}
+  .ui-theme-pane .menu-item .shortcut{color:var(--ui-text-faint)}
+  .ui-theme-pane .set-row{
+    background:var(--ui-row-bg);
+    border:1px solid var(--ui-border);
+  }
+  .ui-theme-pane .set-input{
+    background:var(--ui-input-bg);
+    border:1px solid var(--ui-border-strong);
+    color:var(--ui-text-dim);
+  }
+  .ui-theme-pane .toggle.off{background:var(--ui-toggle-off)}
+  .ui-theme-pane .toggle::after{background:#fff}
 
   /* macOS 窗口 */
   .mac-window{
@@ -786,10 +936,20 @@
     <div class="sec-head">
       <div class="sec-num">05 · UI DESIGN</div>
       <h2>界面设计 · 高保真预览</h2>
-      <p class="sec-sub">三个界面:① QuickPanel 选择面板(核心交互);② 菜单栏常驻菜单;③ 设置窗口。以下是接近真实成品的静态预览。</p>
+      <p class="sec-sub">三个界面:① QuickPanel 选择面板(核心交互);② 菜单栏常驻菜单;③ 设置窗口。以下是接近真实成品的静态预览；主题跟随 macOS 系统外观自动切换。</p>
     </div>
 
-    <div class="mockup-wrap">
+    <div class="theme-switcher">
+      <div class="mockup-label" style="margin-bottom:0">🎨 主题预览</div>
+      <div class="theme-tabs">
+        <button class="theme-tab active" onclick="switchTheme(event,'night')">🌙 夜间主题</button>
+        <button class="theme-tab" onclick="switchTheme(event,'day')">☀️ 白天主题</button>
+      </div>
+      <div class="theme-note">夜间主题严格沿用当前 UI 规范；白天主题保持同一结构，只切换为高雅白配色。实际 App 仅切换颜色，不改变布局、功能、交互或逻辑。</div>
+    </div>
+
+    <div id="ui-theme-pane" class="ui-theme-pane theme-night">
+      <div class="mockup-wrap">
 
       <!-- ===== QuickPanel ===== -->
       <div>
@@ -914,6 +1074,7 @@
         </div>
       </div>
 
+      </div>
     </div>
   </section>
 
@@ -1084,8 +1245,8 @@
   <section id="timeline">
     <div class="sec-head">
       <div class="sec-num">08 · ROADMAP · ✅ 已全部完成</div>
-      <h2>实施路线 · 6 阶段(全部落地)</h2>
-      <p class="sec-sub">每阶段都独立编译验证通过,逐步搭起完整功能。<b style="color:var(--green)">6 / 6 已完成,release 编译零 warning(606KB),App 已在本机实跑。</b></p>
+      <h2>实施路线 · 7 阶段(全部落地)</h2>
+      <p class="sec-sub">每阶段都独立编译验证通过,逐步搭起完整功能。<b style="color:var(--green)">7 / 7 已完成,签名 release 构建与本机实跑均已验证。</b></p>
     </div>
     <div class="timeline">
       <div class="tl-item done">
@@ -1121,20 +1282,36 @@
       <div class="tl-item done">
         <div class="tl-stage">STAGE 6 · 已完成</div>
         <h4>✨ 收尾打磨</h4>
-        <p>图片缩略图与 SHA256 去重打磨;启动清空图片缓存逻辑;菜单栏计数;README 全面重写;<code>swift build -c release</code> 编译通过(零 warning,606KB)。代码层面完整,待本机实跑冒烟测试。</p>
+        <p>图片缩略图与 SHA256 去重打磨;启动清空图片缓存逻辑;菜单栏计数;README 全面重写;release 构建通过。</p>
         <span class="tl-deliver">→ 可运行</span><span class="tl-done">✓ DONE</span>
+      </div>
+      <div class="tl-item done">
+        <div class="tl-stage">STAGE 7 · 已完成</div>
+        <h4>🎨 主题与工程交付</h4>
+        <p><code style="font-family:var(--mono);color:var(--accent)">EchoTheme</code> 提供白天/夜间颜色适配; <code style="font-family:var(--mono);color:var(--accent)">build-app.sh</code> 自动生成签名 <code style="font-family:var(--mono);color:var(--accent)">dist/Echo.app</code> 与 Release 压缩包。</p>
+        <span class="tl-deliver">→ 可重复构建、直接测试</span><span class="tl-done">✓ DONE</span>
       </div>
     </div>
   </section>
 
   <footer>
     <p>Echo · 剪贴板管理器设计文档</p>
-    <p style="margin-top:6px">设计 <code>2026-08-05</code> · 实现 <code>2026-08-05</code> 全部完成 · App 已在本机实跑(PID 42629)· 通过 <code>http://localhost:8765</code> 查看</p>
+    <p style="margin-top:6px">设计 <code>2026-08-05</code> · 实现 <code>2026-08-06</code> · 当前版本 <code>1.1.2</code> · 使用 <code>build-app.sh</code> 可重复生成签名 App 与 Release 资产</p>
   </footer>
 
 </div>
 
 <script>
+  function switchTheme(e, key){
+    const pane = document.getElementById('ui-theme-pane');
+    if (pane) {
+      pane.classList.remove('theme-night', 'theme-day');
+      pane.classList.add(`theme-${key}`);
+    }
+    document.querySelectorAll('.theme-tab').forEach(t => t.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+  }
+
   function switchFlow(e, key){
     document.querySelectorAll('.flow-tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.flow-content').forEach(c=>c.classList.remove('active'));
