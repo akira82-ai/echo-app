@@ -30,6 +30,7 @@ final class SettingsWindowController: NSWindowController {
 
 /// 设置页 SwiftUI 视图。
 struct SettingsView: View {
+    @Environment(\.colorScheme) private var colorScheme
     // 配置(经 AppSettings 读写 UserDefaults)
     @State private var historyLimit: Int = AppSettings.shared.historyLimit
     @State private var hotkeyModifiers: UInt32 = AppSettings.shared.hotkeyModifiers
@@ -40,6 +41,10 @@ struct SettingsView: View {
     // AX 权限状态
     @State private var axGranted: Bool = AXIsProcessTrusted()
     @State private var historyCount: Int = HistoryStore.shared.count
+
+    private var palette: EchoTheme.Palette {
+        EchoTheme.palette(for: colorScheme)
+    }
 
     // 可选热键预设(避免复杂手势捕获,提供常用两键组合)
     private let hotkeyPresets: [(label: String, modifiers: UInt32, keycode: UInt32)] = [
@@ -103,7 +108,7 @@ struct SettingsView: View {
                     settingRow(title: "当前历史") {
                         Text("\(historyCount) / \(historyLimit) 条")
                             .font(.system(.body, design: .monospaced))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(palette.textSecondary)
                     }
 
                     settingRow(title: "清空所有历史", subtitle: "立即删除历史和图片缓存。") {
@@ -120,14 +125,14 @@ struct SettingsView: View {
 
                 Text("Echo · 剪贴板历史管理器 · 本地运行,数据不出本机")
                     .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(palette.textTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 2)
             }
             .padding(18)
         }
         .frame(width: 520, height: 560)
-        .background(Color(nsColor: .windowBackgroundColor).opacity(0.96))
+        .background(palette.windowBackground)
         .onAppear {
             syncHotkeyPresetIndex()
             axGranted = AXIsProcessTrusted()
@@ -147,10 +152,10 @@ struct SettingsView: View {
         HStack(spacing: 12) {
             if axGranted {
                 Label("辅助功能权限:已授予", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(palette.green)
             } else {
                 Label("辅助功能权限:未授予(自动粘贴将降级)", systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(palette.yellow)
                 Button("打开设置") {
                     PermissionsManager.shared.openSystemSettings()
                 }
@@ -162,8 +167,8 @@ struct SettingsView: View {
         .font(.caption)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Color.black.opacity(0.2))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .background(palette.controlBackground)
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(palette.controlBorder, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
@@ -173,7 +178,7 @@ struct SettingsView: View {
             Text(title)
                 .font(.system(size: 11, weight: .bold))
                 .tracking(0.08)
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(palette.accent)
 
             content()
         }
@@ -185,11 +190,11 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: subtitle == nil ? 0 : 2) {
                 Text(title)
                     .font(.system(size: 13))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(palette.textPrimary)
                 if let subtitle {
                     Text(subtitle)
                         .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(palette.textSecondary)
                 }
             }
 
@@ -199,15 +204,15 @@ struct SettingsView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
-        .background(Color.black.opacity(0.2))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .background(palette.rowBackground)
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(palette.border, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func settingNote(_ text: String) -> some View {
         Text(text)
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(palette.textSecondary)
             .fixedSize(horizontal: false, vertical: true)
     }
 

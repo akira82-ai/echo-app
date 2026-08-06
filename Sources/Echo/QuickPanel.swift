@@ -455,6 +455,7 @@ final class QuickPanelViewModel: ObservableObject {
 struct QuickPanelView: View {
     @ObservedObject var viewModel: QuickPanelViewModel
     let onSelected: (ClipEntry) -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
@@ -467,10 +468,14 @@ struct QuickPanelView: View {
         static let keyCapHeight: CGFloat = 22
     }
 
+    private var palette: EchoTheme.Palette {
+        EchoTheme.palette(for: colorScheme)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             searchBar
-            Divider().opacity(0.5)
+            Divider().foregroundStyle(palette.border)
             listArea
             footer
         }
@@ -479,7 +484,7 @@ struct QuickPanelView: View {
         .background {
             ZStack {
                 Rectangle().fill(.ultraThinMaterial)
-                Rectangle().fill(Color(red: 30.0 / 255.0, green: 33.0 / 255.0, blue: 42.0 / 255.0).opacity(0.22))
+                Rectangle().fill(palette.windowTint)
             }
         }
         // 不在 body 上做 clipShape/overlay/shadow:
@@ -492,7 +497,7 @@ struct QuickPanelView: View {
     private var searchBar: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(palette.textTertiary)
                 .font(.system(size: 16))
             TextField("输入 1-5 直达本页 / 关键词搜索", text: $viewModel.query)
                 .textFieldStyle(.plain)
@@ -501,9 +506,9 @@ struct QuickPanelView: View {
             if !viewModel.query.isEmpty {
                 Text(directHint)
                     .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(palette.chipText)
                     .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Color(red: 28.0 / 255.0, green: 32.0 / 255.0, blue: 42.0 / 255.0))
+                    .background(palette.chipBackground)
                     .cornerRadius(6)
             }
         }
@@ -541,11 +546,11 @@ struct QuickPanelView: View {
                         // 设计稿:.qp-item.selected = accent-soft(0.14) + 1px border rgba(accent,0.3)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.accentColor.opacity(isSelected ? 0.14 : 0))
+                                .fill(palette.accentSoft.opacity(isSelected ? 1 : 0))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.accentColor.opacity(isSelected ? 0.3 : 0), lineWidth: 1)
+                                .stroke(palette.accent.opacity(isSelected ? 0.3 : 0), lineWidth: 1)
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -571,7 +576,7 @@ struct QuickPanelView: View {
             if slot == 0 {
                 Text(viewModel.query.isEmpty ? "暂无历史" : "无匹配结果")
                     .font(.system(size: 13))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(palette.textTertiary)
             }
             Spacer(minLength: 0)
         }
@@ -586,7 +591,7 @@ struct QuickPanelView: View {
         HStack(spacing: 14) {
             Text("\(item.displayNumber)")
                 .font(.system(size: 12, design: .monospaced))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(palette.textTertiary)
                 .frame(width: 28, alignment: .trailing)
             previewContent(for: item.entry.kind)
             Spacer(minLength: 0)
@@ -606,7 +611,7 @@ struct QuickPanelView: View {
                 .font(.system(size: 13.5))
                 .lineLimit(1)
                 .truncationMode(.tail)
-                .foregroundStyle(.primary)
+                .foregroundStyle(palette.textPrimary)
         case .image(let ref):
             HStack(spacing: 14) {
                 // 缩略图:32×32 圆角6 + 深色底 #2a2f3d + 边框
@@ -614,12 +619,12 @@ struct QuickPanelView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 32, height: 32)
-                    .background(Color.black.opacity(0.4))
+                    .background(palette.thumbnailBackground)
                     .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.primary.opacity(0.1), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(palette.border, lineWidth: 1))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("[ 图片 ]").foregroundStyle(.secondary).font(.system(size: 13))
-                    Text(ref.sizeText).font(.system(size: 10.5)).foregroundStyle(.tertiary)
+                    Text("[ 图片 ]").foregroundStyle(palette.textSecondary).font(.system(size: 13))
+                    Text(ref.sizeText).font(.system(size: 10.5)).foregroundStyle(palette.textTertiary)
                 }
             }
         case .files(let urls):
@@ -627,16 +632,16 @@ struct QuickPanelView: View {
                 // 文件图标:32×32 圆角7 + green-soft 色底框(图标居中)
                 Image(systemName: fileIconName(for: urls.first))
                     .font(.system(size: 16))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(palette.green)
                     .frame(width: 32, height: 32)
-                    .background(Color.green.opacity(0.14))
+                    .background(palette.greenSoft)
                     .cornerRadius(7)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(filesPreview(urls))
                         .font(.system(size: 13.5)).lineLimit(1).truncationMode(.tail)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(palette.textPrimary)
                     Text(filesLocation(urls))
-                        .font(.system(size: 10.5)).foregroundStyle(.tertiary)
+                        .font(.system(size: 10.5)).foregroundStyle(palette.textTertiary)
                 }
             }
         }
@@ -644,18 +649,18 @@ struct QuickPanelView: View {
 
     /// 类型标签。设计稿:font10 weight600 padding 2/7 圆角5 + soft 底(0.14)。
     private func typeTag(for kind: ClipEntry.Kind) -> some View {
-        let (text, color): (String, Color) = {
+        let (text, color, soft): (String, Color, Color) = {
             switch kind {
-            case .text: return ("文本", .blue)      // 设计稿 --accent(用 blue 作语义替代)
-            case .image: return ("图片", .purple)   // 设计稿 --purple
-            case .files: return ("文件", .green)    // 设计稿 --green
+            case .text: return ("文本", palette.accent, palette.accentSoft)
+            case .image: return ("图片", palette.purple, palette.purpleSoft)
+            case .files: return ("文件", palette.green, palette.greenSoft)
             }
         }()
         return Text(text)
             .font(.system(size: 10, weight: .semibold))
             .tracking(0.4)   // 设计稿 letter-spacing:0.04em
             .padding(.horizontal, 7).padding(.vertical, 2)
-            .background(color.opacity(0.14))
+            .background(soft)
             .foregroundStyle(color)
             .cornerRadius(5)
     }
@@ -675,14 +680,14 @@ struct QuickPanelView: View {
                 kbdHint("esc", "关闭")
             }
             .font(.system(size: 11))
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(palette.textTertiary)
             .frame(height: Layout.footerContentHeight, alignment: .center)
         }
         .padding(.horizontal, 18)
         .frame(height: Layout.footerHeight, alignment: .center)
-        .background(Color.black.opacity(0.15))
+        .background(palette.footerBackground)
         // 设计稿:.qp-footer border-top:1px solid var(--border)
-        .overlay(Rectangle().frame(height: 1).foregroundStyle(Color.primary.opacity(0.08)), alignment: .top)
+        .overlay(Rectangle().frame(height: 1).foregroundStyle(palette.border), alignment: .top)
     }
 
     /// 左侧状态拆开渲染,避免 emoji 影响整行文字基线。
@@ -693,7 +698,7 @@ struct QuickPanelView: View {
                 .frame(width: 18, height: Layout.footerContentHeight, alignment: .center)
             Text("已记录 \(viewModel.allEntries.count) / \(AppSettings.shared.historyLimit) 条")
                 .font(.system(size: 11))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(palette.textTertiary)
                 .lineLimit(1)
         }
         .frame(height: Layout.footerContentHeight, alignment: .center)
@@ -705,9 +710,9 @@ struct QuickPanelView: View {
             Text(keys).font(.system(size: 10.5, design: .monospaced))
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 // 设计稿:panel-solid(#1c202a)实心深底 + 文字 text-dim(比 tertiary 亮一档)
-                .background(Color(red: 230.0 / 255.0, green: 233.0 / 255.0, blue: 238.0 / 255.0))
-                .foregroundStyle(.secondary)
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.primary.opacity(0.16), lineWidth: 1))
+                .background(palette.keycapBackground)
+                .foregroundStyle(palette.keycapText)
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(palette.borderStrong, lineWidth: 1))
                 .cornerRadius(4)
                 .frame(minHeight: Layout.keyCapHeight, alignment: .center)
             Text(label)
