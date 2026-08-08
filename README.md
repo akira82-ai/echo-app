@@ -16,7 +16,7 @@
 
 ## 🎬 演示
 
-<video src="assets/echo.mp4" controls width="100%"></video>
+![Echo 演示](assets/echo-demo.gif)
 
 ## ✨ 特性
 
