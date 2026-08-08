@@ -14,6 +14,10 @@
 
 ---
 
+## 🎬 演示
+
+<video src="assets/echo.mp4" controls width="100%"></video>
+
 ## ✨ 特性
 
 - 🎯 **全自动记录** — 监听剪贴板本身(非按键),右键、剪切、拖拽、App 内按钮统统不漏
