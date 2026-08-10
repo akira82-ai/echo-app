@@ -10,6 +10,7 @@ BUNDLE_ID="com.akira82.echo"
 DIST_DIR="dist"
 APP_BUNDLE="$DIST_DIR/${APP_NAME}.app"
 ZIP_ARCHIVE="$DIST_DIR/${APP_NAME}.app.zip"
+DMG_ARCHIVE="$DIST_DIR/${APP_NAME}.dmg"
 
 # 签名身份:优先用固定自签证书(见 setup-codesign.sh),回退到 adhoc。
 # 两者都会固定 identifier=com.akira82.echo —— 这点是 TCC 识别 App 的关键,
@@ -53,9 +54,18 @@ xattr -cr "$APP_BUNDLE" 2>/dev/null || true
 rm -f "$ZIP_ARCHIVE"
 ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" "$ZIP_ARCHIVE"
 
+echo "💿 创建 DMG..."
+DMG_STAGE="$(mktemp -d "${TMPDIR:-/tmp}/echo-dmg.XXXXXX")"
+trap 'rm -rf "$DMG_STAGE"' EXIT
+cp -R "$APP_BUNDLE" "$DMG_STAGE/"
+ln -s /Applications "$DMG_STAGE/Applications"
+rm -f "$DMG_ARCHIVE"
+hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_STAGE" -format UDZO "$DMG_ARCHIVE" >/dev/null
+
 echo
 echo "✅ 完成 → $APP_BUNDLE"
 echo "📦 Release 资产 → $ZIP_ARCHIVE"
+echo "💿 Release 资产 → $DMG_ARCHIVE"
 echo "   签名验证:"
 codesign -dv "$APP_BUNDLE" 2>&1 | grep -E "Identifier|Signature|TeamIdentifier" | sed 's/^/     /'
 echo

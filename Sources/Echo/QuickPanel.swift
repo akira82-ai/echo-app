@@ -503,14 +503,6 @@ struct QuickPanelView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 18))
                 .focused($fieldFocused)
-            if !viewModel.query.isEmpty {
-                Text(directHint)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(palette.chipText)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(palette.chipBackground)
-                    .cornerRadius(6)
-            }
         }
         // 设计稿:.qp-search padding:14px 18px + border-bottom
         .padding(.horizontal, 18)
@@ -519,15 +511,6 @@ struct QuickPanelView: View {
     }
 
     @FocusState private var fieldFocused: Bool
-
-    /// 输入纯数字时显示"→ 本页第 N 条"提示(分页后数字直达只作用于当前页)。
-    private var directHint: String {
-        let q = viewModel.query.trimmingCharacters(in: .whitespaces)
-        if let n = Int(q), n > 0 {
-            return "→ 本页第 \(n) 条"
-        }
-        return "搜索中"
-    }
 
     // MARK: 列表
 
