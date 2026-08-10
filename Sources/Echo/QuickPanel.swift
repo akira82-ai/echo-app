@@ -10,8 +10,8 @@ import AppKit
 /// - 列表按"最近在前":第 1 条 = 最近复制的,数字直达语义自然
 ///
 /// 交互逻辑(详见 design-plan.html 板块6):
-/// - 输入纯数字且 ≤ 列表长度 → 视为编号,回车直达该条
-/// - 输入含非数字字符 → 视为搜索词,对文本/文件做子串过滤(图片不参与搜索)
+/// - 输入 1–5 → 视为当前页编号,回车直达该条
+/// - 输入 6 及以上或含非数字字符 → 视为搜索词,对文本/文件做子串过滤(图片不参与搜索)
 /// - 不输入 → 方向键浏览,默认高亮第 1 条
 ///
 /// 选中后通过 onSelected 回调把 entry 交给 Paster(Stage 4)。
@@ -298,7 +298,7 @@ final class QuickPanelViewModel: ObservableObject {
         currentPage = 0
     }
 
-    /// 应用过滤:纯数字→当前页页内编号定位(1...pageSize);否则→子串搜索;空→全部。
+    /// 应用过滤:1...pageSize→当前页页内编号定位;其余非空输入→子串搜索;空→全部。
     ///
     /// 注意:数字直达只对**当前页**生效(输 1–5 选当前页第 1–5 条),
     /// 超出页内范围的数字无效——这是分页方案下「页内重新编号」的取舍。
@@ -311,8 +311,8 @@ final class QuickPanelViewModel: ObservableObject {
             clampPageAndSelection()
             return
         }
-        if let n = Int(q), n > 0 {
-            // 数字直达:不缩小列表,只在当前页内定位第 n 条(1...pageSize 有效)
+        if let n = directPageIndex {
+            // 数字直达:不缩小列表,只在当前页内定位第 n 条
             displayed = allEntries.enumerated().map { idx, e in
                 DisplayItem(id: e.id, displayNumber: idx + 1, entry: e)
             }
@@ -339,6 +339,13 @@ final class QuickPanelViewModel: ObservableObject {
         // 搜索结果可能变少,回到第 1 页重新展示
         currentPage = 0
         clampPageAndSelection()
+    }
+
+    /// 仅 1...pageSize 作为当前页编号,更大的数字进入搜索态。
+    private var directPageIndex: Int? {
+        let q = query.trimmingCharacters(in: .whitespaces)
+        guard let n = Int(q), (1...pageSize).contains(n) else { return nil }
+        return n
     }
 
     // MARK: - 删除
@@ -436,9 +443,9 @@ final class QuickPanelViewModel: ObservableObject {
     /// 当前选中的 ClipEntry(数字直达或方向键选中),无则 nil。
     ///
     /// 数字直达:输 1–5 选当前页内第 N 条(超出页内范围无效)。
-    /// 否则:取当前页第 selectedDisplayIndex 条。
+    /// 6+ 和文本搜索都取当前搜索结果页的 selectedDisplayIndex 条。
     func selectedEntry() -> ClipEntry? {
-        if let n = Int(query.trimmingCharacters(in: .whitespaces)), n > 0 {
+        if let n = directPageIndex {
             // 数字直达只认当前页
             let items = pageItems
             guard n >= 1, n <= items.count else { return nil }
