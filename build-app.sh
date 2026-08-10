@@ -11,6 +11,8 @@ DIST_DIR="dist"
 APP_BUNDLE="$DIST_DIR/${APP_NAME}.app"
 ZIP_ARCHIVE="$DIST_DIR/${APP_NAME}.app.zip"
 DMG_ARCHIVE="$DIST_DIR/${APP_NAME}.dmg"
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Info.plist)"
+BUILD_NUMBER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' Info.plist)"
 
 # 签名身份:优先用固定自签证书(见 setup-codesign.sh),回退到 adhoc。
 # 两者都会固定 identifier=com.akira82.echo —— 这点是 TCC 识别 App 的关键,
@@ -20,7 +22,7 @@ if security find-identity -v -p codesigning 2>/dev/null | grep -q "Echo Self-Sig
     SIGN_IDENTITY="Echo Self-Sign"
 fi
 
-echo "🔨 编译 release 产物..."
+echo "🔨 编译 Echo v${VERSION} (build ${BUILD_NUMBER}) release 产物..."
 swift build -c release
 
 echo "📦 组装 .app bundle..."
@@ -33,6 +35,14 @@ cp ".build/release/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 
 # Info.plist → Contents/
 cp Info.plist "$APP_BUNDLE/Contents/Info.plist"
+
+# Fail early if the bundle version ever drifts from the project source.
+BUNDLE_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_BUNDLE/Contents/Info.plist")"
+BUNDLE_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_BUNDLE/Contents/Info.plist")"
+if [[ "$BUNDLE_VERSION" != "$VERSION" || "$BUNDLE_BUILD" != "$BUILD_NUMBER" ]]; then
+    echo "❌ Bundle version mismatch: expected ${VERSION} (${BUILD_NUMBER}), got ${BUNDLE_VERSION} (${BUNDLE_BUILD})" >&2
+    exit 1
+fi
 
 # 图标(若有)
 [ -f "AppIcon.icns" ] && cp AppIcon.icns "$APP_BUNDLE/Contents/Resources/$APP_NAME.icns"
@@ -63,7 +73,7 @@ rm -f "$DMG_ARCHIVE"
 hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_STAGE" -format UDZO "$DMG_ARCHIVE" >/dev/null
 
 echo
-echo "✅ 完成 → $APP_BUNDLE"
+echo "✅ 完成 → $APP_BUNDLE (v${VERSION}, build ${BUILD_NUMBER})"
 echo "📦 Release 资产 → $ZIP_ARCHIVE"
 echo "💿 Release 资产 → $DMG_ARCHIVE"
 echo "   签名验证:"

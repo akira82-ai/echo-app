@@ -26,5 +26,8 @@ Icon?
 # Local distribution builds
 dist/
 
+# Local design workspace
+design-plan.html
+
 # ZCode tool (plans cache etc.)
 .zcode/
