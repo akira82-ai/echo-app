@@ -55,12 +55,6 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         // 记录当前最前台 App——选中条目粘贴时,要激活它让 ⌘V 送达
         frontmostAppAtShowTime = NSWorkspace.shared.frontmostApplication
 
-        // 无历史则不弹(避免空面板)
-        if entries.isEmpty {
-            NSSound.beep()
-            return
-        }
-
         viewModel.configure(entries: entries)
         let viewModel = self.viewModel
         let hosting = NSHostingController(rootView: QuickPanelView(viewModel: viewModel) { [weak self] entry in
@@ -470,6 +464,7 @@ struct QuickPanelView: View {
         static let searchHeight: CGFloat = 72
         static let rowHeight: CGFloat = 56
         static let listVerticalPadding: CGFloat = 8
+        static let listHeight: CGFloat = 304
         static let footerHeight: CGFloat = 48
         static let footerContentHeight: CGFloat = 28
         static let keyCapHeight: CGFloat = 22
@@ -526,7 +521,17 @@ struct QuickPanelView: View {
     /// - 空槽位:渲染与有内容行**等高**的透明占位(不响应点击、不参与高亮、不可被 ↑↓ 选中)
     ///
     /// 这样即使整页只有 1 条内容,下方 4 个空槽位也始终在,框架尺寸纹丝不动。
+    @ViewBuilder
     private var listArea: some View {
+        if viewModel.allEntries.isEmpty && viewModel.query.isEmpty {
+            emptyState
+        } else {
+            populatedList
+        }
+    }
+
+    /// 有内容时的固定 5 行列表。
+    private var populatedList: some View {
         VStack(spacing: 2) {
             ForEach(0..<viewModel.pageSize, id: \.self) { slot in
                 if slot < viewModel.pageItems.count {
@@ -554,6 +559,56 @@ struct QuickPanelView: View {
         // 设计稿:.qp-list padding:6px
         .padding(.horizontal, 6)
         .padding(.vertical, Layout.listVerticalPadding)
+    }
+
+    /// 剪贴板为空时的引导状态:保留列表区域高度,避免窗口跳动。
+    private var emptyState: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(palette.accentSoft)
+                Image(systemName: "command")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(palette.accent)
+            }
+            .frame(width: 58, height: 58)
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(palette.accent.opacity(0.28), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.18 : 0.08), radius: 15, y: 8)
+            .padding(.bottom, 16)
+
+            Text("还没有剪贴板记录")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(palette.textPrimary)
+
+            Text("Echo 已准备好。复制一段文字、图片或文件，再按下快捷键，就能在这里找到它。")
+                .font(.system(size: 12.5))
+                .foregroundStyle(palette.textTertiary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+                .frame(maxWidth: 330)
+                .padding(.top, 8)
+                .padding(.bottom, 14)
+
+            kbdHint("⌘\\", "呼出面板 · 复制内容后即可开始")
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: Layout.listHeight)
+        .background {
+            RadialGradient(
+                colors: [palette.accentSoft, .clear],
+                center: .center,
+                startRadius: 0,
+                endRadius: 210
+            )
+            .opacity(0.65)
+        }
     }
 
     /// 空槽位:与 itemRow 等高的纯透明占位。
