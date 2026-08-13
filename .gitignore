@@ -31,3 +31,6 @@ design-plan.html
 
 # ZCode tool (plans cache etc.)
 .zcode/
+
+# WorkBuddy local workspace
+.workbuddy/

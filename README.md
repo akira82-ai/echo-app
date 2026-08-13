@@ -31,7 +31,7 @@
 
 ## 📦 下载
 
-前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载 `Echo.dmg`,打开后将 Echo 拖进「应用程序」即可。当前版本为 `1.3.0`。
+前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载 `Echo.dmg`,打开后将 Echo 拖进「应用程序」即可。当前版本为 `1.4.0`。
 
 > 当前 Release 是本机开发验证包,使用 `Echo Self-Sign` 自签名。在其他 Mac 上可能仍被 Gatekeeper 拦截;面向公众正式发布时需要 Apple Developer ID 签名和 notarization。
 > 首次使用"自动粘贴"时,系统会弹辅助功能授权引导——授权后选中条目即自动粘;不授权也能用,只是需回目标 App 自己按 `⌘V`。

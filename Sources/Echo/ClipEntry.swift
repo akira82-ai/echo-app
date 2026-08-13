@@ -11,7 +11,7 @@ import CryptoKit
 ///
 /// 设计要点:
 /// - `id` 用 UUID,作为 SwiftUI 列表的稳定身份
-/// - `deduplicationKey` 与具体内容相关;连续两次相同 key 即视为重复,只保留最新一条
+/// - 文本/文件使用精确内容标识进行全历史去重;图片只在连续重复时去重
 /// - `ImageRef` 只是「磁盘引用 + 内存缩略图」,不持有原图数据,内存占用恒定
 struct ClipEntry: Identifiable {
     let id: UUID
@@ -33,8 +33,7 @@ struct ClipEntry: Identifiable {
         case files([URL])
     }
 
-    /// 用于去重的稳定 key:与具体内容相关、与排列顺序无关(多文件)。
-    /// 连续两次产生相同 key 的内容即视为重复,跳过本次收集。
+    /// 用于现有连续重复判断的 key。图片也使用这个 key。
     var deduplicationKey: String {
         switch kind {
         case .text(let body):
@@ -50,6 +49,25 @@ struct ClipEntry: Identifiable {
             // 排序后拼接路径,保证不同选中顺序但相同的一批文件能正确去重
             let paths = urls.map(\.path).sorted().joined(separator: "\n")
             return "files:\(paths)"
+        }
+    }
+
+    /// 文本和文件参与全历史去重的精确 key;图片返回 nil,保持原有策略。
+    /// 文本使用完整内容哈希,避免仅比较前缀导致不同内容误判为重复。
+    var historicalDeduplicationKey: String? {
+        switch kind {
+        case .text(let body):
+            let hash = SHA256.hash(data: Data(body.utf8))
+            let hex = hash.map { String(format: "%02x", $0) }.joined()
+            return "text:\(hex)"
+        case .files(let urls):
+            let paths = urls
+                .map { $0.standardizedFileURL.path }
+                .sorted()
+                .joined(separator: "\n")
+            return "files:\(paths)"
+        case .image:
+            return nil
         }
     }
 }

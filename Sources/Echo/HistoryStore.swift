@@ -5,7 +5,7 @@ import Foundation
 /// 设计要点(详见 design-plan.html 板块2、3):
 /// - **纯内存,不持久化**:App 重启即清空(符合"每次启动即初始化"约束)
 /// - **共享名额**:文本/图片/文件共用一个上限(默认 50,可配置)
-/// - **去重**:连续两次相同 deduplicationKey → 不新增,但更新时间戳置顶
+/// - **去重**:文本/文件在全历史中去重,保留最新复制;图片只做连续重复去重
 /// - **淘汰删盘**:被挤出上限的图片条目,同步删掉 ImageCache 盘文件,避免膨胀
 /// - **线程安全**:所有状态访问走串行队列,UI 读快照用 sync
 ///
@@ -23,7 +23,7 @@ final class HistoryStore {
     /// 实际存储(队首 = 最近)。初始空。
     private var entries: [ClipEntry] = []
 
-    /// 上一次入队条目的去重 key,用于跳过连续重复
+    /// 上一次入队条目的 key,用于图片的连续重复处理
     private var lastDeduplicationKey: String?
 
     private init() {}
@@ -32,8 +32,8 @@ final class HistoryStore {
 
     /// 入队一条新内容。
     ///
-    /// 去重策略:与最近一条 deduplicationKey 相同 → 不新增,但更新该条时间戳并置顶;
-    /// 不同 → 插入队首,超出上限则淘汰队尾(若是图片则删盘)。
+    /// 去重策略:文本/文件扫描全历史并移除相同旧条目;图片仅在连续重复时更新时间戳并置顶;
+    /// 非重复内容插入队首,超出上限则淘汰队尾(若是图片则删盘)。
     ///
     /// - Parameter entry: 新读取的条目
     func append(_ entry: ClipEntry) {
@@ -42,8 +42,19 @@ final class HistoryStore {
 
             let key = entry.deduplicationKey
 
+            // 文本和文件地址全历史去重:移除所有旧副本,再保留本次最新条目。
+            // 该操作与插入处于同一串行队列内,UI 只收到一次变更通知。
+            if let historicalKey = entry.historicalDeduplicationKey {
+                self.entries.removeAll { $0.historicalDeduplicationKey == historicalKey }
+                self.lastDeduplicationKey = historicalKey
+                self.entries.insert(entry, at: 0)
+                self.evictIfNeeded()
+                self.notifyChange()
+                return
+            }
+
             if key == self.lastDeduplicationKey {
-                // 连续重复:把已有那条移到队首并更新时间戳(用户期望"最近"在最上)
+                // 图片保持旧策略:连续重复时保留原 id,更新时间戳并置顶。
                 if let idx = self.entries.firstIndex(where: { $0.deduplicationKey == key }) {
                     let existing = self.entries.remove(at: idx)
                     // 保留原 id(稳定身份),只更新时间戳到最新
