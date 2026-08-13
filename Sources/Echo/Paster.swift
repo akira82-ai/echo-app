@@ -26,20 +26,24 @@ final class Paster {
     ///   - entry: 用户选中的条目
     ///   - targetApp: 面板显示前的最前台 App,粘贴时需激活它让 ⌘V 送达
     /// - Note: 在主线程调用(QuickPanel 选中回调已在主线程)。
-    func paste(_ entry: ClipEntry, targetApp: NSRunningApplication? = nil) {
+    func paste(_ entry: ClipEntry, context: AchievementStore.SelectionContext, targetApp: NSRunningApplication? = nil) {
         // 等面板完全关闭,目标 App 恢复 key 状态
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(80)) { [weak self] in
-            self?.performPaste(entry, targetApp: targetApp)
+            self?.performPaste(entry, context: context, targetApp: targetApp)
         }
     }
 
     /// 实际执行:写剪贴板 → 激活目标 App → 模拟 ⌘V。
-    private func performPaste(_ entry: ClipEntry, targetApp: NSRunningApplication?) {
+    private func performPaste(_ entry: ClipEntry, context: AchievementStore.SelectionContext, targetApp: NSRunningApplication?) {
         // 抑制 watcher 把这次写回误判为新复制
         ClipboardWatcher.shared.suppressNext()
 
         // 写回剪贴板
-        writeBack(entry)
+        guard writeBack(entry) else {
+            ClipboardWatcher.shared.cancelSuppression()
+            return
+        }
+        AchievementStore.shared.recordPaste(mode: context.mode, source: context.source, paged: context.paged)
 
         guard AppSettings.shared.autoPasteEnabled, AXIsProcessTrusted() else {
             // 降级:静默,只写剪贴板。用户回目标 App 自己按 ⌘V。
@@ -63,27 +67,27 @@ final class Paster {
     // MARK: - 写回剪贴板
 
     /// 按类型把内容写回 NSPasteboard.general。
-    private func writeBack(_ entry: ClipEntry) {
+    private func writeBack(_ entry: ClipEntry) -> Bool {
         let pb = NSPasteboard.general
         pb.clearContents()
 
         switch entry.kind {
         case .text(let body):
-            pb.setString(body, forType: .string)
+            return pb.setString(body, forType: .string)
 
         case .image(let ref):
             // 从磁盘按需读回原图(原图不常驻内存)
             guard let image = ImageCache.shared.loadOriginal(at: ref.diskPath) else {
                 NSLog("[Echo] 粘贴图片失败:原图读不回(可能已被清理): \(ref.diskPath.path)")
-                return
+                return false
             }
-            pb.writeObjects([image])
+            return pb.writeObjects([image])
 
         case .files(let urls):
             // 文件零拷贝:只写 NSURL 路径,接收方 App 自行读取。
             // Foundation.URL 不直接遵循 NSPasteboardWriting,转成 NSURL。
             let nsurls = urls.map { $0 as NSURL }
-            pb.writeObjects(nsurls)
+            return pb.writeObjects(nsurls)
         }
     }
 

@@ -121,6 +121,16 @@ struct SettingsView: View {
                         .buttonStyle(.bordered)
                         .controlSize(.small)
                     }
+
+                    settingRow(title: "重置使用成就", subtitle: "只删除勋章统计,不会影响当前或下次剪贴板历史。") {
+                        Button(role: .destructive) {
+                            AchievementStore.shared.reset()
+                        } label: {
+                            Text("重置")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
                 }
 
                 Text("Echo · 剪贴板历史管理器 · 本地运行,数据不出本机")

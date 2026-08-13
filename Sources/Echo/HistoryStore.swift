@@ -45,10 +45,12 @@ final class HistoryStore {
             // 文本和文件地址全历史去重:移除所有旧副本,再保留本次最新条目。
             // 该操作与插入处于同一串行队列内,UI 只收到一次变更通知。
             if let historicalKey = entry.historicalDeduplicationKey {
+                let wasDuplicate = self.entries.contains { $0.historicalDeduplicationKey == historicalKey }
                 self.entries.removeAll { $0.historicalDeduplicationKey == historicalKey }
                 self.lastDeduplicationKey = historicalKey
                 self.entries.insert(entry, at: 0)
                 self.evictIfNeeded()
+                if wasDuplicate { AchievementStore.shared.recordDuplicateHit() }
                 self.notifyChange()
                 return
             }
@@ -60,6 +62,7 @@ final class HistoryStore {
                     // 保留原 id(稳定身份),只更新时间戳到最新
                     let refreshed = ClipEntry(kind: existing.kind, timestamp: entry.timestamp, id: existing.id)
                     self.entries.insert(refreshed, at: 0)
+                    AchievementStore.shared.recordDuplicateHit()
                     self.notifyChange()
                 }
                 return
@@ -121,6 +124,7 @@ final class HistoryStore {
             guard let self else { return }
             guard let idx = self.entries.firstIndex(where: { $0.id == id }) else { return }
             let removed = self.entries.remove(at: idx)
+            AchievementStore.shared.recordDelete()
             // 图片被删 → 删盘文件(照搬 evictIfNeeded / clearAll 的模式)
             if case .image(let ref) = removed.kind {
                 ImageCache.shared.remove(at: ref.diskPath)

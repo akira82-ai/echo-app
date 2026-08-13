@@ -115,6 +115,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 注册全局热键(⌘\),触发时显示 QuickPanel。
     private func setupGlobalHotkey() {
         GlobalHotkey.shared.onTriggered = { [weak self] in
+            AchievementStore.shared.recordHotkeyShow()
             self?.showHistoryPanel()
         }
         GlobalHotkey.shared.register()
@@ -128,8 +129,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// 显示历史选择面板(菜单点击与热键共用入口)。
     private func showHistoryPanel() {
-        QuickPanelController.shared.onSelected = { entry in
-            Paster.shared.paste(entry, targetApp: QuickPanelController.shared.frontmostAppAtShowTime)
+        QuickPanelController.shared.onSelected = { entry, context in
+            Paster.shared.paste(entry, context: context, targetApp: QuickPanelController.shared.frontmostAppAtShowTime)
         }
         QuickPanelController.shared.show()
     }

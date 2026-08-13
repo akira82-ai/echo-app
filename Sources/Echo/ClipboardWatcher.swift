@@ -70,6 +70,11 @@ final class ClipboardWatcher {
         suppressNextChange = true
     }
 
+    /// 写回失败时撤销抑制,避免下一次真实复制被误跳过。
+    func cancelSuppression() {
+        suppressNextChange = false
+    }
+
     // MARK: - 轮询
 
     /// 定时器回调:比较 changeCount,变化则触发采集。

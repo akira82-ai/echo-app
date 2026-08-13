@@ -24,7 +24,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     }
 
     /// 选中某条历史项时调用(主线程)。
-    var onSelected: ((ClipEntry) -> Void)?
+    var onSelected: ((ClipEntry, AchievementStore.SelectionContext) -> Void)?
 
     /// 承载 SwiftUI 内容的非激活式浮层
     private var panel: NSPanel?
@@ -48,6 +48,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     func show() {
         let entries = HistoryStore.shared.snapshot()
         currentEntries = entries
+        AchievementStore.shared.recordPanelShown()
 
         // 先关闭旧面板(必须在 configure 之前,否则 hide 的 reset 会清空新数据)
         hide()
@@ -58,7 +59,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         viewModel.configure(entries: entries)
         let viewModel = self.viewModel
         let hosting = NSHostingController(rootView: QuickPanelView(viewModel: viewModel) { [weak self] entry in
-            self?.handleSelected(entry)
+            self?.handleSelected(entry, source: .mouse)
         })
 
         let panel = Self.makePanel(contentViewController: hosting)
@@ -101,6 +102,15 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 处理一次按键。返回 nil 表示吞掉该事件,返回 event 表示放行。
     private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
+        if viewModel.showsAchievements {
+            switch event.keyCode {
+            case 53: // Esc
+                hide()
+                return nil
+            default:
+                return nil
+            }
+        }
         switch event.keyCode {
         case 126:  // ↑
             viewModel.moveUp()
@@ -116,7 +126,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             return nil
         case 36, 76:  // Return / Enter
             if let entry = viewModel.selectedEntry() {
-                handleSelected(entry)
+                handleSelected(entry, source: .keyboard)
             }
             return nil
         case 51:  // ⌫ Backspace
@@ -140,9 +150,10 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     // MARK: - 选中处理
 
-    private func handleSelected(_ entry: ClipEntry) {
+    private func handleSelected(_ entry: ClipEntry, source: AchievementStore.SelectionSource) {
+        let context = viewModel.selectionContext(source: source)
         hide()
-        onSelected?(entry)
+        onSelected?(entry, context)
     }
 
     // MARK: - NSWindowDelegate
@@ -241,6 +252,12 @@ final class QuickPanelViewModel: ObservableObject {
     /// 与 currentPage 配合定位最终条目:selectedEntry = 当前页第 selectedDisplayIndex 条。
     @Published var selectedDisplayIndex: Int = 1
 
+    /// 正文显示模式:历史列表或勋章墙。
+    @Published var showsAchievements = false
+
+    /// 勋章墙快照。统计变化时由视图刷新。
+    @Published private(set) var medals: [AchievementStore.Medal] = AchievementStore.shared.medals()
+
     /// configure 进行中标志(禁止 query didSet 干扰)
     private var isConfiguring = false
 
@@ -290,6 +307,20 @@ final class QuickPanelViewModel: ObservableObject {
         query = ""
         displayed = []
         currentPage = 0
+        selectedDisplayIndex = 1
+        showsAchievements = false
+    }
+
+    func toggleAchievements() {
+        showsAchievements.toggle()
+        if showsAchievements {
+            query = ""
+        }
+        refreshMedals()
+    }
+
+    func refreshMedals() {
+        medals = AchievementStore.shared.medals()
     }
 
     /// 应用过滤:1...pageSize→当前页页内编号定位;其余非空输入→子串搜索;空→全部。
@@ -449,6 +480,23 @@ final class QuickPanelViewModel: ObservableObject {
         guard selectedDisplayIndex >= 1, selectedDisplayIndex <= items.count else { return nil }
         return items[selectedDisplayIndex - 1].entry
     }
+
+    func selectionContext(source: AchievementStore.SelectionSource) -> AchievementStore.SelectionContext {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        let mode: AchievementStore.PasteMode
+        if directPageIndex != nil {
+            mode = .direct
+        } else if trimmed.isEmpty {
+            mode = .browse
+        } else {
+            mode = .search
+        }
+        return AchievementStore.SelectionContext(
+            mode: mode,
+            source: source,
+            paged: currentPage > 0
+        )
+    }
 }
 
 // MARK: - SwiftUI 视图
@@ -465,6 +513,12 @@ struct QuickPanelView: View {
         static let rowHeight: CGFloat = 56
         static let listVerticalPadding: CGFloat = 8
         static let listHeight: CGFloat = 304
+        // HTML .qp-achievement: height 296 + padding 12px 14px + 8px grid gaps.
+        static let achievementHeight: CGFloat = 296
+        static let achievementHorizontalPadding: CGFloat = 14
+        static let achievementVerticalPadding: CGFloat = 12
+        static let achievementGridSpacing: CGFloat = 8
+        static let medalRowHeight: CGFloat = 85.333333
         static let footerHeight: CGFloat = 48
         static let footerContentHeight: CGFloat = 28
         static let keyCapHeight: CGFloat = 22
@@ -478,7 +532,11 @@ struct QuickPanelView: View {
         VStack(spacing: 0) {
             searchBar
             Divider().foregroundStyle(palette.border)
-            listArea
+            if viewModel.showsAchievements {
+                achievementArea
+            } else {
+                listArea
+            }
             footer
         }
         .frame(width: Layout.panelWidth, height: Layout.panelHeight)
@@ -488,6 +546,9 @@ struct QuickPanelView: View {
                 Rectangle().fill(.ultraThinMaterial)
                 Rectangle().fill(palette.windowTint)
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: AchievementStore.didChangeNotification)) { _ in
+            viewModel.refreshMedals()
         }
         // 不在 body 上做 clipShape/overlay/shadow:
         // 系统标题栏(.titled)由 NSPanel 管理,若这里再裁圆角会把标题栏和交通灯一起裁掉。
@@ -505,11 +566,15 @@ struct QuickPanelView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 18))
                 .focused($fieldFocused)
+                .disabled(viewModel.showsAchievements)
         }
         // 设计稿:.qp-search padding:14px 18px + border-bottom
         .padding(.horizontal, 18)
         .frame(height: Layout.searchHeight)
-        .onAppear { fieldFocused = true }
+        .onAppear { fieldFocused = !viewModel.showsAchievements }
+        .onChange(of: viewModel.showsAchievements) { showsAchievements in
+            fieldFocused = !showsAchievements
+        }
     }
 
     @FocusState private var fieldFocused: Bool
@@ -527,6 +592,69 @@ struct QuickPanelView: View {
             emptyState
         } else {
             populatedList
+        }
+    }
+
+    /// 勋章墙:外层与历史列表共用 304pt 正文槽位,内部沿用 HTML 的 296pt 网格。
+    private var achievementArea: some View {
+        ZStack {
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: Layout.achievementGridSpacing), count: 4),
+                spacing: Layout.achievementGridSpacing
+            ) {
+                ForEach(viewModel.medals) { medal in
+                    medalView(medal)
+                }
+            }
+            .padding(.horizontal, Layout.achievementHorizontalPadding)
+            .padding(.vertical, Layout.achievementVerticalPadding)
+            .frame(maxWidth: .infinity, minHeight: Layout.achievementHeight, maxHeight: Layout.achievementHeight)
+            .background {
+                RadialGradient(
+                    colors: [palette.purpleSoft, .clear],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 210
+                )
+                .opacity(0.7)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: Layout.listHeight, maxHeight: Layout.listHeight)
+    }
+
+    private func medalView(_ medal: AchievementStore.Medal) -> some View {
+        let tone = medalTone(medal.tone)
+        return VStack(spacing: 4) {
+            Text(medal.icon)
+                .font(.system(size: medal.icon.count > 2 ? 12 : 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(medal.unlocked ? tone.primary : palette.textTertiary)
+                .frame(width: 34, height: 34)
+                .background(medal.unlocked ? tone.soft : palette.controlBackground)
+                .overlay(Circle().stroke(medal.unlocked ? tone.primary.opacity(0.36) : palette.border, lineWidth: 1))
+                .clipShape(Circle())
+                .opacity(medal.unlocked ? 1 : 0.55)
+
+            Text(medal.name)
+                .font(.system(size: 10.5))
+                .foregroundStyle(medal.unlocked ? palette.textPrimary : palette.textTertiary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+
+        }
+        .padding(.vertical, 5)
+        .frame(maxWidth: .infinity, minHeight: Layout.medalRowHeight, maxHeight: Layout.medalRowHeight)
+        .background(medal.unlocked ? palette.rowBackground : palette.controlBackground.opacity(0.55))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(palette.border, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .help(medal.progress ?? medal.name)
+    }
+
+    private func medalTone(_ tone: AchievementStore.Medal.Tone) -> (primary: Color, soft: Color) {
+        switch tone {
+        case .accent: return (palette.accent, palette.accentSoft)
+        case .green: return (palette.green, palette.greenSoft)
+        case .yellow: return (palette.yellow, palette.yellowSoft)
+        case .purple: return (palette.purple, palette.purpleSoft)
         }
     }
 
@@ -738,9 +866,15 @@ struct QuickPanelView: View {
     /// 左侧状态拆开渲染,避免 emoji 影响整行文字基线。
     private var statusSummary: some View {
         HStack(spacing: 7) {
-            Text("📊")
-                .font(.system(size: 14))
-                .frame(width: 18, height: Layout.footerContentHeight, alignment: .center)
+            Button {
+                viewModel.toggleAchievements()
+            } label: {
+                Text("🏅")
+                    .font(.system(size: 14))
+                    .frame(width: 18, height: Layout.footerContentHeight, alignment: .center)
+            }
+            .buttonStyle(.plain)
+            .help(viewModel.showsAchievements ? "返回历史" : "查看使用成就")
             Text("已记录 \(viewModel.allEntries.count) / \(AppSettings.shared.historyLimit) 条")
                 .font(.system(size: 11))
                 .foregroundStyle(palette.textTertiary)
