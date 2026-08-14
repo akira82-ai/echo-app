@@ -29,6 +29,8 @@ enum EchoTheme {
         let keycapText: Color
         let controlBackground: Color
         let controlBorder: Color
+        let achievementLockedBackground: Color
+        let achievementLockedIconBackground: Color
     }
 
     static func palette(for colorScheme: ColorScheme) -> Palette {
@@ -61,7 +63,9 @@ enum EchoTheme {
                 keycapBackground: Color(red: 28.0 / 255.0, green: 32.0 / 255.0, blue: 42.0 / 255.0),
                 keycapText: Color(red: 154.0 / 255.0, green: 163.0 / 255.0, blue: 178.0 / 255.0),
                 controlBackground: Color.black.opacity(0.2),
-                controlBorder: Color.white.opacity(0.08)
+                controlBorder: Color.white.opacity(0.08),
+                achievementLockedBackground: Color.black.opacity(0.08),
+                achievementLockedIconBackground: Color.white.opacity(0.04)
             )
         default:
             return Palette(
@@ -91,7 +95,9 @@ enum EchoTheme {
                 keycapBackground: Color(red: 230.0 / 255.0, green: 233.0 / 255.0, blue: 238.0 / 255.0),
                 keycapText: Color(red: 47.0 / 255.0, green: 54.0 / 255.0, blue: 66.0 / 255.0),
                 controlBackground: Color.white.opacity(0.78),
-                controlBorder: Color(red: 15.0 / 255.0, green: 23.0 / 255.0, blue: 42.0 / 255.0).opacity(0.08)
+                controlBorder: Color(red: 15.0 / 255.0, green: 23.0 / 255.0, blue: 42.0 / 255.0).opacity(0.08),
+                achievementLockedBackground: Color(red: 15.0 / 255.0, green: 23.0 / 255.0, blue: 42.0 / 255.0).opacity(0.018),
+                achievementLockedIconBackground: Color.white.opacity(0.04)
             )
         }
     }

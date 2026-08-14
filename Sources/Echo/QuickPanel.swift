@@ -629,10 +629,9 @@ struct QuickPanelView: View {
                 .font(.system(size: medal.icon.count > 2 ? 12 : 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(medal.unlocked ? tone.primary : palette.textTertiary)
                 .frame(width: 34, height: 34)
-                .background(medal.unlocked ? tone.soft : palette.controlBackground)
+                .background(medal.unlocked ? tone.soft : palette.achievementLockedIconBackground)
                 .overlay(Circle().stroke(medal.unlocked ? tone.primary.opacity(0.36) : palette.border, lineWidth: 1))
                 .clipShape(Circle())
-                .opacity(medal.unlocked ? 1 : 0.55)
 
             Text(medal.name)
                 .font(.system(size: 10.5))
@@ -643,9 +642,10 @@ struct QuickPanelView: View {
         }
         .padding(.vertical, 5)
         .frame(maxWidth: .infinity, minHeight: Layout.medalRowHeight, maxHeight: Layout.medalRowHeight)
-        .background(medal.unlocked ? palette.rowBackground : palette.controlBackground.opacity(0.55))
+        .background(medal.unlocked ? palette.rowBackground : palette.achievementLockedBackground)
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(palette.border, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .opacity(medal.unlocked ? 1 : 0.40)
         .help(medal.progress ?? medal.name)
     }
 

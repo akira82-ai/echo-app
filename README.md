@@ -50,7 +50,7 @@ open dist/Echo.app
 
 ### 方式二：下载 Release
 
-前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载当前版本 `2.0.0` 的 `Echo.dmg`。打开 DMG 后,将 Echo 拖进「应用程序」即可。
+前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载当前版本 `2.0.1` 的 `Echo.dmg`。打开 DMG 后,将 Echo 拖进「应用程序」即可。
 
 当前 Release 是本机开发验证包,使用 `Echo Self-Sign` 自签名,不是 Apple Developer ID 签名和 notarization 的正式发行包。因此,首次打开时 macOS 可能提示“无法验证开发者”或拦截应用:
 
