@@ -1,14 +1,16 @@
 <div align="center">
 
+如果 Echo 对你有帮助,欢迎点个 [⭐ Star](https://github.com/akira82-ai/echo-app) 支持一下。
+
 # Echo 📋
 
-**Mac 上的极简智能剪贴板。**
+**Mac 上的极简智能剪贴板。 ｜ 你复制过的,如回声般唤回。**
 
-你复制过的,如回声般唤回。Echo 常驻 Mac 菜单栏,自动记录文本、图片和文件,用一个快捷键快速找回并粘贴。
+Echo 常驻 Mac 菜单栏,自动记录文本、图片和文件,用一个快捷键快速找回并粘贴。
 
-自动记录最近 50 次复制,`⌘\` 呼出面板,**输入 1–5 直达当前页,6+ 或关键词进入搜索**。
+**智能剪贴 · 极速定位 · 智能检索 · 勋章成就**
 
-[下载](#-下载) · [特性](#-特性) · [上手](#-快速上手)
+[特性](#-特性) · [上手](#-快速上手)
 
 </div>
 
@@ -30,14 +32,13 @@
 - 🔒 **零权限优先** — 记录 + 热键无需任何权限;仅"自动粘贴"可选授权,关掉即纯零权限运行
 - ♻️ **本地优先** — 历史纯内存,勋章统计只保存本地计数和日期,数据不出本机
 
-## 📦 下载
+## 为什么选择 Echo
 
-前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载 `Echo.dmg`,打开后将 Echo 拖进「应用程序」即可。当前版本为 `2.0.0`。
-
-> 当前 Release 是本机开发验证包,使用 `Echo Self-Sign` 自签名。在其他 Mac 上可能仍被 Gatekeeper 拦截;面向公众正式发布时需要 Apple Developer ID 签名和 notarization。
-> 首次使用"自动粘贴"时,系统会弹辅助功能授权引导——授权后选中条目即自动粘;不授权也能用,只是需回目标 App 自己按 `⌘V`。
+![Echo 核心价值：更快找回、更少打扰、更长期陪伴](assets/echo-value-cards.svg)
 
 ## 🚀 快速上手
+
+### 方式一：下载源码并编译
 
 ```bash
 # 编译、打包、签名,并生成 dist/Echo.app 与 dist/Echo.dmg
@@ -46,6 +47,17 @@ open dist/Echo.app
 ```
 
 `build-app.sh` 会自动使用本机的 `Echo Self-Sign` 证书。后续优化后重复执行即可,不需要手工重新签名;请始终启动 `dist/Echo.app`,不要直接运行 `.build/.../Echo`。
+
+### 方式二：下载 Release
+
+前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载当前版本 `2.0.0` 的 `Echo.dmg`。打开 DMG 后,将 Echo 拖进「应用程序」即可。
+
+当前 Release 是本机开发验证包,使用 `Echo Self-Sign` 自签名,不是 Apple Developer ID 签名和 notarization 的正式发行包。因此,首次打开时 macOS 可能提示“无法验证开发者”或拦截应用:
+
+1. 在 Finder 中找到 Echo,按住 Control 点击,选择「打开」,再确认一次「打开」。
+2. 如果仍被拦截,打开「系统设置 → 隐私与安全性」,在安全提示旁点击「仍要打开」,然后重新启动 Echo。
+
+首次使用“自动粘贴”时,系统会弹出辅助功能授权引导。授权后选中条目即可自动粘贴;不授权也能用,只是需要回到目标 App 手动按 `⌘V`。
 
 ```
 ① 正常复制(⌘C / 右键 / 拖拽)   →  Echo 自动记录进历史
