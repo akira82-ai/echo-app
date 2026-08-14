@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
-  <title id="title">Echo 的核心价值</title>
-  <desc id="desc">更快找回、更少打扰、更长期陪伴</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="920" viewBox="0 0 1200 920" role="img" aria-labelledby="title desc">
+  <title id="title">Echo 的核心价值与产品定位</title>
+  <desc id="desc">Echo 的三项核心价值，以及与 Maccy、Paste、Raycast 的轻量定位对比</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#101823"/>
@@ -15,46 +15,125 @@
     </filter>
   </defs>
 
-  <rect width="1200" height="500" rx="24" fill="url(#bg)"/>
-  <rect x="1" y="1" width="1198" height="498" rx="23" fill="none" stroke="#273244"/>
+  <rect width="1200" height="920" rx="24" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1198" height="918" rx="23" fill="none" stroke="#273244"/>
 
   <text x="52" y="61" fill="#4aa8ff" font-family="SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700" letter-spacing="2.5">WHY ECHO</text>
   <text x="52" y="112" fill="#f2f5fa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="34" font-weight="700">一个更轻、更懂你的剪贴板</text>
   <text x="52" y="148" fill="#8e9bad" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="16">把复制过的内容留在手边，把复杂的设置留在身后。</text>
 
   <g filter="url(#shadow)">
-    <rect x="42" y="196" width="350" height="248" rx="14" fill="url(#card)" stroke="#2d3b4e"/>
-    <rect x="425" y="196" width="350" height="248" rx="14" fill="url(#card)" stroke="#2d3b4e"/>
-    <rect x="808" y="196" width="350" height="248" rx="14" fill="url(#card)" stroke="#2d3b4e"/>
+    <rect x="42" y="178" width="350" height="190" rx="14" fill="url(#card)" stroke="#2d3b4e"/>
+    <rect x="425" y="178" width="350" height="190" rx="14" fill="url(#card)" stroke="#2d3b4e"/>
+    <rect x="808" y="178" width="350" height="190" rx="14" fill="url(#card)" stroke="#2d3b4e"/>
   </g>
 
   <g>
-    <circle cx="82" cy="240" r="21" fill="#173653" stroke="#4aa8ff"/>
-    <text x="82" y="247" text-anchor="middle" fill="#75c2ff" font-family="SFMono-Regular,Menlo,monospace" font-size="18" font-weight="700">01</text>
-    <text x="120" y="238" fill="#4aa8ff" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="13" font-weight="700">更快找回</text>
-    <text x="64" y="300" fill="#f2f5fa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="24" font-weight="700">一眼找到，马上粘贴</text>
-    <text x="64" y="338" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="15">自动收录文本、图片和文件</text>
-    <text x="64" y="366" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="15">快速定位，不打断当前工作</text>
-    <path d="M64 402H164" stroke="#4aa8ff" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="82" cy="218" r="18" fill="#173653" stroke="#4aa8ff"/>
+    <text x="82" y="224" text-anchor="middle" fill="#75c2ff" font-family="SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700">01</text>
+    <text x="112" y="223" fill="#4aa8ff" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="13" font-weight="700">更快找回</text>
+    <text x="64" y="270" fill="#f2f5fa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="22" font-weight="700">一眼找到，马上粘贴</text>
+    <text x="64" y="306" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="14">自动收录文本、图片和文件</text>
+    <text x="64" y="330" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="14">快速定位，不打断当前工作</text>
+    <path d="M64 350H164" stroke="#4aa8ff" stroke-width="3" stroke-linecap="round"/>
   </g>
 
   <g>
-    <circle cx="465" cy="240" r="21" fill="#173b35" stroke="#34d399"/>
-    <text x="465" y="247" text-anchor="middle" fill="#71e8bc" font-family="SFMono-Regular,Menlo,monospace" font-size="18" font-weight="700">02</text>
-    <text x="503" y="238" fill="#34d399" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="13" font-weight="700">更少打扰</text>
-    <text x="447" y="300" fill="#f2f5fa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="24" font-weight="700">本地运行，安静可靠</text>
-    <text x="447" y="338" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="15">历史数据不写入云端</text>
-    <text x="447" y="366" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="15">不需要复杂权限和配置</text>
-    <path d="M447 402H547" stroke="#34d399" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="465" cy="218" r="18" fill="#173b35" stroke="#34d399"/>
+    <text x="465" y="224" text-anchor="middle" fill="#71e8bc" font-family="SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700">02</text>
+    <text x="495" y="223" fill="#34d399" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="13" font-weight="700">更少打扰</text>
+    <text x="447" y="270" fill="#f2f5fa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="22" font-weight="700">本地运行，安静可靠</text>
+    <text x="447" y="306" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="14">历史数据不写入云端</text>
+    <text x="447" y="330" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="14">不需要复杂权限和配置</text>
+    <path d="M447 350H547" stroke="#34d399" stroke-width="3" stroke-linecap="round"/>
   </g>
 
   <g>
-    <circle cx="848" cy="240" r="21" fill="#332b4e" stroke="#a78bfa"/>
-    <text x="848" y="247" text-anchor="middle" fill="#c5b4ff" font-family="SFMono-Regular,Menlo,monospace" font-size="18" font-weight="700">03</text>
-    <text x="886" y="238" fill="#a78bfa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="13" font-weight="700">更长期陪伴</text>
-    <text x="830" y="300" fill="#f2f5fa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="24" font-weight="700">用得越久，越有回声</text>
-    <text x="830" y="338" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="15">使用成就记录你的工作习惯</text>
-    <text x="830" y="366" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="15">轻量反馈，不制造压力</text>
-    <path d="M830 402H930" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="848" cy="218" r="18" fill="#332b4e" stroke="#a78bfa"/>
+    <text x="848" y="224" text-anchor="middle" fill="#c5b4ff" font-family="SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700">03</text>
+    <text x="878" y="223" fill="#a78bfa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="13" font-weight="700">更长期陪伴</text>
+    <text x="830" y="270" fill="#f2f5fa" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="22" font-weight="700">用得越久，越有回声</text>
+    <text x="830" y="306" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="14">使用成就记录你的工作习惯</text>
+    <text x="830" y="330" fill="#a7b2c1" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="14">轻量反馈，不制造压力</text>
+    <path d="M830 350H930" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
   </g>
+
+  <line x1="52" y1="402" x2="1148" y2="402" stroke="#273244"/>
+  <text x="52" y="446" fill="#4aa8ff" font-family="SFMono-Regular,Menlo,monospace" font-size="15" font-weight="700" letter-spacing="2">PRODUCT POSITIONING</text>
+  <text x="52" y="474" fill="#8e9bad" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="14">不比较功能数量，只看每个产品适合怎样的工作方式。</text>
+
+  <g filter="url(#shadow)">
+    <rect x="42" y="500" width="1116" height="348" rx="14" fill="#151b26" stroke="#2d3b4e"/>
+    <rect x="43" y="501" width="1114" height="52" rx="13" fill="#1b2432"/>
+  </g>
+
+  <g font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif">
+    <text x="66" y="534" fill="#8e9bad" font-size="13" font-weight="700">能力维度</text>
+    <rect x="222" y="500" width="240" height="348" fill="#4aa8ff" fill-opacity=".055"/>
+    <rect x="222" y="500" width="3" height="348" fill="#4aa8ff"/>
+    <rect x="223" y="501" width="238" height="52" fill="#21466d" fill-opacity=".65"/>
+    <text x="246" y="534" fill="#75c2ff" font-size="16" font-weight="800">ECHO</text>
+    <text x="486" y="534" fill="#d3d9e3" font-size="16" font-weight="800">MACCY</text>
+    <text x="726" y="534" fill="#d3d9e3" font-size="16" font-weight="800">PASTE</text>
+    <text x="956" y="534" fill="#d3d9e3" font-size="16" font-weight="800">RAYCAST</text>
+
+    <line x1="42" y1="553" x2="1158" y2="553" stroke="#2d3b4e"/>
+    <line x1="222" y1="500" x2="222" y2="848" stroke="#2d3b4e"/>
+    <line x1="462" y1="500" x2="462" y2="848" stroke="#2d3b4e"/>
+    <line x1="702" y1="500" x2="702" y2="848" stroke="#2d3b4e"/>
+    <line x1="932" y1="500" x2="932" y2="848" stroke="#2d3b4e"/>
+    <line x1="42" y1="595" x2="1158" y2="595" stroke="#273244"/>
+    <line x1="42" y1="637" x2="1158" y2="637" stroke="#273244"/>
+    <line x1="42" y1="679" x2="1158" y2="679" stroke="#273244"/>
+    <line x1="42" y1="721" x2="1158" y2="721" stroke="#273244"/>
+    <line x1="42" y1="763" x2="1158" y2="763" stroke="#273244"/>
+    <line x1="42" y1="805" x2="1158" y2="805" stroke="#273244"/>
+
+    <text x="66" y="580" fill="#f2f5fa" font-size="13" font-weight="700">产品定位</text>
+    <text x="246" y="580" fill="#75c2ff" font-size="13" font-weight="700">极简剪贴板</text>
+    <text x="486" y="580" fill="#a7b2c1" font-size="13">轻量历史</text>
+    <text x="726" y="580" fill="#a7b2c1" font-size="13">剪贴板工作台</text>
+    <text x="956" y="580" fill="#a7b2c1" font-size="13">综合启动器</text>
+
+    <text x="66" y="622" fill="#f2f5fa" font-size="13" font-weight="700">内容类型</text>
+    <text x="246" y="622" fill="#75c2ff" font-size="13" font-weight="700">文本 / 图片 / 文件</text>
+    <text x="486" y="622" fill="#a7b2c1" font-size="13">文本 / 图片</text>
+    <text x="726" y="622" fill="#a7b2c1" font-size="13">文本 / 图片 / 文件</text>
+    <text x="956" y="622" fill="#a7b2c1" font-size="13">多内容入口</text>
+
+    <text x="66" y="664" fill="#f2f5fa" font-size="13" font-weight="700">历史策略</text>
+    <rect x="226" y="638" width="232" height="40" rx="5" fill="#1a4168" fill-opacity=".58"/>
+    <text x="246" y="664" fill="#75c2ff" font-size="13" font-weight="700">重启清空，成就保留</text>
+    <text x="486" y="664" fill="#a7b2c1" font-size="13">本地历史</text>
+    <text x="726" y="664" fill="#a7b2c1" font-size="13">长期整理</text>
+    <text x="956" y="664" fill="#a7b2c1" font-size="13">按产品配置</text>
+
+    <text x="66" y="706" fill="#f2f5fa" font-size="13" font-weight="700">找回方式</text>
+    <rect x="226" y="680" width="232" height="40" rx="5" fill="#1a4168" fill-opacity=".58"/>
+    <text x="246" y="706" fill="#75c2ff" font-size="13" font-weight="700">数字直达 + 智能检索</text>
+    <text x="486" y="706" fill="#a7b2c1" font-size="13">搜索历史</text>
+    <text x="726" y="706" fill="#a7b2c1" font-size="13">搜索 + 组织</text>
+    <text x="956" y="706" fill="#a7b2c1" font-size="13">启动器搜索</text>
+
+    <text x="66" y="748" fill="#f2f5fa" font-size="13" font-weight="700">粘贴体验</text>
+    <text x="246" y="748" fill="#75c2ff" font-size="13" font-weight="700">自动粘贴，无权限可手动</text>
+    <text x="486" y="748" fill="#a7b2c1" font-size="13">快捷键粘贴</text>
+    <text x="726" y="748" fill="#a7b2c1" font-size="13">直接粘贴 + 格式处理</text>
+    <text x="956" y="748" fill="#a7b2c1" font-size="13">动作 + 粘贴</text>
+
+    <text x="66" y="790" fill="#f2f5fa" font-size="13" font-weight="700">长期反馈</text>
+    <rect x="226" y="764" width="232" height="40" rx="5" fill="#332b4e" fill-opacity=".72" stroke="#8f78d0" stroke-opacity=".65"/>
+    <text x="246" y="790" fill="#c5b4ff" font-size="13" font-weight="700">勋章系统</text>
+    <text x="486" y="790" fill="#a7b2c1" font-size="13">—</text>
+    <text x="726" y="790" fill="#a7b2c1" font-size="13">—</text>
+    <text x="956" y="790" fill="#a7b2c1" font-size="13">—</text>
+
+    <text x="66" y="832" fill="#f2f5fa" font-size="13" font-weight="700">适合谁</text>
+    <text x="246" y="832" fill="#75c2ff" font-size="13" font-weight="700">想快、想简洁</text>
+    <text x="486" y="832" fill="#a7b2c1" font-size="13">想要轻量历史</text>
+    <text x="726" y="832" fill="#a7b2c1" font-size="13">想长期组织</text>
+    <text x="956" y="832" fill="#a7b2c1" font-size="13">想扩展工作流</text>
+  </g>
+
+  <text x="52" y="886" fill="#8e9bad" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif" font-size="13">Echo 适合：想快速找回内容，又不想维护复杂系统的人。</text>
 </svg>

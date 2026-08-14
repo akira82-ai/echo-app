@@ -34,7 +34,7 @@ Echo 常驻 Mac 菜单栏,自动记录文本、图片和文件,用一个快捷�
 
 ## 为什么选择 Echo
 
-![Echo 核心价值：更快找回、更少打扰、更长期陪伴](assets/echo-value-cards.svg)
+![Echo 核心价值与产品定位对比](assets/echo-value-cards.svg)
 
 ## 🚀 快速上手
 
