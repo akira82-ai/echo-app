@@ -5,7 +5,7 @@ import CryptoKit
 /// 剪贴板历史项的统一模型。
 ///
 /// 三种来源用枚举贯穿整条链路(读取 → 存储 → 粘贴),避免在各处用字符串判断类型:
-/// - `.text`   普通 App 中选中的文本(统一纯文本,主动丢弃 RTF/HTML)
+/// - `.text`   普通 App 中选中的文本(保留原始纯文本、HTML、RTF、URL表示)
 /// - `.image`  截图、浏览器复制的图片像素数据(原图落盘,内存只持缩略图引用)
 /// - `.files`  Finder 中复制的本地文件(零拷贝,只存 URL 路径)
 ///
@@ -13,6 +13,7 @@ import CryptoKit
 /// - `id` 用 UUID,作为 SwiftUI 列表的稳定身份
 /// - 文本/文件使用精确内容标识进行全历史去重;图片只在连续重复时去重
 /// - `ImageRef` 只是「磁盘引用 + 内存缩略图」,不持有原图数据,内存占用恒定
+/// - 文本同时保留原始格式与规范化预览文本,支持原格式/纯文本两种粘贴
 struct ClipEntry: Identifiable {
     let id: UUID
     let kind: Kind
@@ -25,8 +26,8 @@ struct ClipEntry: Identifiable {
     }
 
     enum Kind {
-        /// 纯文本(已 trim)
-        case text(String)
+        /// 文本及其标准剪贴板表示(原始纯文本、HTML、RTF、URL等)
+        case text(TextPayload)
         /// 图片(原图 PNG 在磁盘,内存只持缩略图)
         case image(ImageRef)
         /// 本地文件 URL(一个或多个,零拷贝)
@@ -36,10 +37,11 @@ struct ClipEntry: Identifiable {
     /// 用于现有连续重复判断的 key。图片也使用这个 key。
     var deduplicationKey: String {
         switch kind {
-        case .text(let body):
+        case .text(let payload):
             // 文本去重 key 用内容前缀 + 长度,避免超长文本拼 key 浪费内存
             // (剪贴板文本通常不会到需要哈希的程度,直接用内容即可;
             //  但为防御极端长文本,取前 4096 字符 + 全长作为指纹)
+            let body = payload.normalizedText
             let prefix = body.prefix(4096)
             return "text:\(prefix)|len:\(body.count)"
         case .image(let ref):
@@ -56,8 +58,8 @@ struct ClipEntry: Identifiable {
     /// 文本使用完整内容哈希,避免仅比较前缀导致不同内容误判为重复。
     var historicalDeduplicationKey: String? {
         switch kind {
-        case .text(let body):
-            let hash = SHA256.hash(data: Data(body.utf8))
+        case .text(let payload):
+            let hash = SHA256.hash(data: Data(payload.normalizedText.utf8))
             let hex = hash.map { String(format: "%02x", $0) }.joined()
             return "text:\(hex)"
         case .files(let urls):
@@ -70,6 +72,26 @@ struct ClipEntry: Identifiable {
             return nil
         }
     }
+}
+
+/// 文本条目的双轨数据:
+/// - `rawText` 用于纯文本粘贴,保留原始空格、换行和缩进
+/// - `representations` 用于原格式粘贴,由剪贴板读取时一次性落入内存
+/// - `normalizedText` 只用于列表预览、搜索和去重,不参与实际粘贴
+struct TextPayload {
+    let rawText: String
+    let representations: [PasteboardRepresentation]
+
+    var normalizedText: String {
+        rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+/// 剪贴板中可恢复的一种标准数据表示。
+/// 只持有类型标识与数据,不依赖 NSPasteboard 对象的生命周期。
+struct PasteboardRepresentation {
+    let typeIdentifier: String
+    let data: Data
 }
 
 /// 图片的磁盘引用 + 内存缩略图。

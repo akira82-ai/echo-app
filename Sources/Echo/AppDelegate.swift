@@ -129,8 +129,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// 显示历史选择面板(菜单点击与热键共用入口)。
     private func showHistoryPanel() {
-        QuickPanelController.shared.onSelected = { entry, context in
-            Paster.shared.paste(entry, context: context, targetApp: QuickPanelController.shared.frontmostAppAtShowTime)
+        QuickPanelController.shared.onSelected = { entry, context, format in
+            Paster.shared.paste(
+                entry,
+                format: format,
+                context: context,
+                targetApp: QuickPanelController.shared.frontmostAppAtShowTime
+            )
         }
         QuickPanelController.shared.show()
     }

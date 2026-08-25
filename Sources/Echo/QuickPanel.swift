@@ -24,7 +24,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     }
 
     /// 选中某条历史项时调用(主线程)。
-    var onSelected: ((ClipEntry, AchievementStore.SelectionContext) -> Void)?
+    var onSelected: ((ClipEntry, AchievementStore.SelectionContext, Paster.PasteFormat) -> Void)?
 
     /// 承载 SwiftUI 内容的非激活式浮层
     private var panel: NSPanel?
@@ -59,7 +59,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         viewModel.configure(entries: entries)
         let viewModel = self.viewModel
         let hosting = NSHostingController(rootView: QuickPanelView(viewModel: viewModel) { [weak self] entry in
-            self?.handleSelected(entry, source: .mouse)
+            self?.handleSelected(entry, source: .mouse, format: .original)
         })
 
         let panel = Self.makePanel(contentViewController: hosting)
@@ -126,7 +126,10 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             return nil
         case 36, 76:  // Return / Enter
             if let entry = viewModel.selectedEntry() {
-                handleSelected(entry, source: .keyboard)
+                let format: Paster.PasteFormat = event.modifierFlags.contains(.option)
+                    ? .plainText
+                    : .original
+                handleSelected(entry, source: .keyboard, format: format)
             }
             return nil
         case 51:  // ⌫ Backspace
@@ -150,10 +153,14 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     // MARK: - 选中处理
 
-    private func handleSelected(_ entry: ClipEntry, source: AchievementStore.SelectionSource) {
+    private func handleSelected(
+        _ entry: ClipEntry,
+        source: AchievementStore.SelectionSource,
+        format: Paster.PasteFormat
+    ) {
         let context = viewModel.selectionContext(source: source)
         hide()
-        onSelected?(entry, context)
+        onSelected?(entry, context, format)
     }
 
     // MARK: - NSWindowDelegate
@@ -350,8 +357,8 @@ final class QuickPanelViewModel: ObservableObject {
         let needle = q.lowercased()
         displayed = allEntries.enumerated().compactMap { idx, e in
             switch e.kind {
-            case .text(let body):
-                return body.lowercased().contains(needle)
+            case .text(let payload):
+                return payload.normalizedText.lowercased().contains(needle)
                     ? DisplayItem(id: e.id, displayNumber: idx + 1, entry: e) : nil
             case .files(let urls):
                 let names = urls.map { $0.lastPathComponent }.joined(separator: " ").lowercased()
@@ -425,8 +432,8 @@ final class QuickPanelViewModel: ObservableObject {
         let needle = q.lowercased()
         displayed = allEntries.enumerated().compactMap { idx, e in
             switch e.kind {
-            case .text(let body):
-                return body.lowercased().contains(needle)
+            case .text(let payload):
+                return payload.normalizedText.lowercased().contains(needle)
                     ? DisplayItem(id: e.id, displayNumber: idx + 1, entry: e) : nil
             case .files(let urls):
                 let names = urls.map { $0.lastPathComponent }.joined(separator: " ").lowercased()
@@ -779,8 +786,8 @@ struct QuickPanelView: View {
     @ViewBuilder
     private func previewContent(for kind: ClipEntry.Kind) -> some View {
         switch kind {
-        case .text(let body):
-            Text(body.previewString(maxLines: 1))
+        case .text(let payload):
+            Text(payload.normalizedText.previewString(maxLines: 1))
                 .font(.system(size: 13.5))
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -848,7 +855,7 @@ struct QuickPanelView: View {
             HStack(spacing: 14) {
                 kbdHint("↑↓", "选择")
                 kbdHint("←→", "翻页")
-                kbdHint("↵", "粘贴")
+                kbdHint("↵ / ⌥↵", "原格式 / 纯文本")
                 kbdHint("⌘⌫", "删除")
                 kbdHint("esc", "关闭")
             }

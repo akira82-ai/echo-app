@@ -17,6 +17,11 @@ import CoreGraphics
 final class Paster {
     static let shared = Paster()
 
+    enum PasteFormat {
+        case original
+        case plainText
+    }
+
     private init() {}
 
     // MARK: - 执行粘贴
@@ -26,20 +31,30 @@ final class Paster {
     ///   - entry: 用户选中的条目
     ///   - targetApp: 面板显示前的最前台 App,粘贴时需激活它让 ⌘V 送达
     /// - Note: 在主线程调用(QuickPanel 选中回调已在主线程)。
-    func paste(_ entry: ClipEntry, context: AchievementStore.SelectionContext, targetApp: NSRunningApplication? = nil) {
+    func paste(
+        _ entry: ClipEntry,
+        format: PasteFormat = .original,
+        context: AchievementStore.SelectionContext,
+        targetApp: NSRunningApplication? = nil
+    ) {
         // 等面板完全关闭,目标 App 恢复 key 状态
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(80)) { [weak self] in
-            self?.performPaste(entry, context: context, targetApp: targetApp)
+            self?.performPaste(entry, format: format, context: context, targetApp: targetApp)
         }
     }
 
     /// 实际执行:写剪贴板 → 激活目标 App → 模拟 ⌘V。
-    private func performPaste(_ entry: ClipEntry, context: AchievementStore.SelectionContext, targetApp: NSRunningApplication?) {
+    private func performPaste(
+        _ entry: ClipEntry,
+        format: PasteFormat,
+        context: AchievementStore.SelectionContext,
+        targetApp: NSRunningApplication?
+    ) {
         // 抑制 watcher 把这次写回误判为新复制
         ClipboardWatcher.shared.suppressNext()
 
         // 写回剪贴板
-        guard writeBack(entry) else {
+        guard writeBack(entry, format: format) else {
             ClipboardWatcher.shared.cancelSuppression()
             return
         }
@@ -67,13 +82,30 @@ final class Paster {
     // MARK: - 写回剪贴板
 
     /// 按类型把内容写回 NSPasteboard.general。
-    private func writeBack(_ entry: ClipEntry) -> Bool {
+    private func writeBack(_ entry: ClipEntry, format: PasteFormat) -> Bool {
         let pb = NSPasteboard.general
         pb.clearContents()
 
         switch entry.kind {
-        case .text(let body):
-            return pb.setString(body, forType: .string)
+        case .text(let payload):
+            switch format {
+            case .plainText:
+                // 纯文本模式仍保留原始空格、换行和缩进,只去掉富文本表示。
+                return pb.setString(payload.rawText, forType: .string)
+            case .original:
+                var wroteAny = false
+                for representation in payload.representations {
+                    let type = NSPasteboard.PasteboardType(rawValue: representation.typeIdentifier)
+                    wroteAny = pb.setData(representation.data, forType: type) || wroteAny
+                }
+                // 旧条目或异常来源可能没有格式数据,必须保证仍能退回纯文本。
+                if !payload.representations.contains(where: {
+                    $0.typeIdentifier == NSPasteboard.PasteboardType.string.rawValue
+                }) {
+                    wroteAny = pb.setString(payload.rawText, forType: .string) || wroteAny
+                }
+                return wroteAny
+            }
 
         case .image(let ref):
             // 从磁盘按需读回原图(原图不常驻内存)
