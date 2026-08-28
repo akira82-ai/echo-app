@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import QuartzCore
 
 /// QuickPanel:Spotlight 风格的剪贴板历史选择浮层。
 ///
@@ -75,7 +76,9 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         panel.setContentSize(NSSize(width: Layout.panelWidth, height: Layout.panelHeight))
         centerOnScreen(panel)
+        preparePanelEntrance(panel)
         panel.makeKeyAndOrderFront(nil)
+        animatePanelEntrance(panel)
     }
 
     /// 隐藏面板。
@@ -225,6 +228,29 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         let x = desiredCenterX - panelSize.width / 2
         let y = desiredCenterY - panelSize.height / 2
         panel.setFrameOrigin(NSPoint(x: x, y: y))
+    }
+
+    /// Prepares and plays the short drop-in used when the panel appears.
+    private func preparePanelEntrance(_ panel: NSPanel) {
+        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
+            panel.alphaValue = 1
+            return
+        }
+
+        panel.alphaValue = 0
+        panel.setFrameOrigin(NSPoint(x: panel.frame.origin.x, y: panel.frame.origin.y + 8))
+    }
+
+    private func animatePanelEntrance(_ panel: NSPanel) {
+        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
+
+        let finalOrigin = NSPoint(x: panel.frame.origin.x, y: panel.frame.origin.y - 8)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.20
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().setFrameOrigin(finalOrigin)
+            panel.animator().alphaValue = 1
+        }
     }
 }
 
@@ -512,6 +538,8 @@ struct QuickPanelView: View {
     @ObservedObject var viewModel: QuickPanelViewModel
     let onSelected: (ClipEntry) -> Void
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hasAppeared = false
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
@@ -556,6 +584,17 @@ struct QuickPanelView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: AchievementStore.didChangeNotification)) { _ in
             viewModel.refreshMedals()
+        }
+        .onAppear {
+            if reduceMotion {
+                hasAppeared = true
+            } else {
+                DispatchQueue.main.async {
+                    withAnimation(.easeOut(duration: 0.22)) {
+                        hasAppeared = true
+                    }
+                }
+            }
         }
         // 不在 body 上做 clipShape/overlay/shadow:
         // 系统标题栏(.titled)由 NSPanel 管理,若这里再裁圆角会把标题栏和交通灯一起裁掉。
@@ -686,6 +725,12 @@ struct QuickPanelView: View {
                         .onTapGesture {
                             onSelected(item.entry)
                         }
+                        .opacity(reduceMotion || hasAppeared ? 1 : 0)
+                        .offset(x: reduceMotion || hasAppeared ? 0 : -8)
+                        .animation(
+                            reduceMotion ? nil : .easeOut(duration: 0.22).delay(Double(slot) * 0.025),
+                            value: hasAppeared
+                        )
                 } else {
                     emptySlot(slot: slot)
                 }
