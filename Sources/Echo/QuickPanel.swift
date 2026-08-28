@@ -14,6 +14,7 @@ import QuartzCore
 /// - 输入 1–5 → 视为当前页编号,回车直达该条
 /// - 输入 6 及以上或含非数字字符 → 视为搜索词,对文本/文件做子串过滤(图片不参与搜索)
 /// - 不输入 → 方向键浏览,默认高亮第 1 条
+/// - 按住 Command 点击或回车 → 将当前文本加入/移出批次;松开后回车合并批次并粘贴
 ///
 /// 选中后通过 onSelected 回调把 entry 交给 Paster(Stage 4)。
 final class QuickPanelController: NSObject, NSWindowDelegate {
@@ -26,6 +27,8 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 选中某条历史项时调用(主线程)。
     var onSelected: ((ClipEntry, AchievementStore.SelectionContext, Paster.PasteFormat) -> Void)?
+    /// 选中一批文本历史项时调用(主线程)。
+    var onBatchSelected: (([ClipEntry], AchievementStore.SelectionContext) -> Void)?
 
     /// 承载 SwiftUI 内容的非激活式浮层
     private var panel: NSPanel?
@@ -33,7 +36,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     private var currentEntries: [ClipEntry] = []
     /// SwiftUI 视图模型(驱动列表与选中状态)
     private let viewModel = QuickPanelViewModel()
-    /// 本地键盘事件监听器(面板显示期间接收方向键/回车/Esc)
+    /// 本地键盘事件监听器(面板显示期间接收方向键/回车/Esc/修饰键状态)
     private var keyMonitor: Any?
 
     private override init() {
@@ -67,7 +70,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         panel.delegate = self
         self.panel = panel
 
-        // 装本地键盘监听器:方向键/回车/Esc
+        // 装本地键盘监听器:方向键/回车/Esc/Command 修饰键状态
         installKeyMonitor()
 
         // 居中并显示
@@ -95,16 +98,20 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     // MARK: - 键盘监听
 
-    /// 装本地键盘事件监听器,处理方向键导航 / 回车确认 / Esc 取消。
+    /// 装本地键盘事件监听器,处理方向键导航 / 回车确认 / Esc 取消与 Command 状态。
     /// 用 NSEvent.addLocalMonitorForEvents(兼容 macOS 13,替代 SwiftUI onKeyPress 的 macOS 14 要求)。
     private func installKeyMonitor() {
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
             self?.handleKeyEvent(event) ?? event
         }
     }
 
     /// 处理一次按键。返回 nil 表示吞掉该事件,返回 event 表示放行。
     private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
+        if event.type == .flagsChanged {
+            viewModel.setCommandPressed(event.modifierFlags.contains(.command))
+            return event
+        }
         if viewModel.showsAchievements {
             switch event.keyCode {
             case 53: // Esc
@@ -128,6 +135,16 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             viewModel.moveNextPage()
             return nil
         case 36, 76:  // Return / Enter
+            if event.modifierFlags.contains(.command) {
+                viewModel.toggleBatchSelection()
+                return nil
+            }
+            if let entries = viewModel.batchEntries(), !entries.isEmpty {
+                let context = viewModel.selectionContext(source: .keyboard)
+                hide()
+                onBatchSelected?(entries, context)
+                return nil
+            }
             if let entry = viewModel.selectedEntry() {
                 let format: Paster.PasteFormat = event.modifierFlags.contains(.option)
                     ? .plainText
@@ -291,6 +308,15 @@ final class QuickPanelViewModel: ObservableObject {
     /// 勋章墙快照。统计变化时由视图刷新。
     @Published private(set) var medals: [AchievementStore.Medal] = AchievementStore.shared.medals()
 
+    /// 当前面板内待合并粘贴的文本条目,按加入顺序保存。
+    @Published private(set) var batchSelectionIDs: [UUID] = []
+
+    /// 最近一次批次操作提示。
+    @Published private(set) var batchNotice: String?
+
+    /// Command 是否处于按下状态,仅用于即时界面反馈。
+    @Published private(set) var isCommandPressed = false
+
     /// configure 进行中标志(禁止 query didSet 干扰)
     private var isConfiguring = false
 
@@ -342,6 +368,9 @@ final class QuickPanelViewModel: ObservableObject {
         currentPage = 0
         selectedDisplayIndex = 1
         showsAchievements = false
+        batchSelectionIDs = []
+        batchNotice = nil
+        isCommandPressed = false
     }
 
     func toggleAchievements() {
@@ -354,6 +383,45 @@ final class QuickPanelViewModel: ObservableObject {
 
     func refreshMedals() {
         medals = AchievementStore.shared.medals()
+    }
+
+    func setCommandPressed(_ pressed: Bool) {
+        guard isCommandPressed != pressed else { return }
+        isCommandPressed = pressed
+    }
+
+    /// 将指定文本加入批次,再次执行则移出批次。
+    /// 批次只允许文本,并保持用户加入时的顺序。
+    func toggleBatchSelection() {
+        guard let entry = selectedEntry() else { return }
+        toggleBatchSelection(for: entry)
+    }
+
+    func toggleBatchSelection(for entry: ClipEntry) {
+        guard case .text = entry.kind else {
+            batchNotice = "批量粘贴仅支持文本"
+            return
+        }
+
+        batchNotice = nil
+        if let index = batchSelectionIDs.firstIndex(of: entry.id) {
+            batchSelectionIDs.remove(at: index)
+        } else {
+            batchSelectionIDs.append(entry.id)
+        }
+    }
+
+    /// 返回当前批次中的文本条目,顺序与加入顺序一致。
+    func batchEntries() -> [ClipEntry]? {
+        let entriesByID = Dictionary(uniqueKeysWithValues: allEntries.map { ($0.id, $0) })
+        let entries = batchSelectionIDs.compactMap { entriesByID[$0] }
+        return entries.isEmpty ? nil : entries
+    }
+
+    /// 返回条目在批次中的顺序编号,用于列表反馈。
+    func batchOrder(for id: UUID) -> Int? {
+        guard let index = batchSelectionIDs.firstIndex(of: id) else { return nil }
+        return index + 1
     }
 
     /// 应用过滤:1...pageSize→当前页页内编号定位;其余非空输入→子串搜索;空→全部。
@@ -420,6 +488,7 @@ final class QuickPanelViewModel: ObservableObject {
         let deletedLocalIndex = selectedDisplayIndex
 
         // 1. 从本地快照移除(立即刷新 UI,不等 HistoryStore 的异步回调)
+        batchSelectionIDs.removeAll { $0 == entry.id }
         allEntries.removeAll { $0.id == entry.id }
         // 2. 通知存储层删盘(图片)/ 清去重锚点
         HistoryStore.shared.remove(id: entry.id)
@@ -606,18 +675,39 @@ struct QuickPanelView: View {
 
     private var searchBar: some View {
         HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(palette.textTertiary)
+            Image(systemName: viewModel.isCommandPressed ? "checkmark.circle.fill" : "magnifyingglass")
+                .foregroundStyle(viewModel.isCommandPressed ? palette.accent : palette.textTertiary)
                 .font(.system(size: 16))
             TextField("输入 1-5 直达本页 / 关键词搜索", text: $viewModel.query)
                 .textFieldStyle(.plain)
                 .font(.system(size: 18))
                 .focused($fieldFocused)
                 .disabled(viewModel.showsAchievements)
+            if viewModel.isCommandPressed && !viewModel.showsAchievements {
+                HStack(spacing: 4) {
+                    Image(systemName: "command")
+                    Text("多选")
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(palette.accent)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(palette.accentSoft)
+                .clipShape(Capsule())
+                .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.94)))
+            }
         }
         // 设计稿:.qp-search padding:14px 18px + border-bottom
         .padding(.horizontal, 18)
         .frame(height: Layout.searchHeight)
+        .background(viewModel.isCommandPressed ? palette.accentSoft.opacity(0.42) : .clear)
+        .overlay(
+            Rectangle()
+                .fill(viewModel.isCommandPressed ? palette.accent.opacity(0.42) : palette.border)
+                .frame(height: 1),
+            alignment: .bottom
+        )
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: viewModel.isCommandPressed)
         .onAppear { fieldFocused = !viewModel.showsAchievements }
         .onChange(of: viewModel.showsAchievements) { showsAchievements in
             fieldFocused = !showsAchievements
@@ -712,7 +802,8 @@ struct QuickPanelView: View {
                 if slot < viewModel.pageItems.count {
                     let item = viewModel.pageItems[slot]
                     let isSelected = viewModel.selectedDisplayIndex == item.displayNumber
-                    itemRow(item)
+                    let batchOrder = viewModel.batchOrder(for: item.id)
+                    itemRow(item, batchOrder: batchOrder)
                         // 设计稿:.qp-item.selected = accent-soft(0.14) + 1px border rgba(accent,0.3)
                         .background {
                             if isSelected {
@@ -723,11 +814,22 @@ struct QuickPanelView: View {
                                             .stroke(palette.accent.opacity(0.3), lineWidth: 1)
                                     )
                                     .matchedGeometryEffect(id: "selected-row-background", in: selectionNamespace)
+                            } else if batchOrder != nil {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(palette.accentSoft.opacity(0.55))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(palette.accent.opacity(0.18), lineWidth: 1)
+                                    )
                             }
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            onSelected(item.entry)
+                            if NSEvent.modifierFlags.contains(.command) {
+                                viewModel.toggleBatchSelection(for: item.entry)
+                            } else {
+                                onSelected(item.entry)
+                            }
                         }
                         .animation(
                             reduceMotion ? nil : .easeOut(duration: 0.12),
@@ -820,7 +922,7 @@ struct QuickPanelView: View {
     /// 单行:编号 + 内容预览 + 类型标签。
     /// 设计稿 .qp-item:height:56px + box-sizing:border-box + padding:11px 14px + gap:14px。
     @ViewBuilder
-    private func itemRow(_ item: QuickPanelViewModel.DisplayItem) -> some View {
+    private func itemRow(_ item: QuickPanelViewModel.DisplayItem, batchOrder: Int?) -> some View {
         HStack(spacing: 14) {
             Text("\(item.displayNumber)")
                 .font(.system(size: 12, design: .monospaced))
@@ -828,7 +930,21 @@ struct QuickPanelView: View {
                 .frame(width: 28, alignment: .trailing)
             previewContent(for: item.entry.kind)
             Spacer(minLength: 0)
-            typeTag(for: item.entry.kind)
+            if let batchOrder {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 11))
+                    Text("批次 \(batchOrder)")
+                }
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(palette.accent)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 2)
+                .background(palette.accentSoft)
+                .cornerRadius(5)
+            } else {
+                typeTag(for: item.entry.kind)
+            }
         }
         .padding(.horizontal, 14)
         .frame(maxWidth: .infinity, minHeight: Layout.rowHeight, maxHeight: Layout.rowHeight, alignment: .leading)
@@ -905,14 +1021,8 @@ struct QuickPanelView: View {
         HStack(alignment: .center) {
             statusSummary
             Spacer()
-            HStack(spacing: 14) {
-                kbdHint("↑↓", "选择")
-                kbdHint("←→", "翻页")
-                kbdHint("↵ / ⌥↵", "原格式 / 纯文本")
-                kbdHint("⌘⌫", "删除")
-                kbdHint("esc", "关闭")
-            }
-            .font(.system(size: 11))
+            shortcutHints
+            .font(.system(size: 10.5))
             .foregroundStyle(palette.textTertiary)
             .frame(height: Layout.footerContentHeight, alignment: .center)
         }
@@ -935,12 +1045,53 @@ struct QuickPanelView: View {
             }
             .buttonStyle(.plain)
             .help(viewModel.showsAchievements ? "返回历史" : "查看使用成就")
-            Text("已记录 \(viewModel.allEntries.count) / \(AppSettings.shared.historyLimit) 条")
+            Text(statusText)
                 .font(.system(size: 11))
                 .foregroundStyle(palette.textTertiary)
                 .lineLimit(1)
         }
         .frame(height: Layout.footerContentHeight, alignment: .center)
+    }
+
+    private var statusText: String {
+        if viewModel.isCommandPressed {
+            return "⌘ 多选模式"
+        }
+        if let notice = viewModel.batchNotice {
+            return notice
+        }
+        if !viewModel.batchSelectionIDs.isEmpty {
+            return "已选 \(viewModel.batchSelectionIDs.count) 条文本 · 按 ↵ 合并粘贴"
+        }
+        return "已记录 \(viewModel.allEntries.count) / \(AppSettings.shared.historyLimit) 条"
+    }
+
+    @ViewBuilder
+    private var shortcutHints: some View {
+        if viewModel.isCommandPressed {
+            HStack(spacing: 8) {
+                kbdHint("↑↓", "选择")
+                kbdHint("←→", "翻页")
+                kbdHint("⌘↵ / ⌘点击", "加入/移出")
+            }
+        } else if viewModel.batchSelectionIDs.isEmpty {
+            HStack(spacing: 8) {
+                kbdHint("↑↓", "选择")
+                kbdHint("←→", "翻页")
+                kbdHint("↵ / ⌥↵", "粘贴")
+                kbdHint("⌘↵ / ⌘点击", "加入批次")
+                kbdHint("esc", "关闭")
+            }
+        } else {
+            HStack(spacing: 8) {
+                kbdHint("↑↓", "选择")
+                kbdHint("←→", "翻页")
+                kbdHint("⌘↵ / ⌘点击", "加入/移出")
+                kbdHint("↵", "合并粘贴")
+                kbdHint("⌘⌫", "删除")
+                kbdHint("esc", "关闭")
+            }
+        }
     }
 
     /// 按键提示。设计稿 .kbd:panel-solid 深色实底 + border-strong + 圆角4 + text-dim 亮字。

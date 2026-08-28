@@ -37,16 +37,54 @@ final class Paster {
         context: AchievementStore.SelectionContext,
         targetApp: NSRunningApplication? = nil
     ) {
-        // 等面板完全关闭,目标 App 恢复 key 状态
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(80)) { [weak self] in
-            self?.performPaste(entry, format: format, context: context, targetApp: targetApp)
+        schedulePaste(
+            writeBack: { [weak self] in
+                self?.writeBack(entry, format: format) ?? false
+            },
+            context: context,
+            targetApp: targetApp
+        )
+    }
+
+    /// 将多条文本按加入顺序用换行合并,再作为一次纯文本粘贴。
+    func pasteTextBatch(
+        _ entries: [ClipEntry],
+        context: AchievementStore.SelectionContext,
+        targetApp: NSRunningApplication? = nil
+    ) {
+        let texts = entries.compactMap { entry -> String? in
+            guard case .text(let payload) = entry.kind else { return nil }
+            return payload.rawText
         }
+        guard texts.count == entries.count, !texts.isEmpty else {
+            NSLog("[Echo] 文本批次粘贴失败:批次包含非文本或为空")
+            return
+        }
+
+        let mergedText = texts.joined(separator: "\n")
+        schedulePaste(
+            writeBack: { [weak self] in
+                self?.writePlainText(mergedText) ?? false
+            },
+            context: context,
+            targetApp: targetApp
+        )
     }
 
     /// 实际执行:写剪贴板 → 激活目标 App → 模拟 ⌘V。
+    private func schedulePaste(
+        writeBack: @escaping () -> Bool,
+        context: AchievementStore.SelectionContext,
+        targetApp: NSRunningApplication?
+    ) {
+        // 等面板完全关闭,目标 App 恢复 key
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(80)) { [weak self] in
+            self?.performPaste(writeBack: writeBack, context: context, targetApp: targetApp)
+        }
+    }
+
     private func performPaste(
-        _ entry: ClipEntry,
-        format: PasteFormat,
+        writeBack: () -> Bool,
         context: AchievementStore.SelectionContext,
         targetApp: NSRunningApplication?
     ) {
@@ -54,7 +92,7 @@ final class Paster {
         ClipboardWatcher.shared.suppressNext()
 
         // 写回剪贴板
-        guard writeBack(entry, format: format) else {
+        guard writeBack() else {
             ClipboardWatcher.shared.cancelSuppression()
             return
         }
@@ -80,6 +118,12 @@ final class Paster {
     }
 
     // MARK: - 写回剪贴板
+
+    private func writePlainText(_ text: String) -> Bool {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        return pb.setString(text, forType: .string)
+    }
 
     /// 按类型把内容写回 NSPasteboard.general。
     private func writeBack(_ entry: ClipEntry, format: PasteFormat) -> Bool {

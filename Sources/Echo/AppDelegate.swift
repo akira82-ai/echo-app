@@ -137,6 +137,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 targetApp: QuickPanelController.shared.frontmostAppAtShowTime
             )
         }
+        QuickPanelController.shared.onBatchSelected = { entries, context in
+            Paster.shared.pasteTextBatch(
+                entries,
+                context: context,
+                targetApp: QuickPanelController.shared.frontmostAppAtShowTime
+            )
+        }
         QuickPanelController.shared.show()
     }
 
