@@ -539,6 +539,7 @@ struct QuickPanelView: View {
     let onSelected: (ClipEntry) -> Void
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var selectionNamespace
     @State private var hasAppeared = false
 
     private enum Layout {
@@ -713,18 +714,25 @@ struct QuickPanelView: View {
                     let isSelected = viewModel.selectedDisplayIndex == item.displayNumber
                     itemRow(item)
                         // 设计稿:.qp-item.selected = accent-soft(0.14) + 1px border rgba(accent,0.3)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(palette.accentSoft.opacity(isSelected ? 1 : 0))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(palette.accent.opacity(isSelected ? 0.3 : 0), lineWidth: 1)
-                        )
+                        .background {
+                            if isSelected {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(palette.accentSoft)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(palette.accent.opacity(0.3), lineWidth: 1)
+                                    )
+                                    .matchedGeometryEffect(id: "selected-row-background", in: selectionNamespace)
+                            }
+                        }
                         .contentShape(Rectangle())
                         .onTapGesture {
                             onSelected(item.entry)
                         }
+                        .animation(
+                            reduceMotion ? nil : .easeOut(duration: 0.12),
+                            value: viewModel.selectedDisplayIndex
+                        )
                         .opacity(reduceMotion || hasAppeared ? 1 : 0)
                         .offset(x: reduceMotion || hasAppeared ? 0 : -8)
                         .animation(
