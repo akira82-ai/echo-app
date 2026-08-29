@@ -320,6 +320,9 @@ final class QuickPanelViewModel: ObservableObject {
     /// Command 是否处于按下状态,仅用于即时界面反馈。
     @Published private(set) var isCommandPressed = false
 
+    /// Command 按下后是否已经通过方向键移动过,用于恢复当前行高亮。
+    @Published private(set) var hasNavigatedWhileCommandPressed = false
+
     /// configure 进行中标志(禁止 query didSet 干扰)
     private var isConfiguring = false
 
@@ -374,6 +377,7 @@ final class QuickPanelViewModel: ObservableObject {
         batchSelectionIDs = []
         batchNotice = nil
         isCommandPressed = false
+        hasNavigatedWhileCommandPressed = false
     }
 
     func toggleAchievements() {
@@ -391,6 +395,15 @@ final class QuickPanelViewModel: ObservableObject {
     func setCommandPressed(_ pressed: Bool) {
         guard isCommandPressed != pressed else { return }
         isCommandPressed = pressed
+        if pressed {
+            hasNavigatedWhileCommandPressed = false
+        }
+    }
+
+    private func markCommandNavigation() {
+        if isCommandPressed {
+            hasNavigatedWhileCommandPressed = true
+        }
     }
 
     /// 将指定文本加入批次,再次执行则移出批次。
@@ -552,24 +565,28 @@ final class QuickPanelViewModel: ObservableObject {
         guard !pageItems.isEmpty else { return }
         let count = pageItems.count
         selectedDisplayIndex = selectedDisplayIndex > 1 ? selectedDisplayIndex - 1 : count
+        markCommandNavigation()
     }
     /// ↓:页内下移,到底循环到顶(不跨页)。
     func moveDown() {
         guard !pageItems.isEmpty else { return }
         let count = pageItems.count
         selectedDisplayIndex = selectedDisplayIndex < count ? selectedDisplayIndex + 1 : 1
+        markCommandNavigation()
     }
     /// ←:上一页(已在第 1 页则不动,不循环)。翻页后高亮重置到该页第 1 条。
     func movePrevPage() {
         guard currentPage > 0 else { return }
         currentPage -= 1
         selectedDisplayIndex = pageItems.isEmpty ? 0 : 1
+        markCommandNavigation()
     }
     /// →:下一页(已在最后一页则不动,不循环)。翻页后高亮重置到该页第 1 条。
     func moveNextPage() {
         guard currentPage < pageCount - 1 else { return }
         currentPage += 1
         selectedDisplayIndex = pageItems.isEmpty ? 0 : 1
+        markCommandNavigation()
     }
 
     /// 当前选中的 ClipEntry(数字直达或方向键选中),无则 nil。
@@ -807,7 +824,7 @@ struct QuickPanelView: View {
                 if slot < viewModel.pageItems.count {
                     let item = viewModel.pageItems[slot]
                     // Command 多选期间不显示普通当前行高亮,避免第一条看起来被自动选中。
-                    let isSelected = !viewModel.isCommandPressed
+                    let isSelected = (!viewModel.isCommandPressed || viewModel.hasNavigatedWhileCommandPressed)
                         && viewModel.selectedDisplayIndex == item.displayNumber
                     let batchOrder = viewModel.batchOrder(for: item.id)
                     itemRow(item, batchOrder: batchOrder)
@@ -934,7 +951,7 @@ struct QuickPanelView: View {
         HStack(spacing: 14) {
             Text("\(item.displayNumber)")
                 .font(.system(size: 12, design: .monospaced))
-                .foregroundStyle(palette.textTertiary)
+                .foregroundStyle(colorScheme == .dark ? .white : palette.textTertiary)
                 .frame(width: 28, alignment: .trailing)
             previewContent(for: item.entry.kind)
             Spacer(minLength: 0)
@@ -1066,7 +1083,7 @@ struct QuickPanelView: View {
             .help(viewModel.showsAchievements ? "返回历史" : "查看使用成就")
             Text(statusText)
                 .font(.system(size: 11))
-                .foregroundStyle(palette.textTertiary)
+                .foregroundStyle(colorScheme == .dark ? .white : palette.textTertiary)
                 .lineLimit(1)
         }
         .frame(height: Layout.footerContentHeight, alignment: .center)
@@ -1126,6 +1143,7 @@ struct QuickPanelView: View {
                 .frame(minHeight: Layout.keyCapHeight, alignment: .center)
             Text(label)
                 .lineLimit(1)
+                .foregroundStyle(colorScheme == .dark ? .white : palette.textTertiary)
         }
         .frame(height: Layout.footerContentHeight, alignment: .center)
     }
