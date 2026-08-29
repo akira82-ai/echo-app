@@ -314,6 +314,9 @@ final class QuickPanelViewModel: ObservableObject {
     /// 最近一次批次操作提示。
     @Published private(set) var batchNotice: String?
 
+    /// 文本批次最多允许选择的条数。
+    let batchSelectionLimit = 5
+
     /// Command 是否处于按下状态,仅用于即时界面反馈。
     @Published private(set) var isCommandPressed = false
 
@@ -406,8 +409,10 @@ final class QuickPanelViewModel: ObservableObject {
         batchNotice = nil
         if let index = batchSelectionIDs.firstIndex(of: entry.id) {
             batchSelectionIDs.remove(at: index)
-        } else {
+        } else if batchSelectionIDs.count < batchSelectionLimit {
             batchSelectionIDs.append(entry.id)
+        } else {
+            batchNotice = "最多选择 \(batchSelectionLimit) 条文本"
         }
     }
 
@@ -801,7 +806,9 @@ struct QuickPanelView: View {
             ForEach(0..<viewModel.pageSize, id: \.self) { slot in
                 if slot < viewModel.pageItems.count {
                     let item = viewModel.pageItems[slot]
-                    let isSelected = viewModel.selectedDisplayIndex == item.displayNumber
+                    // Command 多选期间不显示普通当前行高亮,避免第一条看起来被自动选中。
+                    let isSelected = !viewModel.isCommandPressed
+                        && viewModel.selectedDisplayIndex == item.displayNumber
                     let batchOrder = viewModel.batchOrder(for: item.id)
                     itemRow(item, batchOrder: batchOrder)
                         // 设计稿:.qp-item.selected = accent-soft(0.14) + 1px border rgba(accent,0.3)
@@ -814,12 +821,13 @@ struct QuickPanelView: View {
                                             .stroke(palette.accent.opacity(0.3), lineWidth: 1)
                                     )
                                     .matchedGeometryEffect(id: "selected-row-background", in: selectionNamespace)
-                            } else if batchOrder != nil {
+                            } else if let batchOrder {
+                                let tone = batchTone(for: batchOrder)
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(palette.accentSoft.opacity(0.55))
+                                    .fill(tone.soft.opacity(0.55))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
-                                            .stroke(palette.accent.opacity(0.18), lineWidth: 1)
+                                            .stroke(tone.primary.opacity(0.18), lineWidth: 1)
                                     )
                             }
                         }
@@ -931,16 +939,17 @@ struct QuickPanelView: View {
             previewContent(for: item.entry.kind)
             Spacer(minLength: 0)
             if let batchOrder {
+                let tone = batchTone(for: batchOrder)
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 11))
-                    Text("批次 \(batchOrder)")
+                    Text("# \(batchOrder)")
                 }
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(palette.accent)
+                .foregroundStyle(tone.primary)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 2)
-                .background(palette.accentSoft)
+                .background(tone.soft)
                 .cornerRadius(5)
             } else {
                 typeTag(for: item.entry.kind)
@@ -1014,6 +1023,16 @@ struct QuickPanelView: View {
             .cornerRadius(5)
     }
 
+    private func batchTone(for order: Int) -> (primary: Color, soft: Color) {
+        switch order {
+        case 1: return (palette.accent, palette.accentSoft)
+        case 2: return (palette.purple, palette.purpleSoft)
+        case 3: return (palette.yellow, palette.yellowSoft)
+        case 4: return (palette.green, palette.greenSoft)
+        default: return (palette.red, palette.redSoft)
+        }
+    }
+
     // MARK: 底部
 
     /// 底部状态栏。设计稿 .qp-footer:48pt 高 + 内容 28pt 垂直居中。
@@ -1054,11 +1073,11 @@ struct QuickPanelView: View {
     }
 
     private var statusText: String {
-        if viewModel.isCommandPressed {
-            return "⌘ 多选模式"
-        }
         if let notice = viewModel.batchNotice {
             return notice
+        }
+        if viewModel.isCommandPressed {
+            return "⌘ 多选模式"
         }
         if !viewModel.batchSelectionIDs.isEmpty {
             return "已选 \(viewModel.batchSelectionIDs.count) 条文本 · 按 ↵ 合并粘贴"
