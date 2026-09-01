@@ -1108,14 +1108,13 @@ struct QuickPanelView: View {
             HStack(spacing: 8) {
                 kbdHint("↑↓", "选择")
                 kbdHint("←→", "翻页")
-                kbdHint("⌘↵ / ⌘点击", "加入/移出")
+                kbdHint("⌘↵ / ⌘点击", "加入批次")
             }
         } else if viewModel.batchSelectionIDs.isEmpty {
             HStack(spacing: 8) {
                 kbdHint("↑↓", "选择")
                 kbdHint("←→", "翻页")
                 kbdHint("↵ / ⌥↵", "粘贴")
-                kbdHint("⌘↵ / ⌘点击", "加入批次")
                 kbdHint("esc", "关闭")
             }
         } else {
