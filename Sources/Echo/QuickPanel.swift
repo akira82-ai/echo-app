@@ -153,14 +153,14 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             }
             return nil
         case 51:  // ⌫ Backspace
-            // 仅当按住 ⌘ 时才视为「删除当前条目」,否则放行给搜索框删文字(避免冲突)
-            if event.modifierFlags.contains(.command) {
+            // 仅当按住 ⌥ 时才视为「删除当前条目」,否则放行给搜索框删文字(避免冲突)
+            if event.modifierFlags.contains(.option) {
                 viewModel.deleteSelected { stillHasContent in
                     if !stillHasContent {
                         hide()  // 删空了,关闭面板
                     }
                 }
-                return nil  // 吞掉事件,防止 ⌘⌫ 冒泡
+                return nil  // 吞掉事件,防止 ⌥⌫ 冒泡
             }
             return event
         case 53:  // Esc
@@ -494,9 +494,9 @@ final class QuickPanelViewModel: ObservableObject {
 
     // MARK: - 删除
 
-    /// 删除当前选中的条目(用户按 ⌘⌫ 触发)。
+    /// 删除当前选中的条目(用户按 ⌥⌫ 触发)。
     ///
-    /// 删除后停在原页内位置(手感连贯,连续按 ⌘⌫ 可逐条下删);
+    /// 删除后停在原页内位置(手感连贯,连续按 ⌥⌫ 可逐条下删);
     /// 若当前页删空了则回退到上一页;删空全部则通知调用方关闭面板。
     ///
     /// - Parameter completion: 删除后是否仍有内容(true=还有条目可继续操作;
@@ -1109,12 +1109,14 @@ struct QuickPanelView: View {
                 kbdHint("↑↓", "选择")
                 kbdHint("←→", "翻页")
                 kbdHint("⌘↵ / ⌘点击", "加入批次")
+                kbdHint("⌥⌫", "删除")
             }
         } else if viewModel.batchSelectionIDs.isEmpty {
             HStack(spacing: 8) {
                 kbdHint("↑↓", "选择")
                 kbdHint("←→", "翻页")
                 kbdHint("↵ / ⌥↵", "粘贴")
+                kbdHint("⌥⌫", "删除")
                 kbdHint("esc", "关闭")
             }
         } else {
@@ -1123,7 +1125,7 @@ struct QuickPanelView: View {
                 kbdHint("←→", "翻页")
                 kbdHint("⌘↵ / ⌘点击", "加入/移出")
                 kbdHint("↵", "合并粘贴")
-                kbdHint("⌘⌫", "删除")
+                kbdHint("⌥⌫", "删除")
                 kbdHint("esc", "关闭")
             }
         }
