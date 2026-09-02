@@ -112,6 +112,17 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             viewModel.setCommandPressed(event.modifierFlags.contains(.command))
             return event
         }
+        if event.keyCode == 48 { // Tab
+            guard !viewModel.showsAchievements else { return nil }
+            viewModel.toggleShortcutGuide()
+            return nil
+        }
+        if viewModel.showsShortcutGuide {
+            if event.keyCode == 53 { // Esc
+                hide()
+            }
+            return nil
+        }
         if viewModel.showsAchievements {
             switch event.keyCode {
             case 53: // Esc
@@ -305,6 +316,9 @@ final class QuickPanelViewModel: ObservableObject {
     /// 正文显示模式:历史列表或勋章墙。
     @Published var showsAchievements = false
 
+    /// 正文显示模式:快捷键说明页。与历史列表共用同一正文槽位。
+    @Published var showsShortcutGuide = false
+
     /// 勋章墙快照。统计变化时由视图刷新。
     @Published private(set) var medals: [AchievementStore.Medal] = AchievementStore.shared.medals()
 
@@ -374,6 +388,7 @@ final class QuickPanelViewModel: ObservableObject {
         currentPage = 0
         selectedDisplayIndex = 1
         showsAchievements = false
+        showsShortcutGuide = false
         batchSelectionIDs = []
         batchNotice = nil
         isCommandPressed = false
@@ -382,10 +397,16 @@ final class QuickPanelViewModel: ObservableObject {
 
     func toggleAchievements() {
         showsAchievements.toggle()
+        showsShortcutGuide = false
         if showsAchievements {
             query = ""
         }
         refreshMedals()
+    }
+
+    func toggleShortcutGuide() {
+        guard !showsAchievements else { return }
+        showsShortcutGuide.toggle()
     }
 
     func refreshMedals() {
@@ -649,6 +670,13 @@ struct QuickPanelView: View {
         static let footerHeight: CGFloat = 48
         static let footerContentHeight: CGFloat = 28
         static let keyCapHeight: CGFloat = 22
+        // The guide occupies the same outer content slot as the five-row list.
+        // Its inner content remains padded within this fixed 304pt area.
+        static let shortcutGuideHeight: CGFloat = 304
+        static let shortcutGuideHorizontalPadding: CGFloat = 22
+        static let shortcutGuideVerticalPadding: CGFloat = 14
+        static let shortcutGuideColumnWidth: CGFloat = 240
+        static let shortcutGuideColumnGap: CGFloat = 36
     }
 
     private var palette: EchoTheme.Palette {
@@ -661,6 +689,8 @@ struct QuickPanelView: View {
             Divider().foregroundStyle(palette.border)
             if viewModel.showsAchievements {
                 achievementArea
+            } else if viewModel.showsShortcutGuide {
+                shortcutGuideArea
             } else {
                 listArea
             }
@@ -697,15 +727,15 @@ struct QuickPanelView: View {
 
     private var searchBar: some View {
         HStack(spacing: 10) {
-            Image(systemName: viewModel.isCommandPressed ? "checkmark.circle.fill" : "magnifyingglass")
-                .foregroundStyle(viewModel.isCommandPressed ? palette.accent : palette.textTertiary)
+            Image(systemName: showsMultiSelectFeedback ? "checkmark.circle.fill" : "magnifyingglass")
+                .foregroundStyle(showsMultiSelectFeedback ? palette.accent : palette.textTertiary)
                 .font(.system(size: 16))
             TextField("输入 1-5 直达本页 / 关键词搜索", text: $viewModel.query)
                 .textFieldStyle(.plain)
                 .font(.system(size: 18))
                 .focused($fieldFocused)
-                .disabled(viewModel.showsAchievements)
-            if viewModel.isCommandPressed && !viewModel.showsAchievements {
+                .disabled(viewModel.showsAchievements || viewModel.showsShortcutGuide)
+            if viewModel.isCommandPressed && !viewModel.showsAchievements && !viewModel.showsShortcutGuide {
                 HStack(spacing: 4) {
                     Image(systemName: "command")
                     Text("多选")
@@ -722,21 +752,28 @@ struct QuickPanelView: View {
         // 设计稿:.qp-search padding:14px 18px + border-bottom
         .padding(.horizontal, 18)
         .frame(height: Layout.searchHeight)
-        .background(viewModel.isCommandPressed ? palette.accentSoft.opacity(0.42) : .clear)
+        .background(showsMultiSelectFeedback ? palette.accentSoft.opacity(0.42) : .clear)
         .overlay(
             Rectangle()
-                .fill(viewModel.isCommandPressed ? palette.accent.opacity(0.42) : palette.border)
+                .fill(showsMultiSelectFeedback ? palette.accent.opacity(0.42) : palette.border)
                 .frame(height: 1),
             alignment: .bottom
         )
         .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: viewModel.isCommandPressed)
-        .onAppear { fieldFocused = !viewModel.showsAchievements }
+        .onAppear { fieldFocused = !viewModel.showsAchievements && !viewModel.showsShortcutGuide }
         .onChange(of: viewModel.showsAchievements) { showsAchievements in
-            fieldFocused = !showsAchievements
+            fieldFocused = !showsAchievements && !viewModel.showsShortcutGuide
+        }
+        .onChange(of: viewModel.showsShortcutGuide) { showsShortcutGuide in
+            fieldFocused = !showsShortcutGuide && !viewModel.showsAchievements
         }
     }
 
     @FocusState private var fieldFocused: Bool
+
+    private var showsMultiSelectFeedback: Bool {
+        viewModel.isCommandPressed && !viewModel.showsAchievements && !viewModel.showsShortcutGuide
+    }
 
     // MARK: 列表
 
@@ -779,6 +816,141 @@ struct QuickPanelView: View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: Layout.listHeight, maxHeight: Layout.listHeight)
+    }
+
+    /// 快捷键说明页:与历史列表共用正文槽位,不改变面板尺寸。
+    private var shortcutGuideArea: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            shortcutGroup(
+                title: "面板内通用快捷键",
+                items: [
+                    ("上下移动", "↑ / ↓"),
+                    ("上一页 / 下一页", "← / →"),
+                    ("关闭面板", "Esc"),
+                    ("搜索", "输入文字"),
+                    ("直达当前页对应条目", "输入 1–5"),
+                    ("删除当前条目", "⌥⌫")
+                ],
+                columns: 3
+            )
+
+            HStack(alignment: .top, spacing: Layout.shortcutGuideColumnGap) {
+                shortcutMode(
+                    title: "正常模式",
+                    items: [
+                        ("以纯文本格式粘贴", "⌥↵"),
+                        ("以原格式粘贴", "↵")
+                    ]
+                )
+                shortcutMode(
+                    title: "多选模式",
+                    items: [
+                        ("进入多选状态", "按住 ⌘"),
+                        ("加入 / 移出当前条目", "⌘↵ / ⌘ + 点击"),
+                        ("按选择顺序合并粘贴", "松开 ⌘ 后按 ↵")
+                    ],
+                    note: "多选只对文本条目生效"
+                )
+            }
+            .padding(.top, 9)
+        }
+        .padding(.horizontal, Layout.shortcutGuideHorizontalPadding)
+        .padding(.vertical, Layout.shortcutGuideVerticalPadding)
+        .frame(maxWidth: .infinity, minHeight: Layout.shortcutGuideHeight, maxHeight: Layout.shortcutGuideHeight, alignment: .topLeading)
+        .background(palette.footerBackground.opacity(colorScheme == .dark ? 0.35 : 0.45))
+    }
+
+    @ViewBuilder
+    private func shortcutGroup(
+        title: String,
+        items: [(String, String)],
+        columns: Int
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .tracking(0.8)
+                .foregroundStyle(palette.accent)
+                .padding(.bottom, 5)
+
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 20), count: columns),
+                spacing: 0
+            ) {
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    shortcutRow(label: item.0, keys: item.1)
+                }
+            }
+        }
+        .padding(.bottom, 8)
+    }
+
+    private func shortcutMode(
+        title: String,
+        items: [(String, String)],
+        note: String? = nil
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 0) {
+                Text("/ ")
+                Text(title.uppercased())
+            }
+            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+            .tracking(0.8)
+            .foregroundStyle(palette.accent)
+            .padding(.bottom, 6)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(palette.border)
+                    .frame(height: 1)
+            }
+
+            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                shortcutRow(label: item.0, keys: item.1)
+            }
+
+            if let note {
+                Text(note)
+                    .font(.system(size: 10))
+                    .foregroundStyle(palette.textTertiary)
+                    .lineLimit(1)
+                    .padding(.top, 7)
+            }
+        }
+        .frame(width: Layout.shortcutGuideColumnWidth, alignment: .topLeading)
+    }
+
+    private func shortcutRow(label: String, keys: String) -> some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(palette.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Spacer(minLength: 0)
+            shortcutKeycap(keys)
+        }
+        .frame(maxWidth: .infinity, minHeight: 30, maxHeight: 30, alignment: .leading)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(palette.border)
+                .frame(height: 1)
+        }
+    }
+
+    private func shortcutKeycap(_ keys: String) -> some View {
+        Text(keys)
+            .font(.system(size: 10.5, design: .monospaced))
+            .foregroundStyle(palette.keycapText)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .frame(minHeight: Layout.keyCapHeight)
+            .background(palette.keycapBackground)
+            .overlay {
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(palette.borderStrong, lineWidth: 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 
     private func medalView(_ medal: AchievementStore.Medal) -> some View {
@@ -1093,7 +1265,7 @@ struct QuickPanelView: View {
         if let notice = viewModel.batchNotice {
             return notice
         }
-        if viewModel.isCommandPressed {
+        if viewModel.isCommandPressed && !viewModel.showsShortcutGuide {
             return "⌘ 多选模式"
         }
         if !viewModel.batchSelectionIDs.isEmpty {
@@ -1104,31 +1276,7 @@ struct QuickPanelView: View {
 
     @ViewBuilder
     private var shortcutHints: some View {
-        if viewModel.isCommandPressed {
-            HStack(spacing: 8) {
-                kbdHint("↑↓", "选择")
-                kbdHint("←→", "翻页")
-                kbdHint("⌘↵ / ⌘点击", "加入批次")
-                kbdHint("⌥⌫", "删除")
-            }
-        } else if viewModel.batchSelectionIDs.isEmpty {
-            HStack(spacing: 8) {
-                kbdHint("↑↓", "选择")
-                kbdHint("←→", "翻页")
-                kbdHint("↵ / ⌥↵", "粘贴")
-                kbdHint("⌥⌫", "删除")
-                kbdHint("esc", "关闭")
-            }
-        } else {
-            HStack(spacing: 8) {
-                kbdHint("↑↓", "选择")
-                kbdHint("←→", "翻页")
-                kbdHint("⌘↵ / ⌘点击", "加入/移出")
-                kbdHint("↵", "合并粘贴")
-                kbdHint("⌥⌫", "删除")
-                kbdHint("esc", "关闭")
-            }
-        }
+        kbdHint("tab", viewModel.showsShortcutGuide ? "返回历史" : "查看快捷键")
     }
 
     /// 按键提示。设计稿 .kbd:panel-solid 深色实底 + border-strong + 圆角4 + text-dim 亮字。
