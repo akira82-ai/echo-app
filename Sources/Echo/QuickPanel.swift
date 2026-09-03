@@ -675,8 +675,7 @@ struct QuickPanelView: View {
         static let shortcutGuideHeight: CGFloat = 304
         static let shortcutGuideHorizontalPadding: CGFloat = 22
         static let shortcutGuideVerticalPadding: CGFloat = 14
-        static let shortcutGuideColumnWidth: CGFloat = 240
-        static let shortcutGuideColumnGap: CGFloat = 36
+        static let shortcutGuideColumnGap: CGFloat = 18
     }
 
     private var palette: EchoTheme.Palette {
@@ -820,39 +819,37 @@ struct QuickPanelView: View {
 
     /// 快捷键说明页:与历史列表共用正文槽位,不改变面板尺寸。
     private var shortcutGuideArea: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            shortcutGroup(
-                title: "面板内通用快捷键",
+        HStack(alignment: .top, spacing: Layout.shortcutGuideColumnGap) {
+            shortcutColumn(
+                title: "通用快捷键",
                 items: [
-                    ("上下移动", "↑ / ↓"),
-                    ("上一页 / 下一页", "← / →"),
-                    ("关闭面板", "Esc"),
-                    ("搜索", "输入文字"),
-                    ("直达当前页对应条目", "输入 1–5"),
+                    ("上下移动", "↑↓"),
+                    ("翻页", "←→"),
+                    ("关闭面板", "esc"),
+                    ("关键词搜索", "输入"),
+                    ("当前页直达", "1–5"),
                     ("删除当前条目", "⌥⌫")
                 ],
-                columns: 3
+                usesModePrefix: true
             )
-
-            HStack(alignment: .top, spacing: Layout.shortcutGuideColumnGap) {
-                shortcutMode(
-                    title: "正常模式",
-                    items: [
-                        ("以纯文本格式粘贴", "⌥↵"),
-                        ("以原格式粘贴", "↵")
-                    ]
-                )
-                shortcutMode(
-                    title: "多选模式",
-                    items: [
-                        ("进入多选状态", "按住 ⌘"),
-                        ("加入 / 移出当前条目", "⌘↵ / ⌘ + 点击"),
-                        ("按选择顺序合并粘贴", "松开 ⌘ 后按 ↵")
-                    ],
-                    note: "多选只对文本条目生效"
-                )
-            }
-            .padding(.top, 9)
+            shortcutColumn(
+                title: "正常模式",
+                items: [
+                    ("纯文本粘贴", "⌥↵"),
+                    ("原格式粘贴", "↵")
+                ],
+                usesModePrefix: true
+            )
+            shortcutColumn(
+                title: "多选模式",
+                items: [
+                    ("进入多选状态", "按住 ⌘"),
+                    ("加入 / 移出", "⌘↵ / ⌘ + 点击"),
+                    ("合并粘贴", "松开 ⌘ + ↵")
+                ],
+                note: "多选只对文本条目生效",
+                usesModePrefix: true
+            )
         }
         .padding(.horizontal, Layout.shortcutGuideHorizontalPadding)
         .padding(.vertical, Layout.shortcutGuideVerticalPadding)
@@ -860,45 +857,24 @@ struct QuickPanelView: View {
         .background(palette.footerBackground.opacity(colorScheme == .dark ? 0.35 : 0.45))
     }
 
-    @ViewBuilder
-    private func shortcutGroup(
+    private func shortcutColumn(
         title: String,
         items: [(String, String)],
-        columns: Int
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(title.uppercased())
-                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .tracking(0.8)
-                .foregroundStyle(palette.accent)
-                .padding(.bottom, 5)
-
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 20), count: columns),
-                spacing: 0
-            ) {
-                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                    shortcutRow(label: item.0, keys: item.1)
-                }
-            }
-        }
-        .padding(.bottom, 8)
-    }
-
-    private func shortcutMode(
-        title: String,
-        items: [(String, String)],
-        note: String? = nil
+        note: String? = nil,
+        usesModePrefix: Bool = false
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 0) {
-                Text("/ ")
+                if usesModePrefix {
+                    Text("/ ")
+                }
                 Text(title.uppercased())
             }
             .font(.system(size: 10, weight: .semibold, design: .monospaced))
             .tracking(0.8)
             .foregroundStyle(palette.accent)
             .padding(.bottom, 6)
+            .lineLimit(1)
             .overlay(alignment: .bottom) {
                 Rectangle()
                     .fill(palette.border)
@@ -917,7 +893,7 @@ struct QuickPanelView: View {
                     .padding(.top, 7)
             }
         }
-        .frame(width: Layout.shortcutGuideColumnWidth, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
     private func shortcutRow(label: String, keys: String) -> some View {
