@@ -18,12 +18,9 @@ Echo 常驻 Mac 菜单栏,自动记录文本、图片和文件,用一个快捷�
 
 ## 🎬 演示
 
-![Echo 演示](assets/echo-demo.gif)
+https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 
-<video src="assets/echo.mp4" controls muted playsinline width="720"></video>
 
-[[▶️ 如果播放器未显示，点击观看 MP4 演示](assets/echo.mp4)
-](https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a)
 ## ✨ 特性
 
 - 🎯 **全自动记录** — 监听剪贴板本身(非按键),右键、剪切、拖拽、App 内按钮统统不漏
