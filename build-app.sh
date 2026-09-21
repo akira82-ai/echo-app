@@ -33,6 +33,23 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 # 可执行文件 → Contents/MacOS/
 cp ".build/release/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 
+# SwiftPM 本地化资源 → Contents/Resources/
+RESOURCE_BUNDLE=".build/release/${APP_NAME}_${APP_NAME}.bundle"
+if [[ ! -d "$RESOURCE_BUNDLE" ]]; then
+    echo "❌ Missing localization bundle: $RESOURCE_BUNDLE" >&2
+    exit 1
+fi
+cp -R "$RESOURCE_BUNDLE" "$APP_BUNDLE/Contents/Resources/"
+
+# Info.plist 的系统级文案必须位于主 App bundle 的语言目录中。
+for LPROJ_DIR in Sources/Echo/Resources/*.lproj; do
+    if [[ -f "$LPROJ_DIR/InfoPlist.strings" ]]; then
+        DEST_LPROJ="$APP_BUNDLE/Contents/Resources/$(basename "$LPROJ_DIR")"
+        mkdir -p "$DEST_LPROJ"
+        cp "$LPROJ_DIR/InfoPlist.strings" "$DEST_LPROJ/InfoPlist.strings"
+    fi
+done
+
 # Info.plist → Contents/
 cp Info.plist "$APP_BUNDLE/Contents/Info.plist"
 

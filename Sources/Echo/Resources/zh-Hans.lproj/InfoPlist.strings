@@ -1,0 +1,1 @@
+"NSAppleEventsUsageDescription" = "Echo 需要辅助功能权限，以便将选中的历史内容自动粘贴到当前 App。未授权时，内容只会写入剪贴板。";

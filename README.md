@@ -1,80 +1,83 @@
 <div align="center">
 
-如果 Echo 对你有帮助,欢迎点个 [⭐ Star](https://github.com/akira82-ai/echo-app) 支持一下。
+If Echo helps you, please consider giving it a [⭐ Star](https://github.com/akira82-ai/echo-app).
 
 # Echo 📋
 
-**Mac 上的极简智能剪贴板。 ｜ 你复制过的,如回声般唤回。**
+**A minimal intelligent clipboard for macOS. | Recall what you copied, like an echo.**
 
-Echo 常驻 Mac 菜单栏,自动记录文本、图片和文件,用一个快捷键快速找回并粘贴。
+Echo lives in your Mac menu bar, automatically saves copied text, images, and files, then lets you find and paste them back with one shortcut.
 
-**智能剪贴 · 极速定位 · 智能检索 · 勋章成就**
+**Smart capture · Fast recall · Intelligent search · Achievement system**
 
-[特性](#-特性) · [上手](#-快速上手)
+[English](README.md) · [简体中文](README.zh-CN.md)
+
+[Features](#-features) · [Quick Start](#-quick-start)
 
 </div>
 
 ---
 
-## 🎬 演示
+## 🎬 Demo
 
 https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 
-## ✨ 特性
+## ✨ Features
 
-- 🎯 **全自动记录** — 监听剪贴板本身(非按键),右键、剪切、拖拽、App 内按钮统统不漏
-- 🔢 **一个输入框,智能识别三种意图** — 输 1–5 直达当前页 · 输 6+ 或文字即搜索 · 空输则方向键浏览
-- ✦ **空状态也可呼出** — 没有历史记录时,`⌘\` 仍能打开面板并给出下一步引导
-- 🖼️ **三类内容** — 文本(保留原格式,支持纯文本粘贴)+ 图片(截图/复制图片)+ 文件(Finder 复制的文件路径)
-- ⌨️ **全局热键** — `⌘\` 呼出 Spotlight 风格面板,任意 App 中可用
-- ✨ **轻量入场动效** — 面板与首屏条目自然出现,尊重 macOS「减少动态效果」设置
-- 🎯 **选中反馈更连贯** — 键盘移动时高亮背景平滑跟随,不打断连续选择;多选时只突出已选条目
-- 🧩 **文本多选粘贴** — 按住 `⌘` 后面板提示切换为“加入批次”,点击或按 `⌘↵` 选择最多 5 条文本,彩色编号标记顺序,松开后按 `↵` 按选择顺序用换行合并粘贴
-- 🧹 **快速整理** — 按 `⌥⌫` 删除当前条目,不占用搜索框的退格键
-- ⌘ **快捷键说明页** — 按 `Tab` 在固定正文区域以三列紧凑布局查看通用、正常模式和多选模式的完整快捷键,按 `Esc` 返回
-- 📤 **自动粘贴** — 选中后自动粘到当前 App 光标处,无需手动 `⌘V`
-- 🏅 **使用成就** — 记录快捷操作、搜索、整理和长期使用习惯,12 枚勋章持续陪伴
-- 🔒 **零权限优先** — 记录 + 热键无需任何权限;仅"自动粘贴"可选授权,关掉即纯零权限运行
-- ♻️ **本地优先** — 历史纯内存,勋章统计只保存本地计数和日期,数据不出本机
+- 🎯 **Automatic capture** — Watches the clipboard itself rather than keystrokes, so copies from context menus, cuts, drag-and-drop, and in-app buttons are all captured.
+- 🔢 **One input, three intents** — Type `1`–`5` to select an item on the current page; type `6+` or a keyword to search; leave it empty to browse with the arrow keys.
+- ✦ **Useful empty state** — `⌘\` still opens the panel when history is empty and shows what to do next.
+- 🖼️ **Three content types** — Text (format preserved, with plain-text paste), images, and files copied from Finder.
+- ⌨️ **Global shortcut** — Open the Spotlight-style panel with `⌘\` from any app.
+- ✨ **Subtle entrance motion** — The panel and first page appear naturally while respecting macOS Reduce Motion.
+- 🎯 **Continuous selection feedback** — The highlight follows keyboard movement smoothly and keeps batch selections clear.
+- 🧩 **Batch text paste** — Hold `⌘`, click or press `⌘↵` to add up to five text items, then release `⌘` and press `↵` to paste them in order as one block.
+- 🧹 **Quick cleanup** — Press `⌥⌫` to remove the current item without taking over Backspace in search.
+- ⌘ **Shortcut reference** — Press `Tab` to view a compact three-column reference for general, normal, and batch-mode shortcuts; press `Esc` to return.
+- 📤 **Auto Paste** — Selecting an item pastes it into the focused app without a separate `⌘V`.
+- 🏅 **Achievements** — Tracks shortcuts, search, cleanup, and long-term habits across twelve medals.
+- 🌐 **System language support** — The interface follows macOS and is available in Simplified Chinese, English, and Japanese.
+- 🔒 **Permissions first** — Capturing and the shortcut require no permissions; Auto Paste is optional and can be disabled at any time.
+- ♻️ **On-device by default** — History stays in memory and achievement statistics store only local counters and dates.
 
-## 🚀 快速上手
+## 🚀 Quick Start
 
-### 方式一：下载源码并编译
+### Option 1: Build from source
 
 ```bash
-# 编译、打包、签名,并生成 dist/Echo.app 与 dist/Echo.dmg
+# Build, package, and sign dist/Echo.app and dist/Echo.dmg
 ./build-app.sh
 open dist/Echo.app
 ```
 
-`build-app.sh` 会自动使用本机的 `Echo Self-Sign` 证书。后续优化后重复执行即可,不需要手工重新签名;请始终启动 `dist/Echo.app`,不要直接运行 `.build/.../Echo`。
+`build-app.sh` automatically uses the local `Echo Self-Sign` certificate. Run it again after changes; manual re-signing is not needed. Always launch `dist/Echo.app`, not `.build/.../Echo` directly.
 
-### 方式二：下载 Release
+### Option 2: Download a Release
 
-前往 [Releases](https://github.com/akira82-ai/echo-app/releases),下载当前版本 `2.4.1` 的 `Echo.dmg`。打开 DMG 后,将 Echo 拖进「应用程序」即可。
+Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.5.0` release. Open the DMG and drag Echo to Applications.
 
-当前 Release 是本机开发验证包,使用 `Echo Self-Sign` 自签名,不是 Apple Developer ID 签名和 notarization 的正式发行包。因此,首次打开时 macOS 可能提示“无法验证开发者”或拦截应用:
+Current releases are development-verified builds signed with `Echo Self-Sign`, not Apple Developer ID-signed or notarized distribution builds. The first launch may be blocked by macOS:
 
-1. 在 Finder 中找到 Echo,按住 Control 点击,选择「打开」,再确认一次「打开」。
-2. 如果仍被拦截,打开「系统设置 → 隐私与安全性」,在安全提示旁点击「仍要打开」,然后重新启动 Echo。
+1. In Finder, Control-click Echo, choose **Open**, then confirm **Open** once more.
+2. If it is still blocked, open **System Settings → Privacy & Security**, click **Open Anyway** beside the security notice, then start Echo again.
 
-首次使用“自动粘贴”时,系统会弹出辅助功能授权引导。授权后选中条目即可自动粘贴;不授权也能用,只是需要回到目标 App 手动按 `⌘V`。
+The first use of Auto Paste opens macOS Accessibility permission guidance. Once granted, selecting an item pastes it automatically. Without permission, Echo still copies the item back to the clipboard for manual `⌘V`.
 
 ```
-① 正常复制(⌘C / 右键 / 拖拽)   →  Echo 自动记录进历史
-② 按 ⌘\                          →  弹出历史选择面板
-③ 选一条(1–5 / 6+搜索 / 方向键) →  自动粘到当前光标
-   ⌥↵ 可改为纯文本粘贴,默认保留原格式
-④ 按住 ⌘ 进入多选并按“加入批次”提示选择最多 5 条文本 → 松开 ⌘ 后按 ↵ 按顺序合并粘贴
-⑤ 按 ⌥⌫ 删除当前条目,连续操作可逐条整理
-⑥ 按 Tab 查看快捷键说明,按 Esc 返回历史列表
+1. Copy normally (⌘C / context menu / drag)       → Echo saves it to history
+2. Press ⌘\                                      → Open the history panel
+3. Select an item (1–5 / 6+ search / arrow keys) → Paste into the focused app
+   Use ⌥↵ to paste plain text; formatting is preserved by default.
+4. Hold ⌘, select up to five text items, release ⌘, then press ↵ to paste them together in order.
+5. Press ⌥⌫ to remove the current item and keep organizing.
+6. Press Tab for the shortcut reference; press Esc to return to history.
 ```
 
-**系统要求**:macOS 13(Ventura)及以上。
+**System requirements:** macOS 13 Ventura or later.
 
-### 自动粘贴排查
+### Auto Paste troubleshooting
 
-如果选中历史项后没有自动粘贴,先确认正在运行的是 `dist/Echo.app`,然后在「系统设置 → 隐私与安全性 → 辅助功能」中确认 Echo 已授权,并检查设置页的「启用自动粘贴」开关。即使没有权限,Echo 仍会把内容写回剪贴板,用户可以回到目标 App 手动按 `⌘V`。
+If selecting a history item does not paste automatically, first confirm that `dist/Echo.app` is running. Then check that Echo is granted access under **System Settings → Privacy & Security → Accessibility** and that **Enable Auto Paste** is enabled in Settings. Even without permission, Echo writes the item back to the clipboard so you can paste manually with `⌘V`.
 
 ---
 

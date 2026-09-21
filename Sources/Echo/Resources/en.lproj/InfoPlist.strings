@@ -1,0 +1,1 @@
+"NSAppleEventsUsageDescription" = "Echo uses Accessibility permission to paste a selected history item into the current app. Without permission, it copies the item to the clipboard only.";

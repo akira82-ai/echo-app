@@ -74,31 +74,31 @@ final class AchievementStore {
     func medals() -> [Medal] {
         let stats = snapshot()
         return [
-            Medal(id: "first-paste", icon: "↩", name: "初次回声", tone: .accent,
+            Medal(id: "first-paste", icon: "↩", name: L10n.text("achievement.firstPaste"), tone: .accent,
                   progress: stats.successfulPastes == 0 ? nil : "\(min(stats.successfulPastes, 1)) / 1",
                   unlocked: stats.successfulPastes >= 1),
-            Medal(id: "direct", icon: "1-5", name: "数字直达", tone: .green,
+            Medal(id: "direct", icon: "1-5", name: L10n.text("achievement.direct"), tone: .green,
                   progress: "\(min(stats.directPastes, 20)) / 20", unlocked: stats.directPastes >= 20),
-            Medal(id: "search", icon: "⌕", name: "搜索命中", tone: .yellow,
+            Medal(id: "search", icon: "⌕", name: L10n.text("achievement.search"), tone: .yellow,
                   progress: "\(min(stats.searchPastes, 10)) / 10", unlocked: stats.searchPastes >= 10),
-            Medal(id: "hotkey", icon: "⌘", name: "快捷上手", tone: .purple,
+            Medal(id: "hotkey", icon: "⌘", name: L10n.text("achievement.hotkey"), tone: .purple,
                   progress: "\(min(stats.hotkeyShows, 3)) / 3", unlocked: stats.hotkeyShows >= 3),
-            Medal(id: "keyboard", icon: "⌨", name: "键盘熟练", tone: .accent,
+            Medal(id: "keyboard", icon: "⌨", name: L10n.text("achievement.keyboard"), tone: .accent,
                   progress: "\(min(stats.keyboardOnlyStreak, 3)) / 3", unlocked: stats.keyboardOnlyStreak >= 3),
-            Medal(id: "paging", icon: "↔", name: "翻页探索", tone: .green,
+            Medal(id: "paging", icon: "↔", name: L10n.text("achievement.paging"), tone: .green,
                   progress: "\(min(stats.pagedPastes, 10)) / 10", unlocked: stats.pagedPastes >= 10),
-            Medal(id: "first-delete", icon: "⌫", name: "首次整理", tone: .yellow,
+            Medal(id: "first-delete", icon: "⌫", name: L10n.text("achievement.firstDelete"), tone: .yellow,
                   progress: nil, unlocked: stats.manualDeletes >= 1),
-            Medal(id: "clean-space", icon: "✦", name: "清爽空间", tone: .purple,
+            Medal(id: "clean-space", icon: "✦", name: L10n.text("achievement.cleanSpace"), tone: .purple,
                   progress: "\(min(stats.deletedEntries, 20)) / 20", unlocked: stats.deletedEntries >= 20),
-            Medal(id: "dedup", icon: "◎", name: "去重助手", tone: .accent,
+            Medal(id: "dedup", icon: "◎", name: L10n.text("achievement.dedup"), tone: .accent,
                   progress: "\(min(stats.duplicateHits, 20)) / 20", unlocked: stats.duplicateHits >= 20),
-            Medal(id: "steady", icon: "30", name: "稳定使用", tone: .green,
-                  progress: "\(min(stats.activeDayCount, 30)) / 30 天", unlocked: stats.activeDayCount >= 30),
-            Medal(id: "seasons", icon: "4Q", name: "四季回声", tone: .yellow,
-                  progress: "\(min(stats.activeQuarterCount, 4)) / 4 季", unlocked: stats.activeQuarterCount >= 4),
-            Medal(id: "long-term", icon: "365", name: "长久回声", tone: .purple,
-                  progress: "\(min(stats.activeDayCount, 365)) / 365 天", unlocked: stats.activeDayCount >= 365)
+            Medal(id: "steady", icon: "30", name: L10n.text("achievement.steady"), tone: .green,
+                  progress: L10n.format("achievement.daysProgress", min(stats.activeDayCount, 30)), unlocked: stats.activeDayCount >= 30),
+            Medal(id: "seasons", icon: "4Q", name: L10n.text("achievement.seasons"), tone: .yellow,
+                  progress: L10n.format("achievement.quartersProgress", min(stats.activeQuarterCount, 4)), unlocked: stats.activeQuarterCount >= 4),
+            Medal(id: "long-term", icon: "365", name: L10n.text("achievement.longTerm"), tone: .purple,
+                  progress: L10n.format("achievement.yearProgress", min(stats.activeDayCount, 365)), unlocked: stats.activeDayCount >= 365)
         ]
     }
 

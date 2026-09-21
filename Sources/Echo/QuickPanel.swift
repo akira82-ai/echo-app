@@ -436,7 +436,7 @@ final class QuickPanelViewModel: ObservableObject {
 
     func toggleBatchSelection(for entry: ClipEntry) {
         guard case .text = entry.kind else {
-            batchNotice = "批量粘贴仅支持文本"
+            batchNotice = L10n.text("quick.batch.textOnly")
             return
         }
 
@@ -446,7 +446,7 @@ final class QuickPanelViewModel: ObservableObject {
         } else if batchSelectionIDs.count < batchSelectionLimit {
             batchSelectionIDs.append(entry.id)
         } else {
-            batchNotice = "最多选择 \(batchSelectionLimit) 条文本"
+            batchNotice = L10n.format("quick.batch.limit", batchSelectionLimit)
         }
     }
 
@@ -729,7 +729,7 @@ struct QuickPanelView: View {
             Image(systemName: showsMultiSelectFeedback ? "checkmark.circle.fill" : "magnifyingglass")
                 .foregroundStyle(showsMultiSelectFeedback ? palette.accent : palette.textTertiary)
                 .font(.system(size: 16))
-            TextField("输入 1-5 直达本页 / 关键词搜索", text: $viewModel.query)
+            TextField(L10n.text("quick.search.placeholder"), text: $viewModel.query)
                 .textFieldStyle(.plain)
                 .font(.system(size: 18))
                 .focused($fieldFocused)
@@ -737,7 +737,7 @@ struct QuickPanelView: View {
             if viewModel.isCommandPressed && !viewModel.showsAchievements && !viewModel.showsShortcutGuide {
                 HStack(spacing: 4) {
                     Image(systemName: "command")
-                    Text("多选")
+                    Text(L10n.text("quick.multiSelect"))
                 }
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(palette.accent)
@@ -821,33 +821,33 @@ struct QuickPanelView: View {
     private var shortcutGuideArea: some View {
         HStack(alignment: .top, spacing: Layout.shortcutGuideColumnGap) {
             shortcutColumn(
-                title: "通用快捷键",
+                title: L10n.text("quick.shortcut.general"),
                 items: [
-                    ("上下移动", "↑↓"),
-                    ("翻页", "←→"),
-                    ("关闭面板", "esc"),
-                    ("关键词搜索", "输入"),
-                    ("当前页直达", "1–5"),
-                    ("删除当前条目", "⌥⌫")
+                    (L10n.text("quick.shortcut.move"), "↑↓"),
+                    (L10n.text("quick.shortcut.page"), "←→"),
+                    (L10n.text("quick.shortcut.close"), "esc"),
+                    (L10n.text("quick.shortcut.search"), L10n.text("quick.shortcut.type")),
+                    (L10n.text("quick.shortcut.direct"), "1–5"),
+                    (L10n.text("quick.shortcut.delete"), "⌥⌫")
                 ],
                 usesModePrefix: true
             )
             shortcutColumn(
-                title: "正常模式",
+                title: L10n.text("quick.shortcut.normalMode"),
                 items: [
-                    ("纯文本粘贴", "⌥↵"),
-                    ("原格式粘贴", "↵")
+                    (L10n.text("quick.shortcut.plainPaste"), "⌥↵"),
+                    (L10n.text("quick.shortcut.formattedPaste"), "↵")
                 ],
                 usesModePrefix: true
             )
             shortcutColumn(
-                title: "多选模式",
+                title: L10n.text("quick.shortcut.multiMode"),
                 items: [
-                    ("进入多选状态", "按住 ⌘"),
-                    ("加入 / 移出", "⌘↵ / ⌘ + 点击"),
-                    ("合并粘贴", "松开 ⌘ + ↵")
+                    (L10n.text("quick.shortcut.enterMulti"), L10n.text("quick.shortcut.holdCommand")),
+                    (L10n.text("quick.shortcut.addRemove"), L10n.text("quick.shortcut.click")),
+                    (L10n.text("quick.shortcut.mergePaste"), L10n.text("quick.shortcut.releaseCommand"))
                 ],
-                note: "多选只对文本条目生效",
+                note: L10n.text("quick.shortcut.textOnly"),
                 usesModePrefix: true
             )
         }
@@ -1044,11 +1044,11 @@ struct QuickPanelView: View {
             .shadow(color: .black.opacity(colorScheme == .dark ? 0.18 : 0.08), radius: 15, y: 8)
             .padding(.bottom, 16)
 
-            Text("还没有剪贴板记录")
+            Text(L10n.text("quick.empty.title"))
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(palette.textPrimary)
 
-            Text("Echo 已准备好。复制一段文字、图片或文件，再按下快捷键，就能在这里找到它。")
+            Text(L10n.text("quick.empty.body"))
                 .font(.system(size: 12.5))
                 .foregroundStyle(palette.textTertiary)
                 .multilineTextAlignment(.center)
@@ -1057,7 +1057,7 @@ struct QuickPanelView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 14)
 
-            kbdHint("⌘\\", "呼出面板 · 复制内容后即可开始")
+            kbdHint("⌘\\", L10n.text("quick.empty.hint"))
 
             Spacer(minLength: 0)
         }
@@ -1082,7 +1082,7 @@ struct QuickPanelView: View {
     private func emptySlot(slot: Int) -> some View {
         HStack(spacing: 14) {
             if slot == 0 {
-                Text(viewModel.query.isEmpty ? "暂无历史" : "无匹配结果")
+                Text(L10n.text(viewModel.query.isEmpty ? "quick.noHistory" : "quick.noMatches"))
                     .font(.system(size: 13))
                     .foregroundStyle(palette.textTertiary)
             }
@@ -1146,7 +1146,7 @@ struct QuickPanelView: View {
                     .cornerRadius(6)
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(palette.border, lineWidth: 1))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("[ 图片 ]").foregroundStyle(palette.textSecondary).font(.system(size: 13))
+                    Text(L10n.text("quick.imagePreview")).foregroundStyle(palette.textSecondary).font(.system(size: 13))
                     Text(ref.sizeText).font(.system(size: 10.5)).foregroundStyle(palette.textTertiary)
                 }
             }
@@ -1174,9 +1174,9 @@ struct QuickPanelView: View {
     private func typeTag(for kind: ClipEntry.Kind) -> some View {
         let (text, color, soft): (String, Color, Color) = {
             switch kind {
-            case .text: return ("文本", palette.accent, palette.accentSoft)
-            case .image: return ("图片", palette.purple, palette.purpleSoft)
-            case .files: return ("文件", palette.green, palette.greenSoft)
+            case .text: return (L10n.text("quick.type.text"), palette.accent, palette.accentSoft)
+            case .image: return (L10n.text("quick.type.image"), palette.purple, palette.purpleSoft)
+            case .files: return (L10n.text("quick.type.file"), palette.green, palette.greenSoft)
             }
         }()
         return Text(text)
@@ -1228,7 +1228,7 @@ struct QuickPanelView: View {
                     .frame(width: 18, height: Layout.footerContentHeight, alignment: .center)
             }
             .buttonStyle(.plain)
-            .help(viewModel.showsAchievements ? "返回历史" : "查看使用成就")
+            .help(L10n.text(viewModel.showsAchievements ? "quick.backToHistory" : "quick.viewAchievements"))
             Text(statusText)
                 .font(.system(size: 11))
                 .foregroundStyle(colorScheme == .dark ? .white : palette.textTertiary)
@@ -1242,17 +1242,20 @@ struct QuickPanelView: View {
             return notice
         }
         if viewModel.isCommandPressed && !viewModel.showsShortcutGuide {
-            return "⌘ 多选模式"
+            return L10n.text("quick.status.multiMode")
         }
         if !viewModel.batchSelectionIDs.isEmpty {
-            return "已选 \(viewModel.batchSelectionIDs.count) 条文本 · 按 ↵ 合并粘贴"
+            return L10n.format("quick.status.selected", viewModel.batchSelectionIDs.count)
         }
-        return "已记录 \(viewModel.allEntries.count) / \(AppSettings.shared.historyLimit) 条"
+        return L10n.format("quick.status.recorded", viewModel.allEntries.count, AppSettings.shared.historyLimit)
     }
 
     @ViewBuilder
     private var shortcutHints: some View {
-        kbdHint("tab", viewModel.showsShortcutGuide ? "返回历史" : "查看快捷键")
+        kbdHint(
+            "tab",
+            L10n.text(viewModel.showsShortcutGuide ? "quick.backToHistory" : "quick.viewShortcuts")
+        )
     }
 
     /// 按键提示。设计稿 .kbd:panel-solid 深色实底 + border-strong + 圆角4 + text-dim 亮字。
@@ -1290,7 +1293,7 @@ struct QuickPanelView: View {
 
     private func filesPreview(_ urls: [URL]) -> String {
         if urls.count == 1 { return urls[0].lastPathComponent }
-        return urls[0].lastPathComponent + " 等 \(urls.count) 个文件"
+        return L10n.format("quick.files.multiple", urls[0].lastPathComponent, urls.count)
     }
 
     private func filesLocation(_ urls: [URL]) -> String {

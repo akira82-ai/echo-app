@@ -46,7 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             )
             image?.isTemplate = true
             button.image = image
-            button.toolTip = "Echo - 剪贴板历史管理器"
+            button.toolTip = L10n.text("app.tagline")
         }
 
         let menu = NSMenu()
@@ -59,7 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 显示历史:Stage 3 接入 QuickPanel 后会呼出面板
         let showHistory = NSMenuItem(
-            title: "显示历史",
+            title: L10n.text("menu.showHistory"),
             action: #selector(showHistory),
             keyEquivalent: "\\"
         )
@@ -68,7 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 清空历史:Stage 2 接入 HistoryStore 后生效
         let clearHistory = NSMenuItem(
-            title: "清空历史",
+            title: L10n.text("menu.clearHistory"),
             action: #selector(clearHistory),
             keyEquivalent: ""
         )
@@ -83,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         let openSettings = NSMenuItem(
-            title: "设置…",
+            title: L10n.text("menu.settings"),
             action: #selector(openSettingsWindow),
             keyEquivalent: ","
         )
@@ -91,7 +91,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(openSettings)
 
         let openAccessibility = NSMenuItem(
-            title: "打开辅助功能设置…",
+            title: L10n.text("menu.openAccessibility"),
             action: #selector(openAccessibilitySettings),
             keyEquivalent: ""
         )
@@ -99,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(openAccessibility)
 
         let quit = NSMenuItem(
-            title: "退出 Echo",
+            title: L10n.text("menu.quit"),
             action: #selector(quit),
             keyEquivalent: "q"
         )
@@ -183,9 +183,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// 刷新菜单栏状态行与计数行。
     private func updateStatusMenuItem() {
-        statusMenuItem.title = "✅ Echo · 监听剪贴板中"
+        statusMenuItem.title = L10n.text("menu.monitoring")
         let count = HistoryStore.shared.count
-        countMenuItem.title = "已收集:\(count) 条"
+        countMenuItem.title = L10n.format("menu.collected", count)
         countMenuItem.isHidden = (count == 0)
     }
 }

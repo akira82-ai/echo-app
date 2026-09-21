@@ -9,7 +9,7 @@ final class SettingsWindowController: NSWindowController {
     init() {
         let hosting = NSHostingController(rootView: SettingsView())
         let window = NSWindow(contentViewController: hosting)
-        window.title = "Echo 设置"
+        window.title = L10n.text("settings.windowTitle")
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.center()
         window.isReleasedWhenClosed = false
@@ -58,8 +58,8 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                settingsSection(title: "通用") {
-                    settingRow(title: "历史上限") {
+                settingsSection(title: L10n.text("settings.general")) {
+                    settingRow(title: L10n.text("settings.historyLimit")) {
                         Stepper(value: $historyLimit, in: 10...200, step: 10) {
                             Text("\(historyLimit)")
                                 .font(.system(.body, design: .monospaced))
@@ -70,11 +70,11 @@ struct SettingsView: View {
                         }
                     }
 
-                    settingNote("文本/图片/文件共享名额。超出后最旧条目被淘汰,图片同步删盘。")
+                    settingNote(L10n.text("settings.historyLimit.note"))
                 }
 
-                settingsSection(title: "全局热键") {
-                    settingRow(title: "呼出快捷键") {
+                settingsSection(title: L10n.text("settings.globalShortcut")) {
+                    settingRow(title: L10n.text("settings.openShortcut")) {
                         Picker("", selection: $hotkeyPresetIndex) {
                             ForEach(hotkeyPresets.indices, id: \.self) { idx in
                                 Text(hotkeyPresets[idx].label).tag(idx)
@@ -87,11 +87,14 @@ struct SettingsView: View {
                         }
                     }
 
-                    settingNote("在任意 App 中按此快捷键呼出历史选择面板。⌘\\ 为默认(两键、左手区、系统几乎不占用)。")
+                    settingNote(L10n.text("settings.openShortcut.note"))
                 }
 
-                settingsSection(title: "粘贴") {
-                    settingRow(title: "启用自动粘贴", subtitle: autoPasteEnabled ? "选中后自动模拟 ⌘V。需要辅助功能权限。" : "关闭后只写回剪贴板。") {
+                settingsSection(title: L10n.text("settings.paste")) {
+                    settingRow(
+                        title: L10n.text("settings.autoPaste"),
+                        subtitle: L10n.text(autoPasteEnabled ? "settings.autoPaste.on" : "settings.autoPaste.off")
+                    ) {
                         Toggle("", isOn: $autoPasteEnabled)
                             .labelsHidden()
                             .onChange(of: autoPasteEnabled) { newValue in
@@ -104,36 +107,39 @@ struct SettingsView: View {
                     }
                 }
 
-                settingsSection(title: "数据") {
-                    settingRow(title: "当前历史") {
-                        Text("\(historyCount) / \(historyLimit) 条")
+                settingsSection(title: L10n.text("settings.data")) {
+                    settingRow(title: L10n.text("settings.currentHistory")) {
+                        Text(L10n.format("settings.historyCount", historyCount, historyLimit))
                             .font(.system(.body, design: .monospaced))
                             .foregroundStyle(palette.textSecondary)
                     }
 
-                    settingRow(title: "清空所有历史", subtitle: "立即删除历史和图片缓存。") {
+                    settingRow(title: L10n.text("settings.clearAll"), subtitle: L10n.text("settings.clearAll.note")) {
                         Button(role: .destructive) {
                             HistoryStore.shared.clearAll()
                             historyCount = 0
                         } label: {
-                            Text("清空")
+                            Text(L10n.text("settings.clear"))
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
                     }
 
-                    settingRow(title: "重置使用成就", subtitle: "只删除勋章统计,不会影响当前或下次剪贴板历史。") {
+                    settingRow(
+                        title: L10n.text("settings.resetAchievements"),
+                        subtitle: L10n.text("settings.resetAchievements.note")
+                    ) {
                         Button(role: .destructive) {
                             AchievementStore.shared.reset()
                         } label: {
-                            Text("重置")
+                            Text(L10n.text("settings.reset"))
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
                     }
                 }
 
-                Text("Echo · 剪贴板历史管理器 · 本地运行,数据不出本机")
+                Text(L10n.text("settings.footer"))
                     .font(.caption2)
                     .foregroundStyle(palette.textTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -161,12 +167,12 @@ struct SettingsView: View {
     private var permissionRow: some View {
         HStack(spacing: 12) {
             if axGranted {
-                Label("辅助功能权限:已授予", systemImage: "checkmark.circle.fill")
+                Label(L10n.text("settings.accessibility.granted"), systemImage: "checkmark.circle.fill")
                     .foregroundStyle(palette.green)
             } else {
-                Label("辅助功能权限:未授予(自动粘贴将降级)", systemImage: "exclamationmark.triangle.fill")
+                Label(L10n.text("settings.accessibility.denied"), systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(palette.yellow)
-                Button("打开设置") {
+                Button(L10n.text("settings.openSystemSettings")) {
                     PermissionsManager.shared.openSystemSettings()
                 }
                 .buttonStyle(.bordered)
