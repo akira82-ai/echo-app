@@ -91,14 +91,18 @@ final class ClipboardWatcher {
 
         // 延迟一小段再读,等系统把内容写完整
         let delay = Self.readDelayMs
+        let sourceApp = NSWorkspace.shared.frontmostApplication
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delay)) { [weak self] in
-            self?.captureCurrent()
+            guard self != nil, NSPasteboard.general.changeCount == current else { return }
+            guard let entry = ClipboardReader.shared.read() else { return }
+            HistoryStore.shared.append(entry)
+            // Text entries retain this copy event's ID through deduplication.
+            guard case .text = entry.kind,
+                  NSWorkspace.shared.frontmostApplication?.processIdentifier == sourceApp?.processIdentifier else { return }
+            BrowserSourceReader.shared.capture(app: sourceApp, changeCount: current) { source in
+                if let source { HistoryStore.shared.setBrowserSource(source, for: entry.id) }
+            }
         }
     }
 
-    /// 读取当前剪贴板并入库。
-    private func captureCurrent() {
-        guard let entry = ClipboardReader.shared.read() else { return }
-        HistoryStore.shared.append(entry)
-    }
 }

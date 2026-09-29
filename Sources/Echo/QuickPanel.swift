@@ -146,6 +146,13 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             viewModel.moveNextPage()
             return nil
         case 36, 76:  // Return / Enter
+            if event.modifierFlags.contains(.control) {
+                if let url = viewModel.selectedEntry()?.browserSource?.url {
+                    hide()
+                    NSWorkspace.shared.open(url)
+                }
+                return nil
+            }
             if event.modifierFlags.contains(.command) {
                 viewModel.toggleBatchSelection()
                 return nil
@@ -379,6 +386,16 @@ final class QuickPanelViewModel: ObservableObject {
         currentPage = 0
         applyFilter()
         isConfiguring = false
+    }
+
+    func refreshBrowserSources() {
+        let sources = Dictionary(uniqueKeysWithValues: HistoryStore.shared.snapshot().map { ($0.id, $0) })
+        allEntries = allEntries.map { sources[$0.id] ?? $0 }
+        displayed = displayed.map { item in
+            var entry = item.entry
+            entry.browserSource = sources[item.id]?.browserSource
+            return DisplayItem(id: item.id, displayNumber: item.displayNumber, entry: entry)
+        }
     }
 
     func reset() {
@@ -706,6 +723,9 @@ struct QuickPanelView: View {
         .onReceive(NotificationCenter.default.publisher(for: AchievementStore.didChangeNotification)) { _ in
             viewModel.refreshMedals()
         }
+        .onReceive(NotificationCenter.default.publisher(for: HistoryStore.didChangeNotification)) { _ in
+            viewModel.refreshBrowserSources()
+        }
         .onAppear {
             if reduceMotion {
                 hasAppeared = true
@@ -836,7 +856,8 @@ struct QuickPanelView: View {
                 title: L10n.text("quick.shortcut.normalMode"),
                 items: [
                     (L10n.text("quick.shortcut.plainPaste"), "⌥↵"),
-                    (L10n.text("quick.shortcut.formattedPaste"), "↵")
+                    (L10n.text("quick.shortcut.formattedPaste"), "↵"),
+                    (L10n.text("quick.openSource"), "⌃↵")
                 ],
                 usesModePrefix: true
             )
@@ -976,6 +997,13 @@ struct QuickPanelView: View {
                         && viewModel.selectedDisplayIndex == item.displayNumber
                     let batchOrder = viewModel.batchOrder(for: item.id)
                     itemRow(item, batchOrder: batchOrder)
+                        .contextMenu {
+                            if let source = item.entry.browserSource {
+                                Button(L10n.text("quick.openSource")) {
+                                    NSWorkspace.shared.open(source.url)
+                                }
+                            }
+                        }
                         // 设计稿:.qp-item.selected = accent-soft(0.14) + 1px border rgba(accent,0.3)
                         .background {
                             if isSelected {
@@ -1101,7 +1129,16 @@ struct QuickPanelView: View {
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(colorScheme == .dark ? .white : palette.textTertiary)
                 .frame(width: 28, alignment: .trailing)
-            previewContent(for: item.entry.kind)
+            VStack(alignment: .leading, spacing: 3) {
+                previewContent(for: item.entry.kind)
+                if let source = item.entry.browserSource {
+                    Text("\(source.browserName) · \(source.url.host ?? "")")
+                        .font(.system(size: 10))
+                        .foregroundStyle(palette.textTertiary)
+                        .lineLimit(1)
+                        .help("\(source.title)\n\(source.url.absoluteString)\n\(L10n.text("quick.sourceHint"))")
+                }
+            }
             Spacer(minLength: 0)
             if let batchOrder {
                 let tone = batchTone(for: batchOrder)

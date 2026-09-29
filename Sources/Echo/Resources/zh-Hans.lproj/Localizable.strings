@@ -85,3 +85,5 @@
 "settings.accessibility.granted" = "辅助功能权限：已授予";
 "settings.accessibility.denied" = "辅助功能权限：未授予（自动粘贴不可用）";
 "settings.openSystemSettings" = "打开设置";
+"quick.openSource" = "打开来源网页";
+"quick.sourceHint" = "复制时观察到的页面，右键可打开。";

@@ -93,6 +93,14 @@ final class HistoryStore {
 
     // MARK: - 读快照
 
+    func setBrowserSource(_ source: BrowserSource, for id: UUID) {
+        queue.async {
+            guard let index = self.entries.firstIndex(where: { $0.id == id }) else { return }
+            self.entries[index].browserSource = source
+            self.notifyChange()
+        }
+    }
+
     /// 返回当前历史的快照(队首 = 最近)。UI 列表用。
     /// 用 sync 保证读到一致状态;调用方可在任意线程。
     func snapshot() -> [ClipEntry] {

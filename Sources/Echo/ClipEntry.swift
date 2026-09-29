@@ -18,6 +18,7 @@ struct ClipEntry: Identifiable {
     let id: UUID
     let kind: Kind
     let timestamp: Date
+    var browserSource: BrowserSource?
 
     init(kind: Kind, timestamp: Date = Date(), id: UUID = UUID()) {
         self.kind = kind
@@ -74,10 +75,14 @@ struct ClipEntry: Identifiable {
     }
 }
 
-/// 文本条目的双轨数据:
-/// - `rawText` 用于纯文本粘贴,保留原始空格、换行和缩进
-/// - `representations` 用于原格式粘贴,由剪贴板读取时一次性落入内存
-/// - `normalizedText` 只用于列表预览、搜索和去重,不参与实际粘贴
+/// 复制时观察到的浏览器页面,作为候选来源保存在内存中。
+struct BrowserSource {
+    let browserName: String
+    let url: URL
+    let title: String
+}
+
+/// 原始文本用于粘贴,标准表示保留格式,规范化文本用于展示与搜索。
 struct TextPayload {
     let rawText: String
     let representations: [PasteboardRepresentation]

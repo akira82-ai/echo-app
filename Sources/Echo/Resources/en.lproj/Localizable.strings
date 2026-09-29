@@ -85,3 +85,5 @@
 "settings.accessibility.granted" = "Accessibility: Granted";
 "settings.accessibility.denied" = "Accessibility: Not Granted (auto-paste unavailable)";
 "settings.openSystemSettings" = "Open Settings";
+"quick.openSource" = "Open Source Page";
+"quick.sourceHint" = "Page observed when copying. Right-click to open.";

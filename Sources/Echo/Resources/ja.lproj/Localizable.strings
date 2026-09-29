@@ -85,3 +85,5 @@
 "settings.accessibility.granted" = "アクセシビリティ：許可済み";
 "settings.accessibility.denied" = "アクセシビリティ：未許可（自動貼り付けは利用不可）";
 "settings.openSystemSettings" = "設定を開く";
+"quick.openSource" = "コピー元のページを開く";
+"quick.sourceHint" = "コピー時に確認したページ。右クリックで開けます。";

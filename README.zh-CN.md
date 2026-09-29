@@ -36,8 +36,9 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 - ⌘ **快捷键说明页** — 按 `Tab` 在固定正文区域以三列紧凑布局查看通用、正常模式和多选模式的快捷键；按 `Esc` 返回。
 - 📤 **自动粘贴** — 选中后自动粘到当前 App 光标处，无需手动 `⌘V`。
 - 🏅 **使用成就** — 记录快捷操作、搜索、整理和长期使用习惯，12 枚勋章持续陪伴。
+- 🔗 **找回浏览器页面** — 在 Safari、Chrome、Edge 或 Ego 复制网页文字时，可显示当时观察到的浏览器和域名；右键条目或按 `⌃↵` 打开页面。此可选功能需要辅助功能权限；页面仅是复制时观察到的候选来源，不保证每次准确，标题和网址只保存在内存中。
 - 🌐 **跟随系统语言** — 界面支持简体中文、English、日本語，自动跟随 macOS 系统语言。
-- 🔒 **零权限优先** — 记录与热键无需任何权限；仅「自动粘贴」可选授权，随时可关闭。
+- 🔒 **零权限优先** — 基础剪贴板记录与热键无需权限；自动粘贴与浏览器页面找回使用可选的辅助功能权限。
 - ♻️ **本地优先** — 历史纯内存，勋章统计只保存本地计数和日期，数据不出本机。
 
 ## 🚀 快速上手
@@ -54,7 +55,7 @@ open dist/Echo.app
 
 ### 方式二：下载 Release
 
-前往 [Releases](https://github.com/akira82-ai/echo-app/releases)，下载最新 `2.5.0` 版本的 `Echo.dmg`。打开 DMG 后，将 Echo 拖进「应用程序」即可。
+前往 [Releases](https://github.com/akira82-ai/echo-app/releases)，下载最新 `2.6.0` 版本的 `Echo.dmg`。打开 DMG 后，将 Echo 拖进「应用程序」即可。
 
 当前 Release 是本机开发验证包，使用 `Echo Self-Sign` 自签名，不是 Apple Developer ID 签名和 notarization 的正式发行包。因此，首次打开时 macOS 可能提示「无法验证开发者」或拦截应用：
 
