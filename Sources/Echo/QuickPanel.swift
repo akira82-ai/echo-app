@@ -717,7 +717,7 @@ struct QuickPanelView: View {
         .background {
             ZStack {
                 Rectangle().fill(.ultraThinMaterial)
-                Rectangle().fill(palette.windowTint)
+                Rectangle().fill(colorScheme == .dark ? palette.windowBackground : palette.windowTint)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: AchievementStore.didChangeNotification)) { _ in
@@ -760,11 +760,12 @@ struct QuickPanelView: View {
                     Text(L10n.text("quick.multiSelect"))
                 }
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(palette.accent)
+                .foregroundStyle(colorScheme == .dark ? Color(red: 0.65, green: 0.82, blue: 1) : palette.accent)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(palette.accentSoft)
                 .clipShape(Capsule())
+                .overlay(Capsule().stroke(colorScheme == .dark ? palette.accent.opacity(0.45) : .clear, lineWidth: 1))
                 .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.94)))
             }
         }
@@ -1183,8 +1184,11 @@ struct QuickPanelView: View {
                     .cornerRadius(6)
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(palette.border, lineWidth: 1))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.text("quick.imagePreview")).foregroundStyle(palette.textSecondary).font(.system(size: 13))
-                    Text(ref.sizeText).font(.system(size: 10.5)).foregroundStyle(palette.textTertiary)
+                    Text(L10n.text("quick.imagePreview"))
+                        .foregroundStyle(colorScheme == .dark ? palette.textPrimary : palette.textSecondary)
+                        .font(.system(size: 13))
+                    Text(ref.sizeText).font(.system(size: 10.5))
+                        .foregroundStyle(colorScheme == .dark ? Color(red: 0.71, green: 0.75, blue: 0.81) : palette.textTertiary)
                 }
             }
         case .files(let urls):
@@ -1211,9 +1215,9 @@ struct QuickPanelView: View {
     private func typeTag(for kind: ClipEntry.Kind) -> some View {
         let (text, color, soft): (String, Color, Color) = {
             switch kind {
-            case .text: return (L10n.text("quick.type.text"), palette.accent, palette.accentSoft)
-            case .image: return (L10n.text("quick.type.image"), palette.purple, palette.purpleSoft)
-            case .files: return (L10n.text("quick.type.file"), palette.green, palette.greenSoft)
+            case .text: return (L10n.text("quick.type.text"), colorScheme == .dark ? Color(red: 0.65, green: 0.82, blue: 1) : palette.accent, palette.accentSoft)
+            case .image: return (L10n.text("quick.type.image"), colorScheme == .dark ? Color(red: 0.82, green: 0.74, blue: 1) : palette.purple, palette.purpleSoft)
+            case .files: return (L10n.text("quick.type.file"), colorScheme == .dark ? Color(red: 0.51, green: 0.90, blue: 0.75) : palette.green, palette.greenSoft)
             }
         }()
         return Text(text)
@@ -1223,6 +1227,7 @@ struct QuickPanelView: View {
             .background(soft)
             .foregroundStyle(color)
             .cornerRadius(5)
+            .overlay(RoundedRectangle(cornerRadius: 5).stroke(colorScheme == .dark ? color.opacity(0.45) : .clear, lineWidth: 1))
     }
 
     private func batchTone(for order: Int) -> (primary: Color, soft: Color) {

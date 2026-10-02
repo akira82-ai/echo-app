@@ -31,6 +31,7 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 - ⌨️ **Global shortcut** — Open the Spotlight-style panel with `⌘\` from any app.
 - ✨ **Subtle entrance motion** — The panel and first page appear naturally while respecting macOS Reduce Motion.
 - 🎯 **Continuous selection feedback** — The highlight follows keyboard movement smoothly and keeps batch selections clear.
+- 🌙 **Clearer dark mode** — A more opaque panel background and higher-contrast batch selection indicators, content-type labels, and image details make the panel easier to read.
 - 🧩 **Batch text paste** — Hold `⌘`, click or press `⌘↵` to add up to five text items, then release `⌘` and press `↵` to paste them in order as one block.
 - 🧹 **Quick cleanup** — Press `⌥⌫` to remove the current item without taking over Backspace in search.
 - ⌘ **Shortcut reference** — Press `Tab` to view a compact three-column reference for general, normal, and batch-mode shortcuts; press `Esc` to return.
@@ -55,7 +56,7 @@ open dist/Echo.app
 
 ### Option 2: Download a Release
 
-Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.6.0` release. Open the DMG and drag Echo to Applications.
+Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.6.1` release (build 13). Open the DMG and drag Echo to Applications.
 
 Current releases are development-verified builds signed with `Echo Self-Sign`, not Apple Developer ID-signed or notarized distribution builds. The first launch may be blocked by macOS:
 

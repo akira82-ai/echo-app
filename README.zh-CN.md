@@ -31,6 +31,7 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 - ⌨️ **全局热键** — `⌘\` 呼出 Spotlight 风格面板，任意 App 中可用。
 - ✨ **轻量入场动效** — 面板与首屏条目自然出现，尊重 macOS「减少动态效果」设置。
 - 🎯 **选中反馈更连贯** — 键盘移动时高亮背景平滑跟随，不打断连续选择；多选时只突出已选条目。
+- 🌙 **深色模式更清晰** — 降低面板底色的透明度，提高多选提示、内容类型标签和图片信息的对比度，让内容更容易看清。
 - 🧩 **文本多选粘贴** — 按住 `⌘` 后，点击或按 `⌘↵` 选择最多 5 条文本；松开后按 `↵`，按选择顺序合并粘贴。
 - 🧹 **快速整理** — 按 `⌥⌫` 删除当前条目，不占用搜索框的退格键。
 - ⌘ **快捷键说明页** — 按 `Tab` 在固定正文区域以三列紧凑布局查看通用、正常模式和多选模式的快捷键；按 `Esc` 返回。
@@ -55,7 +56,7 @@ open dist/Echo.app
 
 ### 方式二：下载 Release
 
-前往 [Releases](https://github.com/akira82-ai/echo-app/releases)，下载最新 `2.6.0` 版本的 `Echo.dmg`。打开 DMG 后，将 Echo 拖进「应用程序」即可。
+前往 [Releases](https://github.com/akira82-ai/echo-app/releases)，下载最新 `2.6.1` 版本（build 13）的 `Echo.dmg`。打开 DMG 后，将 Echo 拖进「应用程序」即可。
 
 当前 Release 是本机开发验证包，使用 `Echo Self-Sign` 自签名，不是 Apple Developer ID 签名和 notarization 的正式发行包。因此，首次打开时 macOS 可能提示「无法验证开发者」或拦截应用：
 
