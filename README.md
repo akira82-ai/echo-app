@@ -1,5 +1,12 @@
 <div align="center">
 
+# 🏆 Featured in
+# [Awesome Swift macOS Apps](https://github.com/jaywcjlove/awesome-swift-macos-apps)
+
+**Echo is now part of a curated list of open-source Swift macOS apps.**
+
+---
+
 If Echo helps you, please consider giving it a [⭐ Star](https://github.com/akira82-ai/echo-app).
 
 # Echo 📋

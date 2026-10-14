@@ -1,5 +1,12 @@
 <div align="center">
 
+# 🏆 已收录于
+# [Awesome Swift macOS Apps](https://github.com/jaywcjlove/awesome-swift-macos-apps)
+
+**Echo 已加入 Swift macOS 开源应用精选列表**
+
+---
+
 如果 Echo 对你有帮助，欢迎点个 [⭐ Star](https://github.com/akira82-ai/echo-app) 支持一下。
 
 # Echo 📋
