@@ -8,7 +8,7 @@
 "menu.monitoring" = "✅ Echo · 监听剪贴板中";
 
 "quick.batch.textOnly" = "批量粘贴仅支持文本";
-"quick.search.placeholder" = "输入 1-5 直达本页 / 关键词搜索";
+"quick.search.placeholder" = "搜索剪贴板";
 "quick.multiSelect" = "多选";
 "quick.shortcut.general" = "通用快捷键";
 "quick.shortcut.move" = "上下移动";
@@ -87,3 +87,17 @@
 "settings.openSystemSettings" = "打开设置";
 "quick.openSource" = "打开来源网页";
 "quick.sourceHint" = "复制时观察到的页面，右键可打开。";
+
+"quick.directHint" = "1–5 直达";
+
+"quick.guideTitle" = "快捷键指南";
+
+"quick.pasteSource" = "粘贴与来源";
+
+"quick.sourceAvailableNote" = "仅在条目已有来源网址时可打开网页。";
+
+"quick.status.page" = "%d 条 · 第 %d 页";
+
+"quick.pasteHints" = "↵ 原格式　⌥↵ 纯文本";
+
+"quick.help" = "帮助";

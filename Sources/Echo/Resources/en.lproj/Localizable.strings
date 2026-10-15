@@ -8,7 +8,7 @@
 "menu.monitoring" = "✅ Echo · Monitoring Clipboard";
 
 "quick.batch.textOnly" = "Multi-paste supports text only";
-"quick.search.placeholder" = "Press 1-5 to select / Search";
+"quick.search.placeholder" = "Search clipboard";
 "quick.multiSelect" = "Multi-select";
 "quick.shortcut.general" = "Shortcuts";
 "quick.shortcut.move" = "Move";
@@ -87,3 +87,17 @@
 "settings.openSystemSettings" = "Open Settings";
 "quick.openSource" = "Open Source Page";
 "quick.sourceHint" = "Page observed when copying. Right-click to open.";
+
+"quick.directHint" = "1–5 Jump";
+
+"quick.guideTitle" = "Keyboard shortcuts";
+
+"quick.pasteSource" = "Paste & source";
+
+"quick.sourceAvailableNote" = "Open a page only when a source URL is available.";
+
+"quick.status.page" = "%d items · Page %d";
+
+"quick.pasteHints" = "↵ Original   ⌥↵ Plain text";
+
+"quick.help" = "Help";

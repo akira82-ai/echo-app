@@ -8,7 +8,7 @@
 "menu.monitoring" = "✅ Echo · クリップボード監視中";
 
 "quick.batch.textOnly" = "複数貼り付けはテキストのみ対応";
-"quick.search.placeholder" = "1～5で選択 / キーワード検索";
+"quick.search.placeholder" = "クリップボードを検索";
 "quick.multiSelect" = "複数選択";
 "quick.shortcut.general" = "基本操作";
 "quick.shortcut.move" = "上下移動";
@@ -87,3 +87,17 @@
 "settings.openSystemSettings" = "設定を開く";
 "quick.openSource" = "コピー元のページを開く";
 "quick.sourceHint" = "コピー時に確認したページ。右クリックで開けます。";
+
+"quick.directHint" = "1–5 で選択";
+
+"quick.guideTitle" = "キーボードショートカット";
+
+"quick.pasteSource" = "貼り付けとソース";
+
+"quick.sourceAvailableNote" = "ソースURLがある項目のみページを開けます。";
+
+"quick.status.page" = "%d 件 · %d ページ";
+
+"quick.pasteHints" = "↵ 元の形式　⌥↵ 標準テキスト";
+
+"quick.help" = "ヘルプ";

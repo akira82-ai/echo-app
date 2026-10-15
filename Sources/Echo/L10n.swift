@@ -1,7 +1,14 @@
 import Foundation
 
 enum L10n {
-    private static let bundle = Bundle.module
+    private static let bundle: Bundle = {
+        // Packaged apps keep SwiftPM resources inside Contents/Resources.
+        if let url = Bundle.main.url(forResource: "Echo_Echo", withExtension: "bundle"),
+           let resources = Bundle(url: url) {
+            return resources
+        }
+        return Bundle.module
+    }()
 
     static func text(_ key: String) -> String {
         NSLocalizedString(key, tableName: nil, bundle: bundle, value: key, comment: "")

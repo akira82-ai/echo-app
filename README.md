@@ -15,7 +15,7 @@ If Echo helps you, please consider giving it a [⭐ Star](https://github.com/aki
 
 Echo lives in your Mac menu bar, automatically saves copied text, images, and files, then lets you find and paste them back with one shortcut.
 
-**Smart capture · Fast recall · Intelligent search · Achievement system**
+**Smart capture · Fast recall · Intelligent search · Copy sources**
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
@@ -38,17 +38,16 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 - ⌨️ **Global shortcut** — Open the Spotlight-style panel with `⌘\` from any app.
 - ✨ **Subtle entrance motion** — The panel and first page appear naturally while respecting macOS Reduce Motion.
 - 🎯 **Continuous selection feedback** — The highlight follows keyboard movement smoothly and keeps batch selections clear.
-- 🌙 **Clearer dark mode** — A more opaque panel background and higher-contrast batch selection indicators, content-type labels, and image details make the panel easier to read.
+- 🌙 **Focused light and dark panel** — A compact search bar, five fixed-height rows, subtle type labels, and a clear selection marker keep copied content in focus. Available app names and browser URLs remain visible beneath the content; the footer shows the current page and paste actions.
 - 🧩 **Batch text paste** — Hold `⌘`, click or press `⌘↵` to add up to five text items, then release `⌘` and press `↵` to paste them in order as one block.
 - 🧹 **Quick cleanup** — Press `⌥⌫` to remove the current item without taking over Backspace in search.
-- ⌘ **Shortcut reference** — Press `Tab` to view a compact three-column reference for general, normal, and batch-mode shortcuts; press `Esc` to return.
+- ⌘ **Complete shortcut reference** — Press `Tab` or click Help for a two-column guide covering navigation, paste and source actions, and text multi-select. Press `Tab` again to return to history; `Esc` closes the panel.
 - 📤 **Auto Paste** — Selecting an item pastes it into the focused app without a separate `⌘V`.
-- 🏅 **Achievements** — Tracks shortcuts, search, cleanup, and long-term habits across twelve medals.
 - 🏷️ **Copy source** — Checks clipboard changes every 0.1 seconds. Regular apps show the observed app name; browsers show “browser name · page URL.” Unavailable sources are hidden. Attribution is a best-effort foreground-app observation, not a system-verified writer identity.
 - 🔗 **Browser page recall** — Supports Safari, Chrome, Edge, and Ego for text, image, and file entries. Right-click an item or press `⌃↵` to open its observed page. URL capture requires Accessibility permission; unadapted browsers show no source. App names, page titles, and URLs stay in memory.
 - 🌐 **System language support** — The interface follows macOS and is available in Simplified Chinese, English, and Japanese.
 - 🔒 **Permissions first** — Basic clipboard capture and the shortcut require no permissions; Auto Paste and browser page recall use optional Accessibility permission.
-- ♻️ **On-device by default** — History stays in memory and achievement statistics store only local counters and dates.
+- ♻️ **On-device by default** — History stays in memory and clears when Echo quits or restarts. Existing achievement counters remain local; the main panel no longer shows an achievement entry point.
 
 ## 🚀 Quick Start
 
@@ -64,7 +63,7 @@ open dist/Echo.app
 
 ### Option 2: Download a Release
 
-Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.7.0` release (build 14). Open the DMG and drag Echo to Applications.
+Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.8.0` release (build 15). Open the DMG and drag Echo to Applications.
 
 Current releases are development-verified builds signed with `Echo Self-Sign`, not Apple Developer ID-signed or notarized distribution builds. The first launch may be blocked by macOS:
 
@@ -80,7 +79,7 @@ The first use of Auto Paste opens macOS Accessibility permission guidance. Once 
    Use ⌥↵ to paste plain text; formatting is preserved by default.
 4. Hold ⌘, select up to five text items, release ⌘, then press ↵ to paste them together in order.
 5. Press ⌥⌫ to remove the current item and keep organizing.
-6. Press Tab for the shortcut reference; press Esc to return to history.
+6. Press Tab for the shortcut reference; press Tab again to return to history (Esc closes the panel).
 ```
 
 **System requirements:** macOS 13 Ventura or later.

@@ -2,16 +2,16 @@ import SwiftUI
 
 enum EchoTheme {
     struct Palette {
-        let windowBackground: Color
+        var windowBackground: Color
         let windowTint: Color
         let titleBarBackground: Color
-        let border: Color
-        let borderStrong: Color
-        let textPrimary: Color
-        let textSecondary: Color
-        let textTertiary: Color
-        let accent: Color
-        let accentSoft: Color
+        var border: Color
+        var borderStrong: Color
+        var textPrimary: Color
+        var textSecondary: Color
+        var textTertiary: Color
+        var accent: Color
+        var accentSoft: Color
         let green: Color
         let greenSoft: Color
         let yellow: Color
@@ -31,6 +31,26 @@ enum EchoTheme {
         let controlBorder: Color
         let achievementLockedBackground: Color
         let achievementLockedIconBackground: Color
+    }
+
+    /// Fixed panel colors from the approved compact HTML; settings retain their existing palette.
+    static func panelPalette(for scheme: ColorScheme) -> Palette {
+        var result = palette(for: scheme)
+        func rgb(_ hex: UInt32) -> Color {
+            Color(red: Double((hex >> 16) & 255) / 255,
+                  green: Double((hex >> 8) & 255) / 255,
+                  blue: Double(hex & 255) / 255)
+        }
+        let dark = scheme == .dark
+        result.windowBackground = rgb(dark ? 0x292d31 : 0xf6f7f7)
+        result.textPrimary = rgb(dark ? 0xe4e7e8 : 0x303a41)
+        result.textSecondary = rgb(dark ? 0xc1ccd3 : 0x516471)
+        result.textTertiary = rgb(dark ? 0x88949c : 0x76848e)
+        result.accent = rgb(dark ? 0xabcce4 : 0x638aaa)
+        result.accentSoft = rgb(dark ? 0x8db6d5 : 0x547e9f).opacity(dark ? 0.17 : 0.106)
+        result.border = (dark ? Color.white : Color.black).opacity(0.045)
+        result.borderStrong = (dark ? Color.white : Color.black).opacity(dark ? 0.13 : 0.07)
+        return result
     }
 
     static func palette(for colorScheme: ColorScheme) -> Palette {

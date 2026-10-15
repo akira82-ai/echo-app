@@ -22,7 +22,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
-        static let panelHeight: CGFloat = 425
+        static let panelHeight: CGFloat = 400
     }
 
     /// 选中某条历史项时调用(主线程)。
@@ -232,7 +232,11 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         panel.level = .floating
         // 系统原生标题栏:显示 Echo 标题 + 真实交通灯(保持系统默认外观)
         panel.title = "Echo"
-        panel.titleVisibility = .visible
+        panel.titleVisibility = .hidden
+        panel.titlebarAppearsTransparent = true
+        panel.standardWindowButton(.closeButton)?.isHidden = true
+        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        panel.standardWindowButton(.zoomButton)?.isHidden = true
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
         panel.isOpaque = false
@@ -674,30 +678,30 @@ struct QuickPanelView: View {
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
-        static let panelHeight: CGFloat = 425
-        static let searchHeight: CGFloat = 72
+        static let panelHeight: CGFloat = 400
+        static let searchHeight: CGFloat = 61
         static let rowHeight: CGFloat = 56
-        static let listVerticalPadding: CGFloat = 8
-        static let listHeight: CGFloat = 304
+        static let listVerticalPadding: CGFloat = 11
+        static let listHeight: CGFloat = 302
         // HTML .qp-achievement: height 296 + padding 12px 14px + 8px grid gaps.
         static let achievementHeight: CGFloat = 296
         static let achievementHorizontalPadding: CGFloat = 14
         static let achievementVerticalPadding: CGFloat = 12
         static let achievementGridSpacing: CGFloat = 8
         static let medalRowHeight: CGFloat = 85.333333
-        static let footerHeight: CGFloat = 48
+        static let footerHeight: CGFloat = 36
         static let footerContentHeight: CGFloat = 28
         static let keyCapHeight: CGFloat = 22
         // The guide occupies the same outer content slot as the five-row list.
         // Its inner content remains padded within this fixed 304pt area.
-        static let shortcutGuideHeight: CGFloat = 304
+        static let shortcutGuideHeight: CGFloat = 302
         static let shortcutGuideHorizontalPadding: CGFloat = 22
         static let shortcutGuideVerticalPadding: CGFloat = 14
         static let shortcutGuideColumnGap: CGFloat = 18
     }
 
     private var palette: EchoTheme.Palette {
-        EchoTheme.palette(for: colorScheme)
+        EchoTheme.panelPalette(for: colorScheme)
     }
 
     var body: some View {
@@ -715,12 +719,9 @@ struct QuickPanelView: View {
         }
         .frame(width: Layout.panelWidth, height: Layout.panelHeight)
         // 设计稿:单一深色面板 + 毛玻璃底,避免重复叠背景导致发灰
-        .background {
-            ZStack {
-                Rectangle().fill(.ultraThinMaterial)
-                Rectangle().fill(colorScheme == .dark ? palette.windowBackground : palette.windowTint)
-            }
-        }
+        .background(palette.windowBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(palette.borderStrong, lineWidth: 1))
         .onReceive(NotificationCenter.default.publisher(for: AchievementStore.didChangeNotification)) { _ in
             viewModel.refreshMedals()
         }
@@ -752,9 +753,14 @@ struct QuickPanelView: View {
                 .font(.system(size: 16))
             TextField(L10n.text("quick.search.placeholder"), text: $viewModel.query)
                 .textFieldStyle(.plain)
-                .font(.system(size: 18))
+                .font(.system(size: 15))
                 .focused($fieldFocused)
                 .disabled(viewModel.showsAchievements || viewModel.showsShortcutGuide)
+            if !viewModel.isCommandPressed {
+                Text(L10n.text("quick.directHint"))
+                    .font(.system(size: 9))
+                    .foregroundStyle(palette.textTertiary)
+            }
             if viewModel.isCommandPressed && !viewModel.showsAchievements && !viewModel.showsShortcutGuide {
                 HStack(spacing: 4) {
                     Image(systemName: "command")
@@ -841,43 +847,36 @@ struct QuickPanelView: View {
 
     /// 快捷键说明页:与历史列表共用正文槽位,不改变面板尺寸。
     private var shortcutGuideArea: some View {
-        HStack(alignment: .top, spacing: Layout.shortcutGuideColumnGap) {
-            shortcutColumn(
-                title: L10n.text("quick.shortcut.general"),
-                items: [
-                    (L10n.text("quick.shortcut.move"), "↑↓"),
-                    (L10n.text("quick.shortcut.page"), "←→"),
-                    (L10n.text("quick.shortcut.close"), "esc"),
+        VStack(alignment: .leading, spacing: 13) {
+            Text(L10n.text("quick.guideTitle"))
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(palette.textPrimary)
+            HStack(alignment: .top, spacing: 23) {
+                shortcutColumn(title: L10n.text("quick.shortcut.general"), items: [
+                    (L10n.text("quick.shortcut.move"), "↑ ↓"),
+                    (L10n.text("quick.shortcut.page"), "← →"),
                     (L10n.text("quick.shortcut.search"), L10n.text("quick.shortcut.type")),
                     (L10n.text("quick.shortcut.direct"), "1–5"),
-                    (L10n.text("quick.shortcut.delete"), "⌥⌫")
-                ],
-                usesModePrefix: true
-            )
-            shortcutColumn(
-                title: L10n.text("quick.shortcut.normalMode"),
-                items: [
-                    (L10n.text("quick.shortcut.plainPaste"), "⌥↵"),
-                    (L10n.text("quick.shortcut.formattedPaste"), "↵"),
-                    (L10n.text("quick.openSource"), "⌃↵")
-                ],
-                usesModePrefix: true
-            )
-            shortcutColumn(
-                title: L10n.text("quick.shortcut.multiMode"),
-                items: [
-                    (L10n.text("quick.shortcut.enterMulti"), L10n.text("quick.shortcut.holdCommand")),
-                    (L10n.text("quick.shortcut.addRemove"), L10n.text("quick.shortcut.click")),
-                    (L10n.text("quick.shortcut.mergePaste"), L10n.text("quick.shortcut.releaseCommand"))
-                ],
-                note: L10n.text("quick.shortcut.textOnly"),
-                usesModePrefix: true
-            )
+                    (L10n.text("quick.shortcut.delete"), "⌥⌫"),
+                    (L10n.text("quick.shortcut.close"), "esc")
+                ])
+                VStack(alignment: .leading, spacing: 14) {
+                    shortcutColumn(title: L10n.text("quick.pasteSource"), items: [
+                        (L10n.text("quick.shortcut.formattedPaste"), "↵"),
+                        (L10n.text("quick.shortcut.plainPaste"), "⌥↵"),
+                        (L10n.text("quick.openSource"), "⌃↵")
+                    ], note: L10n.text("quick.sourceAvailableNote"))
+                    shortcutColumn(title: L10n.text("quick.shortcut.multiMode"), items: [
+                        (L10n.text("quick.shortcut.enterMulti"), L10n.text("quick.shortcut.holdCommand")),
+                        (L10n.text("quick.shortcut.addRemove"), L10n.text("quick.shortcut.click")),
+                        (L10n.text("quick.shortcut.mergePaste"), L10n.text("quick.shortcut.releaseCommand"))
+                    ], note: L10n.text("quick.shortcut.textOnly"))
+                }
+            }
         }
-        .padding(.horizontal, Layout.shortcutGuideHorizontalPadding)
-        .padding(.vertical, Layout.shortcutGuideVerticalPadding)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 17)
         .frame(maxWidth: .infinity, minHeight: Layout.shortcutGuideHeight, maxHeight: Layout.shortcutGuideHeight, alignment: .topLeading)
-        .background(palette.footerBackground.opacity(colorScheme == .dark ? 0.35 : 0.45))
     }
 
     private func shortcutColumn(
@@ -891,10 +890,10 @@ struct QuickPanelView: View {
                 if usesModePrefix {
                     Text("/ ")
                 }
-                Text(title.uppercased())
+                Text(title)
             }
-            .font(.system(size: 10, weight: .semibold, design: .monospaced))
-            .tracking(0.8)
+            .font(.system(size: 10, weight: .medium))
+            .tracking(0)
             .foregroundStyle(palette.accent)
             .padding(.bottom, 6)
             .lineLimit(1)
@@ -912,7 +911,7 @@ struct QuickPanelView: View {
                 Text(note)
                     .font(.system(size: 10))
                     .foregroundStyle(palette.textTertiary)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 7)
             }
         }
@@ -929,7 +928,7 @@ struct QuickPanelView: View {
             Spacer(minLength: 0)
             shortcutKeycap(keys)
         }
-        .frame(maxWidth: .infinity, minHeight: 30, maxHeight: 30, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 25, maxHeight: 25, alignment: .leading)
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(palette.border)
@@ -939,17 +938,9 @@ struct QuickPanelView: View {
 
     private func shortcutKeycap(_ keys: String) -> some View {
         Text(keys)
-            .font(.system(size: 10.5, design: .monospaced))
-            .foregroundStyle(palette.keycapText)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .frame(minHeight: Layout.keyCapHeight)
-            .background(palette.keycapBackground)
-            .overlay {
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(palette.borderStrong, lineWidth: 1)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .font(.system(size: 9))
+            .foregroundStyle(palette.textSecondary)
+            .fixedSize()
     }
 
     private func medalView(_ medal: AchievementStore.Medal) -> some View {
@@ -990,7 +981,7 @@ struct QuickPanelView: View {
 
     /// 有内容时的固定 5 行列表。
     private var populatedList: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 0) {
             ForEach(0..<viewModel.pageSize, id: \.self) { slot in
                 if slot < viewModel.pageItems.count {
                     let item = viewModel.pageItems[slot]
@@ -1013,8 +1004,13 @@ struct QuickPanelView: View {
                                     .fill(palette.accentSoft)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
-                                            .stroke(palette.accent.opacity(0.3), lineWidth: 1)
+                                            .stroke(palette.accent.opacity(0.25), lineWidth: 1)
                                     )
+                                    .overlay(alignment: .leading) {
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(palette.accent)
+                                            .frame(width: 3, height: 26)
+                                    }
                                     .matchedGeometryEffect(id: "selected-row-background", in: selectionNamespace)
                             } else if let batchOrder {
                                 let tone = batchTone(for: batchOrder)
@@ -1129,8 +1125,8 @@ struct QuickPanelView: View {
         HStack(spacing: 14) {
             Text("\(item.displayNumber)")
                 .font(.system(size: 12, design: .monospaced))
-                .foregroundStyle(colorScheme == .dark ? .white : palette.textTertiary)
-                .frame(width: 28, alignment: .trailing)
+                .foregroundStyle(palette.textTertiary)
+                .frame(width: 22, alignment: .center)
             VStack(alignment: .leading, spacing: 3) {
                 previewContent(for: item.entry.kind)
                 if let source = item.entry.browserSource {
@@ -1175,7 +1171,7 @@ struct QuickPanelView: View {
         switch kind {
         case .text(let payload):
             Text(payload.normalizedText.previewString(maxLines: 1))
-                .font(.system(size: 13.5))
+                .font(.system(size: 13))
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .foregroundStyle(palette.textPrimary)
@@ -1208,7 +1204,7 @@ struct QuickPanelView: View {
                     .cornerRadius(7)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(filesPreview(urls))
-                        .font(.system(size: 13.5)).lineLimit(1).truncationMode(.tail)
+                        .font(.system(size: 13)).lineLimit(1).truncationMode(.tail)
                         .foregroundStyle(palette.textPrimary)
                     Text(filesLocation(urls))
                         .font(.system(size: 10.5)).foregroundStyle(palette.textTertiary)
@@ -1219,21 +1215,15 @@ struct QuickPanelView: View {
 
     /// 类型标签。设计稿:font10 weight600 padding 2/7 圆角5 + soft 底(0.14)。
     private func typeTag(for kind: ClipEntry.Kind) -> some View {
-        let (text, color, soft): (String, Color, Color) = {
-            switch kind {
-            case .text: return (L10n.text("quick.type.text"), colorScheme == .dark ? Color(red: 0.65, green: 0.82, blue: 1) : palette.accent, palette.accentSoft)
-            case .image: return (L10n.text("quick.type.image"), colorScheme == .dark ? Color(red: 0.82, green: 0.74, blue: 1) : palette.purple, palette.purpleSoft)
-            case .files: return (L10n.text("quick.type.file"), colorScheme == .dark ? Color(red: 0.51, green: 0.90, blue: 0.75) : palette.green, palette.greenSoft)
-            }
-        }()
+        let text: String
+        switch kind {
+        case .text: text = L10n.text("quick.type.text")
+        case .image: text = L10n.text("quick.type.image")
+        case .files: text = L10n.text("quick.type.file")
+        }
         return Text(text)
-            .font(.system(size: 10, weight: .semibold))
-            .tracking(0.4)   // 设计稿 letter-spacing:0.04em
-            .padding(.horizontal, 7).padding(.vertical, 2)
-            .background(soft)
-            .foregroundStyle(color)
-            .cornerRadius(5)
-            .overlay(RoundedRectangle(cornerRadius: 5).stroke(colorScheme == .dark ? color.opacity(0.45) : .clear, lineWidth: 1))
+            .font(.system(size: 9))
+            .foregroundStyle(palette.textTertiary)
     }
 
     private func batchTone(for order: Int) -> (primary: Color, soft: Color) {
@@ -1260,29 +1250,17 @@ struct QuickPanelView: View {
         }
         .padding(.horizontal, 18)
         .frame(height: Layout.footerHeight, alignment: .center)
-        .background(palette.footerBackground)
+        .background(Color.clear)
         // 设计稿:.qp-footer border-top:1px solid var(--border)
         .overlay(Rectangle().frame(height: 1).foregroundStyle(palette.border), alignment: .top)
     }
 
     /// 左侧状态拆开渲染,避免 emoji 影响整行文字基线。
     private var statusSummary: some View {
-        HStack(spacing: 7) {
-            Button {
-                viewModel.toggleAchievements()
-            } label: {
-                Text("🏅")
-                    .font(.system(size: 14))
-                    .frame(width: 18, height: Layout.footerContentHeight, alignment: .center)
-            }
-            .buttonStyle(.plain)
-            .help(L10n.text(viewModel.showsAchievements ? "quick.backToHistory" : "quick.viewAchievements"))
-            Text(statusText)
-                .font(.system(size: 11))
-                .foregroundStyle(colorScheme == .dark ? .white : palette.textTertiary)
-                .lineLimit(1)
-        }
-        .frame(height: Layout.footerContentHeight, alignment: .center)
+        Text(statusText)
+            .font(.system(size: 9))
+            .foregroundStyle(palette.textTertiary)
+            .lineLimit(1)
     }
 
     private var statusText: String {
@@ -1295,15 +1273,23 @@ struct QuickPanelView: View {
         if !viewModel.batchSelectionIDs.isEmpty {
             return L10n.format("quick.status.selected", viewModel.batchSelectionIDs.count)
         }
-        return L10n.format("quick.status.recorded", viewModel.allEntries.count, AppSettings.shared.historyLimit)
+        return L10n.format("quick.status.page", viewModel.allEntries.count, viewModel.currentPage + 1)
     }
 
-    @ViewBuilder
     private var shortcutHints: some View {
-        kbdHint(
-            "tab",
-            L10n.text(viewModel.showsShortcutGuide ? "quick.backToHistory" : "quick.viewShortcuts")
-        )
+        HStack(spacing: 14) {
+            if !viewModel.showsShortcutGuide {
+                Text(L10n.text("quick.pasteHints"))
+                    .foregroundStyle(palette.textSecondary)
+            }
+            Button {
+                viewModel.toggleShortcutGuide()
+            } label: {
+                Text("Tab " + L10n.text(viewModel.showsShortcutGuide ? "quick.backToHistory" : "quick.help"))
+            }
+            .buttonStyle(.plain)
+        }
+        .font(.system(size: 9))
     }
 
     /// 按键提示。设计稿 .kbd:panel-solid 深色实底 + border-strong + 圆角4 + text-dim 亮字。
@@ -1319,7 +1305,7 @@ struct QuickPanelView: View {
                 .frame(minHeight: Layout.keyCapHeight, alignment: .center)
             Text(label)
                 .lineLimit(1)
-                .foregroundStyle(colorScheme == .dark ? .white : palette.textTertiary)
+                .foregroundStyle(palette.textTertiary)
         }
         .frame(height: Layout.footerContentHeight, alignment: .center)
     }
