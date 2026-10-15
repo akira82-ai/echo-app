@@ -6,11 +6,10 @@ import AppKit
 /// 设计依据(详见 design-plan.html 板块3「changeCount 轮询」):
 /// - 监听「剪贴板本身」而非「按键」,覆盖所有复制来源(右键/剪切/拖拽/快捷键)
 /// - **零权限**:只用 NSPasteboard 公开 API + Timer
-/// - 0.5s 延迟肉眼几乎无感,换来全覆盖 + 稳定(不会像 CGEventTap 被系统禁用)
-/// - 这是 Maccy / Flycut / Paste 等所有同类工具的标准方案
+/// - 每 0.1s 检测变化,缩短观察前台应用的时间窗口。
 ///
 /// 工作流:
-/// 1. Timer 每 0.5s 在主线程触发(主线程访问 NSPasteboard 最安全)
+/// 1. Timer 每 0.1s 在主线程触发(主线程访问 NSPasteboard 最安全)
 /// 2. 比较 changeCount:变了 → 延迟一小段读剪贴板 → 分类 → 入历史
 /// 3. 延迟读取是为了等系统把内容完整写入剪贴板(尤其图片)
 ///
@@ -19,8 +18,8 @@ import AppKit
 final class ClipboardWatcher {
     static let shared = ClipboardWatcher()
 
-    /// 轮询间隔(秒)。0.5s 是体验与电量的平衡点。
-    static let pollInterval: TimeInterval = 0.5
+    /// 轮询间隔(秒)。只在 changeCount 变化后读取内容和前台应用。
+    static let pollInterval: TimeInterval = 0.1
 
     /// 读剪贴板前的短延迟(毫秒),等系统把内容写完整(图片尤其需要)。
     static let readDelayMs: Int = 80
@@ -51,6 +50,7 @@ final class ClipboardWatcher {
         let t = Timer(timeInterval: Self.pollInterval, repeats: true) { [weak self] _ in
             self?.tick()
         }
+        t.tolerance = 0.01
         // common 模式确保菜单打开、拖拽等场景下定时器仍触发
         RunLoop.main.add(t, forMode: .common)
         timer = t
@@ -92,15 +92,23 @@ final class ClipboardWatcher {
         // 延迟一小段再读,等系统把内容写完整
         let delay = Self.readDelayMs
         let sourceApp = NSWorkspace.shared.frontmostApplication
+        let sourceAppName: String?
+        if let sourceApp,
+           sourceApp.processIdentifier != ProcessInfo.processInfo.processIdentifier,
+           !BrowserSourceReader.shared.isBrowser(sourceApp) {
+            sourceAppName = sourceApp.localizedName.flatMap { $0.isEmpty ? nil : $0 }
+        } else {
+            sourceAppName = nil
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delay)) { [weak self] in
             guard self != nil, NSPasteboard.general.changeCount == current else { return }
-            guard let entry = ClipboardReader.shared.read() else { return }
+            guard var entry = ClipboardReader.shared.read() else { return }
+            entry.sourceAppName = sourceAppName
             HistoryStore.shared.append(entry)
-            // Text entries retain this copy event's ID through deduplication.
-            guard case .text = entry.kind,
-                  NSWorkspace.shared.frontmostApplication?.processIdentifier == sourceApp?.processIdentifier else { return }
+            // Read a browser URL only while the observed app remains in front.
+            guard NSWorkspace.shared.frontmostApplication?.processIdentifier == sourceApp?.processIdentifier else { return }
             BrowserSourceReader.shared.capture(app: sourceApp, changeCount: current) { source in
-                if let source { HistoryStore.shared.setBrowserSource(source, for: entry.id) }
+                if let source { HistoryStore.shared.setBrowserSource(source, for: entry.sourceEventID) }
             }
         }
     }

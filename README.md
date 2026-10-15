@@ -44,7 +44,8 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 - ⌘ **Shortcut reference** — Press `Tab` to view a compact three-column reference for general, normal, and batch-mode shortcuts; press `Esc` to return.
 - 📤 **Auto Paste** — Selecting an item pastes it into the focused app without a separate `⌘V`.
 - 🏅 **Achievements** — Tracks shortcuts, search, cleanup, and long-term habits across twelve medals.
-- 🔗 **Browser page recall** — For text copied in Safari, Chrome, Edge, or Ego, Echo can show the observed browser and domain. Right-click the item or press `⌃↵` to open that page. This optional feature requires Accessibility permission; the page is a best-effort observation at copy time, not a guaranteed source, and its title and URL stay in memory.
+- 🏷️ **Copy source** — Checks clipboard changes every 0.1 seconds. Regular apps show the observed app name; browsers show “browser name · page URL.” Unavailable sources are hidden. Attribution is a best-effort foreground-app observation, not a system-verified writer identity.
+- 🔗 **Browser page recall** — Supports Safari, Chrome, Edge, and Ego for text, image, and file entries. Right-click an item or press `⌃↵` to open its observed page. URL capture requires Accessibility permission; unadapted browsers show no source. App names, page titles, and URLs stay in memory.
 - 🌐 **System language support** — The interface follows macOS and is available in Simplified Chinese, English, and Japanese.
 - 🔒 **Permissions first** — Basic clipboard capture and the shortcut require no permissions; Auto Paste and browser page recall use optional Accessibility permission.
 - ♻️ **On-device by default** — History stays in memory and achievement statistics store only local counters and dates.
@@ -63,7 +64,7 @@ open dist/Echo.app
 
 ### Option 2: Download a Release
 
-Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.6.1` release (build 13). Open the DMG and drag Echo to Applications.
+Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.7.0` release (build 14). Open the DMG and drag Echo to Applications.
 
 Current releases are development-verified builds signed with `Echo Self-Sign`, not Apple Developer ID-signed or notarized distribution builds. The first launch may be blocked by macOS:
 

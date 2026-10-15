@@ -394,6 +394,7 @@ final class QuickPanelViewModel: ObservableObject {
         displayed = displayed.map { item in
             var entry = item.entry
             entry.browserSource = sources[item.id]?.browserSource
+            entry.sourceAppName = sources[item.id]?.sourceAppName
             return DisplayItem(id: item.id, displayNumber: item.displayNumber, entry: entry)
         }
     }
@@ -1133,11 +1134,16 @@ struct QuickPanelView: View {
             VStack(alignment: .leading, spacing: 3) {
                 previewContent(for: item.entry.kind)
                 if let source = item.entry.browserSource {
-                    Text("\(source.browserName) · \(source.url.host ?? "")")
+                    Text("\(source.browserName) · \(source.url.absoluteString)")
                         .font(.system(size: 10))
                         .foregroundStyle(palette.textTertiary)
                         .lineLimit(1)
                         .help("\(source.title)\n\(source.url.absoluteString)\n\(L10n.text("quick.sourceHint"))")
+                } else if let name = item.entry.sourceAppName {
+                    Text(name)
+                        .font(.system(size: 10))
+                        .foregroundStyle(palette.textTertiary)
+                        .lineLimit(1)
                 }
             }
             Spacer(minLength: 0)

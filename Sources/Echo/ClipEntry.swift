@@ -19,11 +19,16 @@ struct ClipEntry: Identifiable {
     let kind: Kind
     let timestamp: Date
     var browserSource: BrowserSource?
+    /// Observed foreground app; nil for browsers and unavailable sources.
+    var sourceAppName: String?
+    /// Identifies this copy event even when image deduplication keeps the row ID.
+    var sourceEventID: UUID
 
     init(kind: Kind, timestamp: Date = Date(), id: UUID = UUID()) {
         self.kind = kind
         self.timestamp = timestamp
         self.id = id
+        self.sourceEventID = id
     }
 
     enum Kind {

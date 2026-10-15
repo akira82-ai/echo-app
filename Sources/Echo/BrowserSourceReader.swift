@@ -9,6 +9,19 @@ final class BrowserSourceReader {
     private let browsers: Set<String> = ["com.apple.Safari", "com.google.Chrome",
         "com.microsoft.edgemac", "com.citrolabs.ego.lite"]
 
+    func isBrowser(_ app: NSRunningApplication) -> Bool {
+        let identifier = app.bundleIdentifier ?? ""
+        // Also recognize unadapted default browsers: no app-name fallback for them.
+        let defaultBrowser = NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://example.com")!)
+        if browsers.contains(identifier) { return true }
+        if let defaultBrowser, app.bundleURL == defaultBrowser { return true }
+        // Registering http/https links does not make an app a browser (e.g. ChatGPT).
+        let otherBrowsers: Set<String> = ["org.mozilla.firefox", "org.mozilla.nightly",
+            "com.brave.Browser", "company.thebrowser.Browser", "com.operasoftware.Opera",
+            "com.vivaldi.Vivaldi", "com.apple.SafariTechnologyPreview"]
+        return otherBrowsers.contains(identifier)
+    }
+
     func capture(app: NSRunningApplication?, changeCount: Int, completion: @escaping (BrowserSource?) -> Void) {
         guard !busy, AXIsProcessTrusted(), let app,
               browsers.contains(app.bundleIdentifier ?? "") else { completion(nil); return }

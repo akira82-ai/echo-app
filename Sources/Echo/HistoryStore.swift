@@ -60,7 +60,10 @@ final class HistoryStore {
                 if let idx = self.entries.firstIndex(where: { $0.deduplicationKey == key }) {
                     let existing = self.entries.remove(at: idx)
                     // 保留原 id(稳定身份),只更新时间戳到最新
-                    let refreshed = ClipEntry(kind: existing.kind, timestamp: entry.timestamp, id: existing.id)
+                    var refreshed = ClipEntry(kind: existing.kind, timestamp: entry.timestamp, id: existing.id)
+                    refreshed.sourceAppName = entry.sourceAppName
+                    refreshed.browserSource = entry.browserSource
+                    refreshed.sourceEventID = entry.sourceEventID
                     self.entries.insert(refreshed, at: 0)
                     AchievementStore.shared.recordDuplicateHit()
                     self.notifyChange()
@@ -93,9 +96,9 @@ final class HistoryStore {
 
     // MARK: - 读快照
 
-    func setBrowserSource(_ source: BrowserSource, for id: UUID) {
+    func setBrowserSource(_ source: BrowserSource, for sourceEventID: UUID) {
         queue.async {
-            guard let index = self.entries.firstIndex(where: { $0.id == id }) else { return }
+            guard let index = self.entries.firstIndex(where: { $0.sourceEventID == sourceEventID }) else { return }
             self.entries[index].browserSource = source
             self.notifyChange()
         }
