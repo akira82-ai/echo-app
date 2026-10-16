@@ -19,7 +19,7 @@
 "quick.shortcut.direct" = "当前页直达";
 "quick.shortcut.delete" = "删除当前条目";
 "quick.shortcut.normalMode" = "正常模式";
-"quick.shortcut.plainPaste" = "纯文本粘贴";
+"quick.shortcut.markdownPaste" = "Markdown 粘贴";
 "quick.shortcut.formattedPaste" = "原格式粘贴";
 "quick.shortcut.multiMode" = "多选模式";
 "quick.shortcut.enterMulti" = "进入多选状态";
@@ -98,6 +98,9 @@
 
 "quick.status.page" = "%d 条 · 第 %d 页";
 
-"quick.pasteHints" = "↵ 原格式　⌥↵ 纯文本";
+"quick.pasteHints" = "↵ 原格式　⌥↵ Markdown";
+"quick.markdown.converting" = "正在转换 Markdown… Esc 取消";
+"quick.markdown.failed" = "转换失败，可按 ↵ 粘贴原格式：";
+"quick.markdown.clipboardChanged" = "剪贴板已变化，请重新选择。";
 
 "quick.help" = "帮助";

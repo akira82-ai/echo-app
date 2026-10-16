@@ -40,6 +40,12 @@ if [[ ! -d "$RESOURCE_BUNDLE" ]]; then
     exit 1
 fi
 cp -R "$RESOURCE_BUNDLE" "$APP_BUNDLE/Contents/Resources/"
+MARKDOWN_BUNDLE=".build/release/Echo_MarkdownConversion.bundle"
+if [[ ! -d "$MARKDOWN_BUNDLE" ]]; then
+    echo "❌ Missing Markdown conversion bundle: $MARKDOWN_BUNDLE" >&2
+    exit 1
+fi
+cp -R "$MARKDOWN_BUNDLE" "$APP_BUNDLE/Contents/Resources/"
 
 # Info.plist 的系统级文案必须位于主 App bundle 的语言目录中。
 for LPROJ_DIR in Sources/Echo/Resources/*.lproj; do

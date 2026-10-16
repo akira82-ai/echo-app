@@ -19,7 +19,7 @@
 "quick.shortcut.direct" = "Select";
 "quick.shortcut.delete" = "Delete";
 "quick.shortcut.normalMode" = "Normal Mode";
-"quick.shortcut.plainPaste" = "Plain text";
+"quick.shortcut.markdownPaste" = "Markdown";
 "quick.shortcut.formattedPaste" = "Formatted";
 "quick.shortcut.multiMode" = "Multi-select";
 "quick.shortcut.enterMulti" = "Start";
@@ -98,6 +98,9 @@
 
 "quick.status.page" = "%d items · Page %d";
 
-"quick.pasteHints" = "↵ Original   ⌥↵ Plain text";
+"quick.pasteHints" = "↵ Original   ⌥↵ Markdown";
+"quick.markdown.converting" = "Converting Markdown… Esc to cancel";
+"quick.markdown.failed" = "Conversion failed; ↵ pastes original:";
+"quick.markdown.clipboardChanged" = "Clipboard changed. Select again.";
 
 "quick.help" = "Help";

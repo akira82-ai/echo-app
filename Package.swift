@@ -8,8 +8,15 @@ let package = Package(
         .macOS(.v13)
     ],
     targets: [
+        .target(name: "MarkdownConversion", resources: [.process("Resources")]),
+        .executableTarget(
+            name: "MarkdownProbe",
+            dependencies: ["MarkdownConversion"],
+            path: "Sources/MarkdownProbe"
+        ),
         .executableTarget(
             name: "Echo",
+            dependencies: ["MarkdownConversion"],
             path: "Sources/Echo",
             resources: [
                 .process("Resources")

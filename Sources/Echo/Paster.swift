@@ -19,10 +19,27 @@ final class Paster {
 
     enum PasteFormat {
         case original
-        case plainText
+        case markdown
     }
 
     private init() {}
+    private var requestID = UUID()
+
+    func cancelPendingPaste() { requestID = UUID() }
+
+    /// Conversion has already succeeded; only now may the clipboard be replaced.
+    func pasteMarkdown(_ text: String, context: AchievementStore.SelectionContext,
+                       targetApp: NSRunningApplication?, expectedChangeCount: Int) {
+        let request = UUID()
+        requestID = request
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(80)) { [weak self] in
+            guard self?.requestID == request else { return }
+            guard NSPasteboard.general.changeCount == expectedChangeCount else { return }
+            let foreground = NSWorkspace.shared.frontmostApplication?.processIdentifier
+            guard foreground == ProcessInfo.processInfo.processIdentifier || foreground == targetApp?.processIdentifier else { return }
+            self?.performPaste(writeBack: { self?.writePlainText(text) ?? false }, context: context, targetApp: targetApp)
+        }
+    }
 
     // MARK: - 执行粘贴
 
@@ -77,8 +94,11 @@ final class Paster {
         context: AchievementStore.SelectionContext,
         targetApp: NSRunningApplication?
     ) {
+        let request = UUID()
+        requestID = request
         // 等面板完全关闭,目标 App 恢复 key
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(80)) { [weak self] in
+            guard self?.requestID == request else { return }
             self?.performPaste(writeBack: writeBack, context: context, targetApp: targetApp)
         }
     }
@@ -111,8 +131,15 @@ final class Paster {
             targetApp.activate(options: [.activateAllWindows])
         }
 
+        let writtenChangeCount = NSPasteboard.general.changeCount
+        let request = requestID
+
         // 激活后等待目标 App 完全成为 key 窗口,再模拟 ⌘V
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(200)) {
+            guard self.requestID == request,
+                  NSPasteboard.general.changeCount == writtenChangeCount,
+                  let targetApp,
+                  NSWorkspace.shared.frontmostApplication?.processIdentifier == targetApp.processIdentifier else { return }
             self.simulateCmdV()
         }
     }
@@ -127,15 +154,17 @@ final class Paster {
 
     /// 按类型把内容写回 NSPasteboard.general。
     private func writeBack(_ entry: ClipEntry, format: PasteFormat) -> Bool {
+        guard format == .original else { return false }
         let pb = NSPasteboard.general
         pb.clearContents()
 
         switch entry.kind {
         case .text(let payload):
             switch format {
-            case .plainText:
-                // 纯文本模式仍保留原始空格、换行和缩进,只去掉富文本表示。
-                return pb.setString(payload.rawText, forType: .string)
+            case .markdown:
+                // Markdown must be prepared asynchronously before any clipboard mutation.
+                assertionFailure("Markdown requires pasteMarkdown")
+                return false
             case .original:
                 var wroteAny = false
                 for representation in payload.representations {

@@ -15,7 +15,7 @@ If Echo helps you, please consider giving it a [⭐ Star](https://github.com/aki
 
 Echo lives in your Mac menu bar, automatically saves copied text, images, and files, then lets you find and paste them back with one shortcut.
 
-**Smart capture · Fast recall · Intelligent search · Copy sources**
+**Smart capture · Fast recall · Markdown paste · Copy sources**
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
@@ -34,7 +34,8 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 - 🎯 **Automatic capture** — Watches the clipboard itself rather than keystrokes, so copies from context menus, cuts, drag-and-drop, and in-app buttons are all captured.
 - 🔢 **One input, three intents** — Type `1`–`5` to select an item on the current page; type `6+` or a keyword to search; leave it empty to browse with the arrow keys.
 - ✦ **Useful empty state** — `⌘\` still opens the panel when history is empty and shows what to do next.
-- 🖼️ **Three content types** — Text (format preserved, with plain-text paste), images, and files copied from Finder.
+- 🖼️ **Three content types** — Text (format preserved, with Markdown paste), images, and files copied from Finder.
+- 📝 **Markdown paste** — Press `⌥↵` to paste copied rich text as Markdown, including headings, links, lists, code blocks, and simple tables. Select multiple text items to paste their Markdown together in selection order. Conversion runs locally and caches results in memory.
 - ⌨️ **Global shortcut** — Open the Spotlight-style panel with `⌘\` from any app.
 - ✨ **Subtle entrance motion** — The panel and first page appear naturally while respecting macOS Reduce Motion.
 - 🎯 **Continuous selection feedback** — The highlight follows keyboard movement smoothly and keeps batch selections clear.
@@ -63,7 +64,7 @@ open dist/Echo.app
 
 ### Option 2: Download a Release
 
-Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.8.0` release (build 15). Open the DMG and drag Echo to Applications.
+Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.9.0` release (build 16). Open the DMG and drag Echo to Applications.
 
 Current releases are development-verified builds signed with `Echo Self-Sign`, not Apple Developer ID-signed or notarized distribution builds. The first launch may be blocked by macOS:
 
@@ -76,13 +77,21 @@ The first use of Auto Paste opens macOS Accessibility permission guidance. Once 
 1. Copy normally (⌘C / context menu / drag)       → Echo saves it to history
 2. Press ⌘\                                      → Open the history panel
 3. Select an item (1–5 / 6+ search / arrow keys) → Paste into the focused app
-   Use ⌥↵ to paste plain text; formatting is preserved by default.
+   Use ⌥↵ for Markdown; Return preserves the original format.
 4. Hold ⌘, select up to five text items, release ⌘, then press ↵ to paste them together in order.
 5. Press ⌥⌫ to remove the current item and keep organizing.
 6. Press Tab for the shortcut reference; press Tab again to return to history (Esc closes the panel).
 ```
 
 **System requirements:** macOS 13 Ventura or later.
+
+### Markdown paste
+
+After capture, Echo prepares Markdown locally from saved HTML or RTF/RTFD text and caches it in memory, leaving the system clipboard and list preview unchanged. Press `⌥↵` to paste the result; if conversion is still running, Echo waits for it. Press `Esc` to cancel the wait. Plain text passes through unchanged.
+
+Common text structures and simple tables are supported. Merged or nested tables are rejected; image attachments are not guaranteed to convert. Conversion failures are shown without replacing the clipboard, so you can press `↵` to paste the original instead. For multiple selections, `⌥↵` joins Markdown with blank lines in selection order; `↵` still merges plain text.
+
+**Shortcut change in 2.9.0:** `⌥↵` now pastes Markdown instead of stripping formatting to plain text.
 
 ### Auto Paste troubleshooting
 

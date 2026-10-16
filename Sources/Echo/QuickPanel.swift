@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import QuartzCore
+import MarkdownConversion
 
 /// QuickPanel:Spotlight 风格的剪贴板历史选择浮层。
 ///
@@ -38,6 +39,8 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     private let viewModel = QuickPanelViewModel()
     /// 本地键盘事件监听器(面板显示期间接收方向键/回车/Esc/修饰键状态)
     private var keyMonitor: Any?
+    private var conversionTask: Task<Void, Never>?
+    private var conversionID: UUID?
 
     private override init() {
         super.init()
@@ -50,6 +53,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 显示面板:读取历史快照、定位到屏幕中央、设为 key 窗口。
     func show() {
+        Paster.shared.cancelPendingPaste()
         let entries = HistoryStore.shared.snapshot()
         currentEntries = entries
         AchievementStore.shared.recordPanelShown()
@@ -86,6 +90,9 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 隐藏面板。
     func hide() {
+        conversionID = nil
+        conversionTask?.cancel()
+        conversionTask = nil
         // 卸载键盘监听器
         if let monitor = keyMonitor {
             NSEvent.removeMonitor(monitor)
@@ -108,6 +115,10 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 处理一次按键。返回 nil 表示吞掉该事件,返回 event 表示放行。
     private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
+        if viewModel.isConverting {
+            if event.type == .keyDown && event.keyCode == 53 { hide() }
+            return nil
+        }
         if event.type == .flagsChanged {
             viewModel.setCommandPressed(event.modifierFlags.contains(.command))
             return event
@@ -159,13 +170,17 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             }
             if let entries = viewModel.batchEntries(), !entries.isEmpty {
                 let context = viewModel.selectionContext(source: .keyboard)
+                if event.modifierFlags.contains(.option) {
+                    convertAndPaste(entries, context: context)
+                    return nil
+                }
                 hide()
                 onBatchSelected?(entries, context)
                 return nil
             }
             if let entry = viewModel.selectedEntry() {
                 let format: Paster.PasteFormat = event.modifierFlags.contains(.option)
-                    ? .plainText
+                    ? .markdown
                     : .original
                 handleSelected(entry, source: .keyboard, format: format)
             }
@@ -196,9 +211,50 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         source: AchievementStore.SelectionSource,
         format: Paster.PasteFormat
     ) {
+        guard !viewModel.isConverting else { return }
         let context = viewModel.selectionContext(source: source)
+        if format == .markdown, case .text = entry.kind {
+            convertAndPaste([entry], context: context)
+            return
+        }
         hide()
-        onSelected?(entry, context, format)
+        onSelected?(entry, context, .original)
+    }
+
+    private func convertAndPaste(_ entries: [ClipEntry], context: AchievementStore.SelectionContext) {
+        guard !viewModel.isConverting else { return }
+        let id = UUID()
+        conversionID = id
+        let target = frontmostAppAtShowTime
+        let changeCount = NSPasteboard.general.changeCount
+        viewModel.isConverting = true
+        viewModel.conversionNotice = nil
+        conversionTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                var results: [String] = []
+                for entry in entries {
+                    try Task.checkCancellation()
+                    results.append(try await MarkdownCache.shared.value(for: entry.id))
+                }
+                try Task.checkCancellation()
+                guard self.conversionID == id else { return }
+                guard NSPasteboard.general.changeCount == changeCount else {
+                    throw ProbeError.message(L10n.text("quick.markdown.clipboardChanged"))
+                }
+                let foreground = NSWorkspace.shared.frontmostApplication?.processIdentifier
+                guard foreground == ProcessInfo.processInfo.processIdentifier || foreground == target?.processIdentifier else {
+                    self.hide(); return
+                }
+                self.hide()
+                Paster.shared.pasteMarkdown(results.joined(separator: "\n\n"), context: context, targetApp: target, expectedChangeCount: changeCount)
+            } catch {
+                guard self.conversionID == id, !Task.isCancelled else { return }
+                self.viewModel.isConverting = false
+                self.viewModel.conversionNotice = L10n.text("quick.markdown.failed") + " " + error.localizedDescription
+                self.conversionTask = nil
+            }
+        }
     }
 
     // MARK: - NSWindowDelegate
@@ -297,6 +353,8 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
 /// 驱动 QuickPanel 列表与选中状态的视图模型。
 final class QuickPanelViewModel: ObservableObject {
+    @Published var isConverting = false
+    @Published var conversionNotice: String?
     /// 全部历史(最近在前)
     @Published private(set) var allEntries: [ClipEntry] = []
 
@@ -404,6 +462,8 @@ final class QuickPanelViewModel: ObservableObject {
     }
 
     func reset() {
+        isConverting = false
+        conversionNotice = nil
         allEntries = []
         query = ""
         displayed = []
@@ -718,6 +778,7 @@ struct QuickPanelView: View {
             footer
         }
         .frame(width: Layout.panelWidth, height: Layout.panelHeight)
+        .allowsHitTesting(!viewModel.isConverting)
         // 设计稿:单一深色面板 + 毛玻璃底,避免重复叠背景导致发灰
         .background(palette.windowBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -755,7 +816,7 @@ struct QuickPanelView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 15))
                 .focused($fieldFocused)
-                .disabled(viewModel.showsAchievements || viewModel.showsShortcutGuide)
+                .disabled(viewModel.showsAchievements || viewModel.showsShortcutGuide || viewModel.isConverting)
             if !viewModel.isCommandPressed {
                 Text(L10n.text("quick.directHint"))
                     .font(.system(size: 9))
@@ -863,7 +924,7 @@ struct QuickPanelView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     shortcutColumn(title: L10n.text("quick.pasteSource"), items: [
                         (L10n.text("quick.shortcut.formattedPaste"), "↵"),
-                        (L10n.text("quick.shortcut.plainPaste"), "⌥↵"),
+                        (L10n.text("quick.shortcut.markdownPaste"), "⌥↵"),
                         (L10n.text("quick.openSource"), "⌃↵")
                     ], note: L10n.text("quick.sourceAvailableNote"))
                     shortcutColumn(title: L10n.text("quick.shortcut.multiMode"), items: [
@@ -1258,12 +1319,15 @@ struct QuickPanelView: View {
     /// 左侧状态拆开渲染,避免 emoji 影响整行文字基线。
     private var statusSummary: some View {
         Text(statusText)
+            .help(statusText)
             .font(.system(size: 9))
             .foregroundStyle(palette.textTertiary)
             .lineLimit(1)
     }
 
     private var statusText: String {
+        if viewModel.isConverting { return L10n.text("quick.markdown.converting") }
+        if let notice = viewModel.conversionNotice { return notice }
         if let notice = viewModel.batchNotice {
             return notice
         }

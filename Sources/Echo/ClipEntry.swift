@@ -13,7 +13,7 @@ import CryptoKit
 /// - `id` 用 UUID,作为 SwiftUI 列表的稳定身份
 /// - 文本/文件使用精确内容标识进行全历史去重;图片只在连续重复时去重
 /// - `ImageRef` 只是「磁盘引用 + 内存缩略图」,不持有原图数据,内存占用恒定
-/// - 文本同时保留原始格式与规范化预览文本,支持原格式/纯文本两种粘贴
+/// - 文本同时保留原始格式与规范化预览文本,支持原格式/Markdown两种粘贴
 struct ClipEntry: Identifiable {
     let id: UUID
     let kind: Kind

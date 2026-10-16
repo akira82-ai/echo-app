@@ -1,4 +1,5 @@
 import Foundation
+import MarkdownConversion
 
 /// 剪贴板历史的内存环形队列:采集链路的存储核心。
 ///
@@ -172,6 +173,13 @@ final class HistoryStore {
     /// 在主线程发出内容变化通知(UI 订阅刷新)。
     private func notifyChange() {
         DispatchQueue.main.async {
+            // Sidecars use the same lifecycle as history. UI and raw clipboard text stay intact.
+            let requests = self.snapshot().reversed().compactMap { entry -> MarkdownCache.Request? in
+                guard case .text(let payload) = entry.kind else { return nil }
+                return MarkdownCache.Request(id: entry.id, rawText: payload.rawText,
+                    representations: Dictionary(payload.representations.map { ($0.typeIdentifier, $0.data) }, uniquingKeysWith: { first, _ in first }))
+            }
+            MainActor.assumeIsolated { MarkdownCache.shared.synchronize(requests) }
             NotificationCenter.default.post(name: Self.didChangeNotification, object: nil)
         }
     }

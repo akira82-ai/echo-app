@@ -19,7 +19,7 @@
 "quick.shortcut.direct" = "直接選択";
 "quick.shortcut.delete" = "削除";
 "quick.shortcut.normalMode" = "通常モード";
-"quick.shortcut.plainPaste" = "テキストのみ";
+"quick.shortcut.markdownPaste" = "Markdown 貼り付け";
 "quick.shortcut.formattedPaste" = "書式付き";
 "quick.shortcut.multiMode" = "複数選択";
 "quick.shortcut.enterMulti" = "開始";
@@ -98,6 +98,9 @@
 
 "quick.status.page" = "%d 件 · %d ページ";
 
-"quick.pasteHints" = "↵ 元の形式　⌥↵ 標準テキスト";
+"quick.pasteHints" = "↵ 元の形式　⌥↵ Markdown";
+"quick.markdown.converting" = "Markdown に変換中… Esc でキャンセル";
+"quick.markdown.failed" = "変換失敗。↵ で元の形式を貼り付け：";
+"quick.markdown.clipboardChanged" = "クリップボードが変更されました。再選択してください。";
 
 "quick.help" = "ヘルプ";

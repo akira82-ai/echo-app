@@ -37,6 +37,9 @@ final class ClipboardReader {
         }
 
         // 3. 图片像素数据(截图、浏览器复制图片)
+        // Rich text may include a raster preview; preserve its text representations first.
+        if pb.types?.contains(where: { [.html, .rtf, .rtfd].contains($0) }) == true,
+           let entry = readTextIfPresent(pb) { return entry }
         if let imageEntry = readImageIfPresent(pb) {
             return imageEntry
         }
@@ -131,6 +134,7 @@ final class ClipboardReader {
             NSPasteboard.PasteboardType.string.rawValue,
             "public.utf16-plain-text",
             "public.rtf",
+            NSPasteboard.PasteboardType.rtfd.rawValue,
             "public.html",
             "public.url"
         ]
