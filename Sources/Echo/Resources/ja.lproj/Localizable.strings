@@ -104,3 +104,13 @@
 "quick.markdown.clipboardChanged" = "クリップボードが変更されました。再選択してください。";
 
 "quick.help" = "ヘルプ";
+"calc.title" = "計算";
+"calc.result" = "計算結果";
+"calc.empty" = "数式を入力してください";
+"calc.incomplete" = "数式を続けて入力…";
+"calc.invalid" = "数式を認識できません。入力を確認してください。";
+"calc.nonFinite" = "計算できません：ゼロ除算、定義域外、または範囲外です。";
+"calc.tooLong" = "数式が長すぎるか、括弧が深すぎます。";
+"calc.help" = "() / （）、四則演算、sqrt、pow などに対応。% は剰余です。";
+"calc.shortcuts" = "↵ 結果を貼り付け    ⌘C 結果をコピー";
+"calc.close" = "閉じる";

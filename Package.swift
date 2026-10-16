@@ -7,7 +7,12 @@ let package = Package(
     platforms: [
         .macOS(.v13)
     ],
+    dependencies: [
+        .package(url: "https://github.com/nicklockwood/Expression.git", from: "0.13.0")
+    ],
     targets: [
+        .target(name: "Calculator", dependencies: [.product(name: "Expression", package: "Expression")]),
+        .executableTarget(name: "CalculatorProbe", dependencies: ["Calculator"]),
         .target(name: "MarkdownConversion", resources: [.process("Resources")]),
         .executableTarget(
             name: "MarkdownProbe",
@@ -16,7 +21,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "Echo",
-            dependencies: ["MarkdownConversion"],
+            dependencies: ["MarkdownConversion", "Calculator"],
             path: "Sources/Echo",
             resources: [
                 .process("Resources")

@@ -36,6 +36,7 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 - ✦ **Useful empty state** — `⌘\` still opens the panel when history is empty and shows what to do next.
 - 🖼️ **Three content types** — Text (format preserved, with Markdown paste), images, and files copied from Finder.
 - 📝 **Markdown paste** — Press `⌥↵` to paste copied rich text as Markdown, including headings, links, lists, code blocks, and simple tables. Select multiple text items to paste their Markdown together in selection order. Conversion runs locally and caches results in memory.
+- 🧮 **Instant calculation** — Start with `!` or `！` to calculate in the panel, e.g. `! (128+36)/4`. Press Return to paste the result, or `⌘C` to copy it when no text is selected. Remove the prefix to return to clipboard search.
 - ⌨️ **Global shortcut** — Open the Spotlight-style panel with `⌘\` from any app.
 - ✨ **Subtle entrance motion** — The panel and first page appear naturally while respecting macOS Reduce Motion.
 - 🎯 **Continuous selection feedback** — The highlight follows keyboard movement smoothly and keeps batch selections clear.
@@ -64,7 +65,7 @@ open dist/Echo.app
 
 ### Option 2: Download a Release
 
-Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.9.1` release (build 17). Open the DMG and drag Echo to Applications.
+Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.10.0` release (build 18). Open the DMG and drag Echo to Applications.
 
 Current releases are development-verified builds signed with `Echo Self-Sign`, not Apple Developer ID-signed or notarized distribution builds. The first launch may be blocked by macOS:
 
@@ -84,6 +85,10 @@ The first use of Auto Paste opens macOS Accessibility permission guidance. Once 
 ```
 
 **System requirements:** macOS 13 Ventura or later.
+
+### Instant calculation
+
+Start input with `!` or `！` to calculate locally with Expression, e.g. `! （128+36）/4`. Supports ASCII and full-width parentheses, arithmetic, and functions such as `sqrt(81)` and `pow(2,3)`. `%` means remainder, not percentage. Return pastes the result and closes; `⌘C` copies the result when no text is selected and keeps the panel open; `Esc` closes. Removing the prefix restores clipboard search. Floating-point results are formatted to at most 15 significant digits, not intended for exact decimal financial accounting.
 
 ### Markdown paste
 

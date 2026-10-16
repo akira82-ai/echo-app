@@ -9,9 +9,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.akira82.echo</string>
     <key>CFBundleVersion</key>
-    <string>17</string>
+    <string>18</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.9.1</string>
+    <string>2.10.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>

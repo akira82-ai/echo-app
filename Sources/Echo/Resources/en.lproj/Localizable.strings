@@ -104,3 +104,13 @@
 "quick.markdown.clipboardChanged" = "Clipboard changed. Select again.";
 
 "quick.help" = "Help";
+"calc.title" = "Calculate";
+"calc.result" = "Result";
+"calc.empty" = "Enter an expression";
+"calc.incomplete" = "Continue typing…";
+"calc.invalid" = "Unrecognized expression. Check your input.";
+"calc.nonFinite" = "Cannot calculate: division by zero, invalid domain, or overflow.";
+"calc.tooLong" = "Expression is too long or too deeply nested.";
+"calc.help" = "Supports () / （）, arithmetic, sqrt, pow and more. % means remainder.";
+"calc.shortcuts" = "↵ Paste result    ⌘C Copy result";
+"calc.close" = "Close";

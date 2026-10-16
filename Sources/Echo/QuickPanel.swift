@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import QuartzCore
 import MarkdownConversion
+import Calculator
 
 /// QuickPanel:Spotlight 风格的剪贴板历史选择浮层。
 ///
@@ -121,6 +122,26 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         }
         if event.type == .flagsChanged {
             viewModel.setCommandPressed(event.modifierFlags.contains(.command))
+            return event
+        }
+        if viewModel.isCalculator {
+            if event.keyCode == 53 { hide(); return nil }
+            if event.keyCode == 36 || event.keyCode == 76 {
+                if let result = viewModel.calculationResult {
+                    let entry = ClipEntry(kind: .text(TextPayload(rawText: result, representations: [])))
+                    let context = viewModel.selectionContext(source: .keyboard)
+                    hide()
+                    onSelected?(entry, context, .original)
+                }
+                return nil
+            }
+            if event.modifierFlags.contains(.command), event.charactersIgnoringModifiers == "c",
+               let field = panel?.firstResponder as? NSTextView, field.selectedRange().length == 0,
+               let result = viewModel.calculationResult {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(result, forType: .string)
+                return nil
+            }
             return event
         }
         if event.keyCode == 48 { // Tab
@@ -370,8 +391,22 @@ final class QuickPanelViewModel: ObservableObject {
         didSet {
             // configure 期间禁止 didSet 触发 applyFilter(避免 query="" 清空还没配好的数据)
             guard !isConfiguring else { return }
+            if isCalculator {
+                calculation = Calculator.evaluate(String(query.dropFirst()))
+                batchSelectionIDs = []
+                batchNotice = nil
+                return
+            }
+            calculation = .empty
             applyFilter()
         }
+    }
+
+    var isCalculator: Bool { query.first == "!" || query.first == "！" }
+    @Published private(set) var calculation: Calculation = .empty
+    var calculationResult: String? {
+        if case .result(let value) = calculation { return value }
+        return nil
     }
 
     /// 过滤后的全量条目(搜索后),带原始全局序号(1-based)。
@@ -768,7 +803,9 @@ struct QuickPanelView: View {
         VStack(spacing: 0) {
             searchBar
             Divider().foregroundStyle(palette.border)
-            if viewModel.showsAchievements {
+            if viewModel.isCalculator {
+                calculatorArea
+            } else if viewModel.showsAchievements {
                 achievementArea
             } else if viewModel.showsShortcutGuide {
                 shortcutGuideArea
@@ -807,22 +844,60 @@ struct QuickPanelView: View {
 
     // MARK: 搜索栏
 
+    private var calculatorArea: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.text(viewModel.calculationResult == nil ? "calc.title" : "calc.result"))
+                .font(.system(size: 12)).foregroundStyle(palette.textTertiary)
+            if let result = viewModel.calculationResult {
+                ScrollView {
+                    Text(result).font(.system(size: 40, weight: .medium, design: .monospaced))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                Text(L10n.text(calculationMessageKey))
+                    .font(.system(size: 18)).foregroundStyle(palette.textPrimary)
+            }
+            Text(L10n.text("calc.help"))
+                .font(.system(size: 11)).foregroundStyle(palette.textTertiary)
+            Spacer(minLength: 0)
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: Layout.listHeight)
+    }
+
+    private var calculationMessageKey: String {
+        switch viewModel.calculation {
+        case .empty: return "calc.empty"
+        case .incomplete: return "calc.incomplete"
+        case .invalid: return "calc.invalid"
+        case .nonFinite: return "calc.nonFinite"
+        case .tooLong: return "calc.tooLong"
+        case .result: return "calc.result"
+        }
+    }
+
     private var searchBar: some View {
         HStack(spacing: 10) {
+            if !viewModel.isCalculator {
             Image(systemName: showsMultiSelectFeedback ? "checkmark.circle.fill" : "magnifyingglass")
                 .foregroundStyle(showsMultiSelectFeedback ? palette.accent : palette.textTertiary)
                 .font(.system(size: 16))
+            }
             TextField(L10n.text("quick.search.placeholder"), text: $viewModel.query)
                 .textFieldStyle(.plain)
                 .font(.system(size: 15))
                 .focused($fieldFocused)
                 .disabled(viewModel.showsAchievements || viewModel.showsShortcutGuide || viewModel.isConverting)
-            if !viewModel.isCommandPressed {
+            if viewModel.isCalculator {
+                Text(L10n.text("calc.title")).font(.system(size: 11)).foregroundStyle(palette.textTertiary)
+            } else if !viewModel.isCommandPressed {
                 Text(L10n.text("quick.directHint"))
                     .font(.system(size: 9))
                     .foregroundStyle(palette.textTertiary)
             }
-            if viewModel.isCommandPressed && !viewModel.showsAchievements && !viewModel.showsShortcutGuide {
+            if viewModel.isCommandPressed && !viewModel.isCalculator && !viewModel.showsAchievements && !viewModel.showsShortcutGuide {
                 HStack(spacing: 4) {
                     Image(systemName: "command")
                     Text(L10n.text("quick.multiSelect"))
@@ -860,7 +935,7 @@ struct QuickPanelView: View {
     @FocusState private var fieldFocused: Bool
 
     private var showsMultiSelectFeedback: Bool {
-        viewModel.isCommandPressed && !viewModel.showsAchievements && !viewModel.showsShortcutGuide
+        viewModel.isCommandPressed && !viewModel.isCalculator && !viewModel.showsAchievements && !viewModel.showsShortcutGuide
     }
 
     // MARK: 列表
@@ -1302,12 +1377,22 @@ struct QuickPanelView: View {
     /// 底部状态栏。设计稿 .qp-footer:48pt 高 + 内容 28pt 垂直居中。
     private var footer: some View {
         HStack(alignment: .center) {
+            if viewModel.isCalculator {
+                Text(L10n.text("calc.shortcuts"))
+                    .font(.system(size: 10.5)).foregroundStyle(palette.textTertiary)
+                Link(L10n.text("quick.help"), destination: URL(string: "https://github.com/nicklockwood/Expression#math-symbols")!)
+                    .font(.system(size: 10.5)).foregroundStyle(palette.accent)
+                Spacer()
+                Text("esc " + L10n.text("calc.close"))
+                    .font(.system(size: 10.5)).foregroundStyle(palette.textTertiary)
+            } else {
             statusSummary
             Spacer()
             shortcutHints
             .font(.system(size: 10.5))
             .foregroundStyle(palette.textTertiary)
             .frame(height: Layout.footerContentHeight, alignment: .center)
+            }
         }
         .padding(.horizontal, 18)
         .frame(height: Layout.footerHeight, alignment: .center)

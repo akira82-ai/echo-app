@@ -104,3 +104,13 @@
 "quick.markdown.clipboardChanged" = "剪贴板已变化，请重新选择。";
 
 "quick.help" = "帮助";
+"calc.title" = "算一下";
+"calc.result" = "计算结果";
+"calc.empty" = "输入一个算式";
+"calc.incomplete" = "继续输入算式…";
+"calc.invalid" = "无法识别算式，请检查输入";
+"calc.nonFinite" = "无法计算：除零、无效定义域或结果超出范围";
+"calc.tooLong" = "算式过长或嵌套过深";
+"calc.help" = "支持 () / （）、四则运算、sqrt、pow 等；% 表示取余。";
+"calc.shortcuts" = "↵ 粘贴结果    ⌘C 复制结果";
+"calc.close" = "关闭";
