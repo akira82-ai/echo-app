@@ -98,7 +98,7 @@
 
 "quick.status.page" = "%d 条 · 第 %d 页";
 
-"quick.pasteHints" = "↵ 原格式　⌥↵ Markdown";
+"quick.pasteHints" = "↵ 原格式粘贴　⌥↵ Markdown 粘贴";
 "quick.markdown.converting" = "正在转换 Markdown… Esc 取消";
 "quick.markdown.failed" = "转换失败，可按 ↵ 粘贴原格式：";
 "quick.markdown.clipboardChanged" = "剪贴板已变化，请重新选择。";

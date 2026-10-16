@@ -98,7 +98,7 @@
 
 "quick.status.page" = "%d 件 · %d ページ";
 
-"quick.pasteHints" = "↵ 元の形式　⌥↵ Markdown";
+"quick.pasteHints" = "↵ 元の形式で貼付　⌥↵ Markdown 貼付";
 "quick.markdown.converting" = "Markdown に変換中… Esc でキャンセル";
 "quick.markdown.failed" = "変換失敗。↵ で元の形式を貼り付け：";
 "quick.markdown.clipboardChanged" = "クリップボードが変更されました。再選択してください。";

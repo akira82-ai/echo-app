@@ -98,7 +98,7 @@
 
 "quick.status.page" = "%d items · Page %d";
 
-"quick.pasteHints" = "↵ Original   ⌥↵ Markdown";
+"quick.pasteHints" = "↵ Paste original   ⌥↵ Paste Markdown";
 "quick.markdown.converting" = "Converting Markdown… Esc to cancel";
 "quick.markdown.failed" = "Conversion failed; ↵ pastes original:";
 "quick.markdown.clipboardChanged" = "Clipboard changed. Select again.";
