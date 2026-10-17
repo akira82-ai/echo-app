@@ -42,6 +42,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     private var keyMonitor: Any?
     private var conversionTask: Task<Void, Never>?
     private var conversionID: UUID?
+    private var lastChatQuery: String?
 
     private override init() {
         super.init()
@@ -54,6 +55,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 显示面板:读取历史快照、定位到屏幕中央、设为 key 窗口。
     func show() {
+        let restoredChatQuery = viewModel.isChat ? viewModel.query : lastChatQuery
         Paster.shared.cancelPendingPaste()
         let entries = HistoryStore.shared.snapshot()
         currentEntries = entries
@@ -66,6 +68,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         frontmostAppAtShowTime = NSWorkspace.shared.frontmostApplication
 
         viewModel.configure(entries: entries)
+        if let restoredChatQuery { viewModel.query = restoredChatQuery }
         let viewModel = self.viewModel
         let hosting = NSHostingController(rootView: QuickPanelView(viewModel: viewModel) { [weak self] entry in
             self?.handleSelected(entry, source: .mouse, format: .original)
@@ -87,10 +90,37 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         preparePanelEntrance(panel)
         panel.makeKeyAndOrderFront(nil)
         animatePanelEntrance(panel)
+        DispatchQueue.main.async { [weak self] in self?.placeSearchCaretAtEnd() }
+    }
+
+    func placeSearchCaretAtEnd() {
+        guard let field = panel?.firstResponder as? NSTextView,
+              !field.hasMarkedText(), field.string == viewModel.query else { return }
+        field.setSelectedRange(NSRange(location: field.string.utf16.count, length: 0))
+    }
+
+    func sendChatQuestion() {
+        viewModel.chat.send(String(viewModel.query.dropFirst()))
+        placeSearchCaretAtEnd()
+        // SwiftUI's submit handling can select the field after the key event returns.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.viewModel.chat.busy else { return }
+            self.placeSearchCaretAtEnd()
+        }
+    }
+
+    func selectCompletedChatQuestion() {
+        guard viewModel.isChat, !viewModel.chat.busy,
+              viewModel.chat.errorKey == nil, !viewModel.chat.answer.isEmpty,
+              let field = panel?.firstResponder as? NSTextView,
+              !field.hasMarkedText(), field.string == viewModel.query else { return }
+        field.setSelectedRange(NSRange(location: 1, length: field.string.utf16.count - 1))
     }
 
     /// 隐藏面板。
     func hide() {
+        lastChatQuery = viewModel.isChat ? viewModel.query : nil
+        viewModel.chat.reset()
         conversionID = nil
         conversionTask?.cancel()
         conversionTask = nil
@@ -122,6 +152,27 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         }
         if event.type == .flagsChanged {
             viewModel.setCommandPressed(event.modifierFlags.contains(.command))
+            return event
+        }
+        if viewModel.isChat {
+            if event.keyCode == 53 { hide(); return nil }
+            if event.keyCode == 36 || event.keyCode == 76 {
+                if let field = panel?.firstResponder as? NSTextView, field.hasMarkedText() { return event }
+                if !event.modifierFlags.contains(.command) {
+                    sendChatQuestion()
+                }
+                return nil
+            }
+            if event.modifierFlags.contains(.command), event.charactersIgnoringModifiers == "c" {
+                if let field = panel?.firstResponder as? NSTextView, field.selectedRange().length > 0 {
+                    field.copy(nil)
+                    return nil
+                }
+                guard !viewModel.chat.busy, viewModel.chat.errorKey == nil, !viewModel.chat.answer.isEmpty else { return event }
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(viewModel.chat.answer, forType: .string)
+                return nil
+            }
             return event
         }
         if viewModel.isCalculator {
@@ -390,7 +441,13 @@ final class QuickPanelViewModel: ObservableObject {
     @Published var query: String = "" {
         didSet {
             // configure 期间禁止 didSet 触发 applyFilter(避免 query="" 清空还没配好的数据)
-            guard !isConfiguring else { return }
+            guard !isConfiguring, query != oldValue else { return }
+            chat.reset()
+            if isChat {
+                batchSelectionIDs = []
+                batchNotice = nil
+                return
+            }
             if isCalculator {
                 calculation = Calculator.evaluate(String(query.dropFirst()))
                 batchSelectionIDs = []
@@ -403,6 +460,8 @@ final class QuickPanelViewModel: ObservableObject {
     }
 
     var isCalculator: Bool { query.first == "!" || query.first == "！" }
+    var isChat: Bool { query.first == "@" }
+    let chat = ChatState()
     @Published private(set) var calculation: Calculation = .empty
     var calculationResult: String? {
         if case .result(let value) = calculation { return value }
@@ -803,7 +862,12 @@ struct QuickPanelView: View {
         VStack(spacing: 0) {
             searchBar
             Divider().foregroundStyle(palette.border)
-            if viewModel.isCalculator {
+            if viewModel.isChat {
+                ChatArea(state: viewModel.chat) {
+                    QuickPanelController.shared.selectCompletedChatQuestion()
+                }
+                    .frame(height: Layout.listHeight)
+            } else if viewModel.isCalculator {
                 calculatorArea
             } else if viewModel.showsAchievements {
                 achievementArea
@@ -880,24 +944,32 @@ struct QuickPanelView: View {
 
     private var searchBar: some View {
         HStack(spacing: 10) {
-            if !viewModel.isCalculator {
+            if !viewModel.isCalculator && !viewModel.isChat {
             Image(systemName: showsMultiSelectFeedback ? "checkmark.circle.fill" : "magnifyingglass")
                 .foregroundStyle(showsMultiSelectFeedback ? palette.accent : palette.textTertiary)
                 .font(.system(size: 16))
             }
             TextField(L10n.text("quick.search.placeholder"), text: $viewModel.query)
                 .textFieldStyle(.plain)
+                .onSubmit {
+                    // Input methods may consume Return before the event monitor can send.
+                    if viewModel.isChat {
+                        QuickPanelController.shared.sendChatQuestion()
+                    }
+                }
                 .font(.system(size: 15))
                 .focused($fieldFocused)
                 .disabled(viewModel.showsAchievements || viewModel.showsShortcutGuide || viewModel.isConverting)
-            if viewModel.isCalculator {
+            if viewModel.isChat {
+                Text(L10n.text("chat.title")).font(.system(size: 11)).foregroundStyle(palette.textTertiary)
+            } else if viewModel.isCalculator {
                 Text(L10n.text("calc.title")).font(.system(size: 11)).foregroundStyle(palette.textTertiary)
             } else if !viewModel.isCommandPressed {
                 Text(L10n.text("quick.directHint"))
                     .font(.system(size: 9))
                     .foregroundStyle(palette.textTertiary)
             }
-            if viewModel.isCommandPressed && !viewModel.isCalculator && !viewModel.showsAchievements && !viewModel.showsShortcutGuide {
+            if viewModel.isCommandPressed && !viewModel.isChat && !viewModel.isCalculator && !viewModel.showsAchievements && !viewModel.showsShortcutGuide {
                 HStack(spacing: 4) {
                     Image(systemName: "command")
                     Text(L10n.text("quick.multiSelect"))
@@ -924,6 +996,13 @@ struct QuickPanelView: View {
         )
         .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: viewModel.isCommandPressed)
         .onAppear { fieldFocused = !viewModel.showsAchievements && !viewModel.showsShortcutGuide }
+        .onReceive(NotificationCenter.default.publisher(for: NSText.didBeginEditingNotification)) { notification in
+            guard let editor = notification.object as? NSTextView,
+                  editor.window === NSApp.keyWindow, editor.string == viewModel.query else { return }
+            DispatchQueue.main.async {
+                QuickPanelController.shared.placeSearchCaretAtEnd()
+            }
+        }
         .onChange(of: viewModel.showsAchievements) { showsAchievements in
             fieldFocused = !showsAchievements && !viewModel.showsShortcutGuide
         }
@@ -935,7 +1014,7 @@ struct QuickPanelView: View {
     @FocusState private var fieldFocused: Bool
 
     private var showsMultiSelectFeedback: Bool {
-        viewModel.isCommandPressed && !viewModel.isCalculator && !viewModel.showsAchievements && !viewModel.showsShortcutGuide
+        viewModel.isCommandPressed && !viewModel.isChat && !viewModel.isCalculator && !viewModel.showsAchievements && !viewModel.showsShortcutGuide
     }
 
     // MARK: 列表
@@ -1377,7 +1456,11 @@ struct QuickPanelView: View {
     /// 底部状态栏。设计稿 .qp-footer:48pt 高 + 内容 28pt 垂直居中。
     private var footer: some View {
         HStack(alignment: .center) {
-            if viewModel.isCalculator {
+            if viewModel.isChat {
+                Text(L10n.text("chat.shortcuts"))
+                    .font(.system(size: 10)).foregroundStyle(palette.textTertiary)
+                Spacer()
+            } else if viewModel.isCalculator {
                 Text(L10n.text("calc.shortcuts"))
                     .font(.system(size: 10.5)).foregroundStyle(palette.textTertiary)
                 Link(L10n.text("quick.help"), destination: URL(string: "https://github.com/nicklockwood/Expression#math-symbols")!)

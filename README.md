@@ -1,109 +1,107 @@
 <div align="center">
 
-# 🏆 Featured in
-# [Awesome Swift macOS Apps](https://github.com/jaywcjlove/awesome-swift-macos-apps)
-
-**Echo is now part of a curated list of open-source Swift macOS apps.**
-
----
-
 If Echo helps you, please consider giving it a [⭐ Star](https://github.com/akira82-ai/echo-app).
 
 # Echo 📋
 
-**A minimal intelligent clipboard for macOS. | Recall what you copied, like an echo.**
+**A minimal intelligent clipboard for macOS.**
 
-Echo lives in your Mac menu bar, automatically saves copied text, images, and files, then lets you find and paste them back with one shortcut.
+Recall copied content, paste Markdown, calculate, or ask a quick question — from one menu-bar panel.
 
-**Smart capture · Fast recall · Markdown paste · Copy sources**
+**Clipboard history · Markdown paste · Instant calculation · Quick questions**
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-[Features](#-features) · [Quick Start](#-quick-start)
+[Features](#features) · [Install](#install) · [Usage](#usage) · [Privacy](#privacy-and-permissions)
+
+Featured in [Awesome Swift macOS Apps](https://github.com/jaywcjlove/awesome-swift-macos-apps).
 
 </div>
 
----
-
-## 🎬 Demo
+## Demo
 
 https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 
-## ✨ Features
+## Features
 
-- 🎯 **Automatic capture** — Watches the clipboard itself rather than keystrokes, so copies from context menus, cuts, drag-and-drop, and in-app buttons are all captured.
-- 🔢 **One input, three intents** — Type `1`–`5` to select an item on the current page; type `6+` or a keyword to search; leave it empty to browse with the arrow keys.
-- ✦ **Useful empty state** — `⌘\` still opens the panel when history is empty and shows what to do next.
-- 🖼️ **Three content types** — Text (format preserved, with Markdown paste), images, and files copied from Finder.
-- 📝 **Markdown paste** — Press `⌥↵` to paste copied rich text as Markdown, including headings, links, lists, code blocks, and simple tables. Select multiple text items to paste their Markdown together in selection order. Conversion runs locally and caches results in memory.
-- 🧮 **Instant calculation** — Start with `!` or `！` to calculate in the panel, e.g. `! (128+36)/4`. Press Return to paste the result, or `⌘C` to copy it when no text is selected. Remove the prefix to return to clipboard search.
-- ⌨️ **Global shortcut** — Open the Spotlight-style panel with `⌘\` from any app.
-- ✨ **Subtle entrance motion** — The panel and first page appear naturally while respecting macOS Reduce Motion.
-- 🎯 **Continuous selection feedback** — The highlight follows keyboard movement smoothly and keeps batch selections clear.
-- 🌙 **Focused light and dark panel** — A compact search bar, five fixed-height rows, subtle type labels, and a clear selection marker keep copied content in focus. Available app names and browser URLs remain visible beneath the content; the footer shows the current page and paste actions.
-- 🧩 **Batch text paste** — Hold `⌘`, click or press `⌘↵` to add up to five text items, then release `⌘` and press `↵` to paste them in order as one block.
-- 🧹 **Quick cleanup** — Press `⌥⌫` to remove the current item without taking over Backspace in search.
-- ⌘ **Complete shortcut reference** — Press `Tab` or click Help for a two-column guide covering navigation, paste and source actions, and text multi-select. Press `Tab` again to return to history; `Esc` closes the panel.
-- 📤 **Auto Paste** — Selecting an item pastes it into the focused app without a separate `⌘V`.
-- 🏷️ **Copy source** — Checks clipboard changes every 0.1 seconds. Regular apps show the observed app name; browsers show “browser name · page URL.” Unavailable sources are hidden. Attribution is a best-effort foreground-app observation, not a system-verified writer identity.
-- 🔗 **Browser page recall** — Supports Safari, Chrome, Edge, and Ego for text, image, and file entries. Right-click an item or press `⌃↵` to open its observed page. URL capture requires Accessibility permission; unadapted browsers show no source. App names, page titles, and URLs stay in memory.
-- 🌐 **System language support** — The interface follows macOS and is available in Simplified Chinese, English, and Japanese.
-- 🔒 **Permissions first** — Basic clipboard capture and the shortcut require no permissions; Auto Paste and browser page recall use optional Accessibility permission.
-- ♻️ **On-device by default** — History stays in memory and clears when Echo quits or restarts. Existing achievement counters remain local; the main panel no longer shows an achievement entry point.
+- **Clipboard history** — Capture copied text, images, and Finder files. Open with `⌘\` to search, select, and paste.
+- **Markdown paste** — Convert captured rich text to Markdown locally, including headings, links, lists, code blocks, and simple tables.
+- **Batch paste** — Select up to five text items and paste them together in selection order, as plain text or Markdown.
+- **Instant calculation** — Start with `!` or `！` to calculate without leaving the panel.
+- **Quick questions** — Start with `@` for streamed DeepSeek answers, with model-directed web search and page reading. Requires your own API key.
+- **Copy sources** — See available app names or browser URLs, and reopen an observed page in Safari, Chrome, Edge, or Ego. Attribution is best-effort.
+- **Native interface** — Light and dark appearances, Reduce Motion support, and Simplified Chinese, English, and Japanese interfaces.
 
-## 🚀 Quick Start
+## Install
 
-### Option 1: Build from source
+Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Apple Silicon**; Intel Macs require a source build.
+
+### Download a Release
+
+Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
+
+Current version: **2.11.0 (build 19)**.
+
+Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
+
+### Build from source
+
+Install Xcode or Apple's Command Line Tools with **Swift 6.2 or later** (required by the current dependencies), then run:
 
 ```bash
-# Build, package, and sign dist/Echo.app and dist/Echo.dmg
+git clone https://github.com/akira82-ai/echo-app.git
+cd echo-app
 ./build-app.sh
 open dist/Echo.app
 ```
 
-`build-app.sh` automatically uses the local `Echo Self-Sign` certificate. Run it again after changes; manual re-signing is not needed. Always launch `dist/Echo.app`, not `.build/.../Echo` directly.
+The script builds and packages the app, using `Echo Self-Sign` when available or ad-hoc signing otherwise. Launch `dist/Echo.app` so bundled resources and permissions work as expected. The first build downloads dependencies.
 
-### Option 2: Download a Release
+## Usage
 
-Visit [Releases](https://github.com/akira82-ai/echo-app/releases) and download `Echo.dmg` from the latest `2.10.0` release (build 18). Open the DMG and drag Echo to Applications.
+Copy normally, press `⌘\`, select an item, and press Return. Auto Paste requires Accessibility permission; without it, return to the target app and press `⌘V`.
 
-Current releases are development-verified builds signed with `Echo Self-Sign`, not Apple Developer ID-signed or notarized distribution builds. The first launch may be blocked by macOS:
-
-1. In Finder, Control-click Echo, choose **Open**, then confirm **Open** once more.
-2. If it is still blocked, open **System Settings → Privacy & Security**, click **Open Anyway** beside the security notice, then start Echo again.
-
-The first use of Auto Paste opens macOS Accessibility permission guidance. Once granted, selecting an item pastes it automatically. Without permission, Echo still copies the item back to the clipboard for manual `⌘V`.
-
-```
-1. Copy normally (⌘C / context menu / drag)       → Echo saves it to history
-2. Press ⌘\                                      → Open the history panel
-3. Select an item (1–5 / 6+ search / arrow keys) → Paste into the focused app
-   Use ⌥↵ for Markdown; Return preserves the original format.
-4. Hold ⌘, select up to five text items, release ⌘, then press ↵ to paste them together in order.
-5. Press ⌥⌫ to remove the current item and keep organizing.
-6. Press Tab for the shortcut reference; press Tab again to return to history (Esc closes the panel).
-```
-
-**System requirements:** macOS 13 Ventura or later.
-
-### Instant calculation
-
-Start input with `!` or `！` to calculate locally with Expression, e.g. `! （128+36）/4`. Supports ASCII and full-width parentheses, arithmetic, and functions such as `sqrt(81)` and `pow(2,3)`. `%` means remainder, not percentage. Return pastes the result and closes; `⌘C` copies the result when no text is selected and keeps the panel open; `Esc` closes. Removing the prefix restores clipboard search. Floating-point results are formatted to at most 15 significant digits, not intended for exact decimal financial accounting.
+| In the panel | Action |
+| --- | --- |
+| `1`–`5`, then Return | Paste that item on the current page |
+| A keyword or number `6+` | Search history |
+| Arrow keys | Browse history |
+| `↵` / `⌥↵` | Paste original / Markdown |
+| Hold `⌘`, then click or press `⌘↵` | Add or remove a text item from the batch |
+| Release `⌘`, then `↵` / `⌥↵` | Paste the batch as plain text / Markdown |
+| `⌥⌫` | Delete the current item |
+| Right-click → Open Source Page, or `⌃↵` | Open the recorded browser page, when available |
+| `Tab` | Toggle the clipboard shortcut guide |
+| `Esc` | Close the panel or cancel a Markdown wait |
 
 ### Markdown paste
 
-After capture, Echo prepares Markdown locally from saved HTML or RTF/RTFD text and caches it in memory, leaving the system clipboard and list preview unchanged. Press `⌥↵` to paste the result; if conversion is still running, Echo waits for it. Press `Esc` to cancel the wait. Plain text passes through unchanged.
+Press `⌥↵` for Markdown; ordinary Return preserves the original format. Plain text passes through unchanged. Conversion is prepared locally after capture without changing the clipboard or list preview.
 
-Common text structures and simple tables are supported. Merged or nested tables are rejected; image attachments are not guaranteed to convert. Conversion failures are shown without replacing the clipboard, so you can press `↵` to paste the original instead. For multiple selections, `⌥↵` joins Markdown with blank lines in selection order; `↵` still merges plain text.
+Merged/nested tables and image attachments are not fully supported. Conversion failures leave the clipboard unchanged; use Return to paste the original instead.
 
-**Shortcut change in 2.9.0:** `⌥↵` now pastes Markdown instead of stripping formatting to plain text.
+### Instant calculation
 
-### Auto Paste troubleshooting
+Type `! (128+36)/4` to calculate. Supports full-width parentheses, arithmetic, `sqrt(81)`, `pow(2,3)`, and more; `%` means remainder.
 
-If selecting a history item does not paste automatically, first confirm that `dist/Echo.app` is running. Then check that Echo is granted access under **System Settings → Privacy & Security → Accessibility** and that **Enable Auto Paste** is enabled in Settings. Even without permission, Echo writes the item back to the clipboard so you can paste manually with `⌘V`.
+Return pastes the result and closes the panel. With no text selected, `⌘C` copies the result and keeps the panel open. Remove the prefix to restore search. Results use floating-point arithmetic with up to 15 significant digits, not exact decimal accounting.
 
----
+### Quick questions
+
+In Settings → Model settings, save your **DeepSeek API key**. The endpoint (`https://api.deepseek.com/v1`) and model (`deepseek-chat`) are fixed; the key is stored in macOS Keychain.
+
+Type `@ question` and press Return. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Remove `@` to return to search. Reopening restores the last question in memory, without its answer or an automatic resend.
+
+The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides/search) with the same key, without a separate switch. It is instructed to cite sources; check important facts and links. Questions are independent: no previous conversation or clipboard history is automatically included.
+
+## Privacy and permissions
+
+- **Local clipboard data:** History and Markdown caches are not restored after restarting Echo. Image originals are cached under `~/Library/Caches/Echo/images/`; files are removed when their entries are deleted or evicted, and the image cache is cleared on startup. Settings and existing usage counters remain local.
+- **Optional Accessibility access:** Basic recording and the global shortcut need no permission. Auto Paste and browser URL capture require Accessibility permission. Browser attribution may be missing or inaccurate.
+- **DeepSeek requests:** Quick questions send your input, model-generated search queries, and page URLs to DeepSeek; web results are returned to the model. Content you manually paste into a question is sent too. The provider may retain requests and charge for chat and web usage.
+
+If Auto Paste fails, enable Echo in **System Settings → Privacy & Security → Accessibility** and check **Enable Auto Paste** in Echo settings. You can still paste manually with `⌘V`.
 
 ## License
 
-MIT License · Copyright © 2026 akira82-ai
+[MIT](LICENSE) · Copyright © 2026 akira82-ai. Dependency licenses and notices are included in the app resources.

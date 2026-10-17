@@ -151,7 +151,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         HistoryStore.shared.clearAll()
     }
 
-    @objc private func openSettingsWindow() {
+    @objc func openSettingsWindow() {
         settingsWindowController.show()
     }
 

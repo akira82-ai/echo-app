@@ -8,7 +8,7 @@ import AppKit
 final class SettingsWindowController: NSWindowController {
     init() {
         let hosting = NSHostingController(rootView: SettingsView())
-        let window = NSWindow(contentViewController: hosting)
+        let window = SettingsWindow(contentViewController: hosting)
         window.title = L10n.text("settings.windowTitle")
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.center()
@@ -25,6 +25,25 @@ final class SettingsWindowController: NSWindowController {
         NSApp.activate(ignoringOtherApps: true)
         showWindow(nil)
         window?.makeKeyAndOrderFront(nil)
+    }
+}
+
+/// Menu-bar apps have no standard Edit menu to dispatch text shortcuts.
+private final class SettingsWindow: NSWindow {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if modifiers == .command {
+            let action: Selector?
+            switch event.charactersIgnoringModifiers?.lowercased() {
+            case "v": action = #selector(NSText.paste(_:))
+            case "c": action = #selector(NSText.copy(_:))
+            case "x": action = #selector(NSText.cut(_:))
+            case "a": action = #selector(NSText.selectAll(_:))
+            default: action = nil
+            }
+            if let action, NSApp.sendAction(action, to: nil, from: self) { return true }
+        }
+        return super.performKeyEquivalent(with: event)
     }
 }
 
@@ -105,6 +124,10 @@ struct SettingsView: View {
                     if autoPasteEnabled {
                         permissionRow
                     }
+                }
+
+                settingsSection(title: L10n.text("chat.settings")) {
+                    ChatConfigurationView()
                 }
 
                 settingsSection(title: L10n.text("settings.data")) {
@@ -201,28 +224,8 @@ struct SettingsView: View {
     }
 
     /// 单行设置项:左侧标题/副标题,右侧控件。
-    private func settingRow<Accessory: View>(title: String, subtitle: String? = nil, @ViewBuilder accessory: () -> Accessory) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: subtitle == nil ? 0 : 2) {
-                Text(title)
-                    .font(.system(size: 13))
-                    .foregroundStyle(palette.textPrimary)
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundStyle(palette.textSecondary)
-                }
-            }
-
-            Spacer(minLength: 16)
-
-            accessory()
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
-        .background(palette.rowBackground)
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(palette.border, lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    private func settingRow<Accessory: View>(title: String, subtitle: String? = nil, @ViewBuilder accessory: @escaping () -> Accessory) -> some View {
+        SettingsRow(title: title, subtitle: subtitle, accessory: accessory)
     }
 
     private func settingNote(_ text: String) -> some View {
@@ -250,4 +253,38 @@ struct SettingsView: View {
         AppSettings.shared.hotkeyKeyCode = preset.keycode
         GlobalHotkey.shared.reregister()
     }
+}
+
+/// Shared row styling for general and model settings.
+struct SettingsRow<Accessory: View>: View {
+    let title: String
+    var subtitle: String? = nil
+    @ViewBuilder let accessory: () -> Accessory
+    @Environment(\.colorScheme) private var colorScheme
+    private var palette: EchoTheme.Palette { EchoTheme.palette(for: colorScheme) }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: subtitle == nil ? 0 : 2) {
+                Text(title)
+                    .font(.system(size: 13))
+                    .foregroundStyle(palette.textPrimary)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 11))
+                        .foregroundStyle(palette.textSecondary)
+                }
+            }
+
+            Spacer(minLength: 16)
+
+            accessory()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(palette.rowBackground)
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(palette.border, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
 }

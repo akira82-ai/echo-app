@@ -8,7 +8,8 @@ let package = Package(
         .macOS(.v13)
     ],
     dependencies: [
-        .package(url: "https://github.com/nicklockwood/Expression.git", from: "0.13.0")
+        .package(url: "https://github.com/nicklockwood/Expression.git", from: "0.13.0"),
+        .package(url: "https://github.com/MacPaw/OpenAI.git", exact: "0.5.3")
     ],
     targets: [
         .target(name: "Calculator", dependencies: [.product(name: "Expression", package: "Expression")]),
@@ -21,7 +22,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "Echo",
-            dependencies: ["MarkdownConversion", "Calculator"],
+            dependencies: ["MarkdownConversion", "Calculator", .product(name: "OpenAI", package: "OpenAI")],
             path: "Sources/Echo",
             resources: [
                 .process("Resources")
