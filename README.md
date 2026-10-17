@@ -1,6 +1,6 @@
 <div align="center">
 
-If Echo helps you, please consider giving it a [⭐ Star](https://github.com/akira82-ai/echo-app).
+Like simple, handy Mac tools? Give Echo a [⭐ Star](https://github.com/akira82-ai/echo-app) to support its continued development.
 
 # Echo 📋
 
@@ -9,6 +9,8 @@ If Echo helps you, please consider giving it a [⭐ Star](https://github.com/aki
 Recall copied content, paste Markdown, calculate, or ask a quick question — from one menu-bar panel.
 
 **Clipboard history · Markdown paste · Instant calculation · Quick questions**
+
+[Download Echo. Make copy and paste feel easier. →](https://github.com/akira82-ai/echo-app/releases/latest)
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
@@ -24,13 +26,13 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 
 ## Features
 
-- **Clipboard history** — Capture copied text, images, and Finder files. Open with `⌘\` to search, select, and paste.
-- **Markdown paste** — Convert captured rich text to Markdown locally, including headings, links, lists, code blocks, and simple tables.
-- **Batch paste** — Select up to five text items and paste them together in selection order, as plain text or Markdown.
-- **Instant calculation** — Start with `!` or `！` to calculate without leaving the panel.
-- **Quick questions** — Start with `@` for streamed DeepSeek answers, with model-directed web search and page reading. Requires your own API key.
-- **Copy sources** — See available app names or browser URLs, and reopen an observed page in Safari, Chrome, Edge, or Ego. Attribution is best-effort.
-- **Native interface** — Light and dark appearances, Reduce Motion support, and Simplified Chinese, English, and Japanese interfaces.
+- **Copied it? Find it again.** — Text, images, and Finder files are captured automatically. Press `⌘\`, search, pick an item, and keep going.
+- **From clipping to notes, with less cleanup.** — Paste copied rich text as Markdown, keeping common structures such as headings, links, and lists. Conversion happens entirely on your Mac.
+- **Several clips. One paste.** — Combine up to five text items in the order you choose. Gather excerpts and piece together notes with fewer trips between apps.
+- **Do the math. Keep your focus.** — Start with `!`, then press Return to use the result. From simple arithmetic to common functions, no separate calculator needed.
+- **A quick question, right here.** — Type `@` to ask DeepSeek in the same panel. Watch the answer arrive as it is generated, with model-directed web search and page reading when needed. Bring your own API key.
+- **Find the clip—and its source.** — See the source app or webpage when available. Reopen a captured URL in one step to keep reading or check the context.
+- **At home on your Mac.** — Follows your system's light or dark appearance, respects Reduce Motion, and speaks Chinese, English, and Japanese. Open it when needed; dismiss it when done.
 
 ## Install
 
