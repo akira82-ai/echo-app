@@ -42,7 +42,7 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 
 在最新 [Release](https://github.com/akira82-ai/echo-app/releases/latest) 下载 `Echo.dmg`，打开后将 Echo 拖入「应用程序」。也可下载 ZIP。
 
-当前版本：**2.11.0（build 19）**。
+当前版本：**2.11.1（build 20）**。
 
 Release 使用 `Echo Self-Sign` 自签名，未经 Apple Developer ID 签名或公证。首次启动若被 macOS 拦截，尝试打开后，前往「系统设置 → 隐私与安全性」，点击「仍要打开」并确认。
 
@@ -62,6 +62,8 @@ open dist/Echo.app
 ## 使用
 
 正常复制，按 `⌘\` 呼出面板，选择条目并回车。自动粘贴需要辅助功能权限；未授权时，回到目标 App 按 `⌘V` 即可。
+
+输入框沿用 Mac 常用编辑快捷键：`⌘A` 全选、`⌘V` 粘贴纯文本，`⌘X` / `⌘C` 剪切或复制选中文字；有可撤销的编辑时，使用 `⌘Z` / `⇧⌘Z` 撤销或重做。剪贴板搜索、计算和问答输入均可使用；`Ctrl+A` 保留 macOS 默认文本编辑行为。
 
 | 面板内操作 | 作用 |
 | --- | --- |

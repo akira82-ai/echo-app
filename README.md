@@ -42,7 +42,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.11.0 (build 19)**.
+Current version: **2.11.1 (build 20)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 
@@ -62,6 +62,8 @@ The script builds and packages the app, using `Echo Self-Sign` when available or
 ## Usage
 
 Copy normally, press `⌘\`, select an item, and press Return. Auto Paste requires Accessibility permission; without it, return to the target app and press `⌘V`.
+
+Edit the input with familiar Mac shortcuts: `⌘A` selects all, `⌘V` pastes plain text, and `⌘X` / `⌘C` cut or copy selected text. `⌘Z` / `⇧⌘Z` undo or redo when available. These work in clipboard search, calculation, and quick questions; `Ctrl+A` keeps its macOS text-editing behavior.
 
 | In the panel | Action |
 | --- | --- |

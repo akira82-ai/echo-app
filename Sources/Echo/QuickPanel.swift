@@ -4,6 +4,35 @@ import QuartzCore
 import MarkdownConversion
 import Calculator
 
+/// Menu-bar panels have no Edit menu to route standard editing shortcuts.
+private final class QuickPanel: NSPanel {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard isKeyWindow, let editor = firstResponder as? NSTextView,
+              editor.isFieldEditor, editor.isEditable else {
+            return super.performKeyEquivalent(with: event)
+        }
+        let modifiers = event.modifierFlags.intersection([.command, .control, .option, .shift])
+        let key = event.charactersIgnoringModifiers?.lowercased()
+        if modifiers == .command {
+            switch key {
+            case "a": editor.selectAll(nil); return true
+            case "v": editor.pasteAsPlainText(nil); return true
+            case "x": editor.cut(nil); return true
+            case "c": editor.copy(nil); return true
+            case "z":
+                if let undo = editor.undoManager, undo.canUndo {
+                    undo.undo(); return true
+                }
+            default: break
+            }
+        } else if modifiers == [.command, .shift], key == "z",
+                  let undo = editor.undoManager, undo.canRedo {
+            undo.redo(); return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+}
+
 /// QuickPanel:Spotlight 风格的剪贴板历史选择浮层。
 ///
 /// 设计依据(详见 design-plan.html 板块5、6):
@@ -146,6 +175,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 处理一次按键。返回 nil 表示吞掉该事件,返回 event 表示放行。
     private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
+        guard event.window === panel, panel?.isKeyWindow == true else { return event }
         if viewModel.isConverting {
             if event.type == .keyDown && event.keyCode == 53 { hide() }
             return nil
@@ -163,8 +193,10 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
                 }
                 return nil
             }
-            if event.modifierFlags.contains(.command), event.charactersIgnoringModifiers == "c" {
-                if let field = panel?.firstResponder as? NSTextView, field.selectedRange().length > 0 {
+            if event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command,
+               event.charactersIgnoringModifiers?.lowercased() == "c",
+               let field = panel?.firstResponder as? NSTextView, field.isFieldEditor {
+                if field.selectedRange().length > 0 {
                     field.copy(nil)
                     return nil
                 }
@@ -186,8 +218,10 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
                 }
                 return nil
             }
-            if event.modifierFlags.contains(.command), event.charactersIgnoringModifiers == "c",
-               let field = panel?.firstResponder as? NSTextView, field.selectedRange().length == 0,
+            if event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command,
+               event.charactersIgnoringModifiers?.lowercased() == "c",
+               let field = panel?.firstResponder as? NSTextView, field.isFieldEditor,
+               field.selectedRange().length == 0,
                let result = viewModel.calculationResult {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(result, forType: .string)
@@ -345,7 +379,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     /// 这是「不抢焦点」与「显示交通灯」之间的取舍,前者对粘贴功能是硬需求。
     private static func makePanel(contentViewController: NSViewController) -> NSPanel {
         let styleMask: NSWindow.StyleMask = [.nonactivatingPanel, .titled, .fullSizeContentView]
-        let panel = NSPanel(
+        let panel = QuickPanel(
             contentRect: NSRect(x: 0, y: 0, width: Layout.panelWidth, height: Layout.panelHeight),
             styleMask: styleMask,
             backing: .buffered,
