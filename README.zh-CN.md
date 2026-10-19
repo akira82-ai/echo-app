@@ -42,7 +42,7 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 
 在最新 [Release](https://github.com/akira82-ai/echo-app/releases/latest) 下载 `Echo.dmg`，打开后将 Echo 拖入「应用程序」。也可下载 ZIP。
 
-当前版本：**2.11.1（build 20）**。
+当前版本：**2.11.2（build 21）**。
 
 Release 使用 `Echo Self-Sign` 自签名，未经 Apple Developer ID 签名或公证。首次启动若被 macOS 拦截，尝试打开后，前往「系统设置 → 隐私与安全性」，点击「仍要打开」并确认。
 

@@ -983,17 +983,17 @@ struct QuickPanelView: View {
                 .foregroundStyle(showsMultiSelectFeedback ? palette.accent : palette.textTertiary)
                 .font(.system(size: 16))
             }
-            TextField(L10n.text("quick.search.placeholder"), text: $viewModel.query)
-                .textFieldStyle(.plain)
-                .onSubmit {
+            ModeSearchField(text: $viewModel.query,
+                            placeholder: L10n.text("quick.search.placeholder"),
+                            focused: fieldFocused,
+                            enabled: !viewModel.showsAchievements && !viewModel.showsShortcutGuide && !viewModel.isConverting) {
                     // Input methods may consume Return before the event monitor can send.
                     if viewModel.isChat {
                         QuickPanelController.shared.sendChatQuestion()
                     }
                 }
-                .font(.system(size: 15))
-                .focused($fieldFocused)
-                .disabled(viewModel.showsAchievements || viewModel.showsShortcutGuide || viewModel.isConverting)
+                .frame(maxWidth: .infinity)
+                .frame(height: 24)
             if viewModel.isChat {
                 Text(L10n.text("chat.title")).font(.system(size: 11)).foregroundStyle(palette.textTertiary)
             } else if viewModel.isCalculator {
