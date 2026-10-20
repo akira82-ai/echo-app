@@ -14,7 +14,7 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-[特性](#特性) · [安装](#安装) · [使用](#使用) · [隐私](#隐私与权限)
+[特性](#特性) · [常见问题](#常见问题) · [使用](#使用) · [安装](#安装) · [隐私](#隐私与权限)
 
 已收录于 [Awesome Swift macOS Apps](https://github.com/jaywcjlove/awesome-swift-macos-apps)。
 
@@ -34,30 +34,34 @@ https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
 - **找回内容，也找回出处** — 查看复制内容的来源 App 或网页；识别到网址时，一步回到原页面，继续阅读和查证。
 - **原生体验，融入 Mac** — 明暗主题随系统切换，支持「减少动态效果」与中、英、日三种语言。需要时呼出，用完即收起。
 
-## 安装
+## 常见问题
 
-需要 **macOS 13 Ventura 及以上**。当前预编译包适用于 **Apple Silicon**；Intel Mac 需从源码构建。
+**Echo 是什么？一句话说。**
+Mac 菜单栏里的极简智能剪贴板：找回复制内容、粘贴 Markdown、算一下、问一下，一个面板全干。免费开源（MIT），无订阅、无内购、无账号。
 
-### 下载 Release
+**已经在用 Maccy / Paste / Raycast，还值得试试 Echo 吗？**
+看你缺哪一步：
+- 喜欢 Maccy 的极简，但还想要 Markdown 粘贴、计算和问答 → 试试 Echo；
+- 需要 Paste 那样的持久历史库 → 它更合适。Echo 选了另一个方向：剪贴板是暂存区，重启即清、零残留；
+- 重度 Raycast 用户 → 留在 Raycast 挺好。Echo 是给「只想贴段文字、顺手算一下问一下，不想为此装一个启动器」的人。
 
-在最新 [Release](https://github.com/akira82-ai/echo-app/releases/latest) 下载 `Echo.dmg`，打开后将 Echo 拖入「应用程序」。也可下载 ZIP。
+**我的剪贴板数据会被上传吗？**
+不会。历史与缓存全部留在本机，重启即清空（细节见下方「隐私与权限」）。唯一出网的是「问一下」——而且只发你的问题本身。
 
-当前版本：**2.11.2（build 21）**。
+**「问一下」会把我的剪贴板历史发给 DeepSeek 吗？**
+不会。只有你当次输入的问题、以及你手动粘贴进问题的内容会发送；剪贴板历史不会被自动附带，各问题相互独立、不带上文。需要查证时，模型生成的搜索词和网页地址会发给 DeepSeek 的搜索服务。
 
-Release 使用 `Echo Self-Sign` 自签名，未经 Apple Developer ID 签名或公证。首次启动若被 macOS 拦截，尝试打开后，前往「系统设置 → 隐私与安全性」，点击「仍要打开」并确认。
+**为什么「问一下」要我自己填 API Key？**
+Echo 不做中转、不经手你的额度：Key 存在 macOS 钥匙串，请求从你的机器直连 DeepSeek，用量和费用完全由你掌控。
 
-### 下载源码并编译
+**Markdown 粘贴有什么限制？**
+保留标题、链接、列表等常见结构；合并/嵌套表格与图片附件暂不完整支持。转换失败时剪贴板保持原样，回车仍可粘贴原格式。
 
-先安装带有 **Swift 6.2 及以上**的 Xcode 或 Apple Command Line Tools（当前依赖要求），再执行：
+**为什么启动时 macOS 提示「无法打开」？**
+Echo 使用自签名，未经 Apple 公证。先尝试打开，再到「系统设置 → 隐私与安全性」点「仍要打开」并确认即可（见「安装」）。介意的话，也可以用源码自行构建——这也是开源的意义。
 
-```bash
-git clone https://github.com/akira82-ai/echo-app.git
-cd echo-app
-./build-app.sh
-open dist/Echo.app
-```
-
-脚本会编译并打包应用；本机有 `Echo Self-Sign` 证书时使用该证书，否则使用临时签名（ad-hoc）。请启动 `dist/Echo.app`，以正确加载资源并处理权限。首次构建需要下载依赖。
+**自动粘贴为什么要「辅助功能」权限？**
+自动写回目标 App 需要该权限。不授权也能正常用：回车复制后，到目标 App 按 `⌘V`（见「使用」）。基础的剪贴板记录和 `⌘\` 全局快捷键不需要任何权限。
 
 ## 使用
 
@@ -97,6 +101,31 @@ open dist/Echo.app
 输入 `@ 问题` 并回车；未选中文字时，`⌘C` 复制完整回答。修改输入会清空回答并取消请求，`Esc` 关闭并取消；删掉 `@` 返回搜索。重新呼出面板会恢复内存中的上次问题，但不保留回答，也不会自动重发。
 
 模型可使用同一个 Key 调用 [DeepSeek 搜索与网页读取](https://api-docs.deepseek.com/zh-cn/guides/search)，无需另开开关。系统要求回答引用来源，重要事实和链接仍需核对。各问题独立，不自动附带此前对话或剪贴板历史。
+
+## 安装
+
+需要 **macOS 13 Ventura 及以上**。当前预编译包适用于 **Apple Silicon**；Intel Mac 需从源码构建。
+
+### 下载 Release
+
+在最新 [Release](https://github.com/akira82-ai/echo-app/releases/latest) 下载 `Echo.dmg`，打开后将 Echo 拖入「应用程序」。也可下载 ZIP。
+
+当前版本：**2.11.2（build 21）**。
+
+Release 使用 `Echo Self-Sign` 自签名，未经 Apple Developer ID 签名或公证。首次启动若被 macOS 拦截，尝试打开后，前往「系统设置 → 隐私与安全性」，点击「仍要打开」并确认。
+
+### 下载源码并编译
+
+先安装带有 **Swift 6.2 及以上**的 Xcode 或 Apple Command Line Tools（当前依赖要求），再执行：
+
+```bash
+git clone https://github.com/akira82-ai/echo-app.git
+cd echo-app
+./build-app.sh
+open dist/Echo.app
+```
+
+脚本会编译并打包应用；本机有 `Echo Self-Sign` 证书时使用该证书，否则使用临时签名（ad-hoc）。请启动 `dist/Echo.app`，以正确加载资源并处理权限。首次构建需要下载依赖。
 
 ## 隐私与权限
 
