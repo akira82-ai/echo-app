@@ -14,7 +14,7 @@ Recall copied content, paste Markdown, calculate, or ask a quick question — fr
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-[Features](#features) · [Install](#install) · [Usage](#usage) · [Privacy](#privacy-and-permissions)
+[Features](#features) · [FAQ](#faq) · [Usage](#usage) · [Install](#install) · [Privacy](#privacy-and-permissions)
 
 Featured in [Awesome Swift macOS Apps](https://github.com/jaywcjlove/awesome-swift-macos-apps).
 
@@ -34,30 +34,34 @@ https://github.com/user-attachments/assets/2fa21d5d-e4a0-42c7-bee8-ceb0c1b1ccef
 - **Find the clip—and its source.** — See the source app or webpage when available. Reopen a captured URL in one step to keep reading or check the context.
 - **At home on your Mac.** — Follows your system's light or dark appearance, respects Reduce Motion, and speaks Chinese, English, and Japanese. Open it when needed; dismiss it when done.
 
-## Install
+## FAQ
 
-Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Apple Silicon**; Intel Macs require a source build.
+**What is Echo, in one sentence?**
+A minimal intelligent clipboard in your Mac's menu bar: recall copied content, paste Markdown, calculate, and ask quick questions — one panel does it all. Free and open source (MIT). No subscription, no in-app purchases, no account.
 
-### Download a Release
+**I already use Maccy / Paste / Raycast. Is Echo still worth a try?**
+Depends on which step you're missing:
+- You like Maccy's simplicity but want Markdown paste, calculation, and quick questions → give Echo a try;
+- You need a persistent history database like Paste's → that's what it does best. Echo takes a different path: the clipboard is a scratchpad — cleared on restart, nothing left behind;
+- Heavy Raycast user → stick with Raycast. Echo is for people who just want to paste some text, run a quick calculation, or ask a quick question — without installing a whole launcher for it.
 
-Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
+**Will my clipboard data be uploaded?**
+No. History and caches stay on your Mac and are cleared on restart (details under Privacy and permissions). The only thing that ever leaves your machine is a quick question — and only the question itself.
 
-Current version: **2.11.2 (build 21)**.
+**Does a quick question send my clipboard history to DeepSeek?**
+No. Only the question you type — plus anything you manually paste into it — is sent. Clipboard history is never attached automatically, and questions are independent, with no memory of each other. When verification is needed, the model's search queries and page URLs are sent to DeepSeek's search service.
 
-Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
+**Why do I need my own API key for quick questions?**
+Echo doesn't proxy or touch your quota: the key lives in the macOS Keychain, and requests go straight from your machine to DeepSeek. You stay in full control of usage and cost.
 
-### Build from source
+**What are the limits of Markdown paste?**
+Common structures such as headings, links, and lists are preserved; merged/nested tables and image attachments are not fully supported yet. If a conversion fails, the clipboard stays untouched, and Return still pastes the original.
 
-Install Xcode or Apple's Command Line Tools with **Swift 6.2 or later** (required by the current dependencies), then run:
+**Why does macOS say Echo "can't be opened"?**
+Echo is self-signed and not notarized by Apple. Try opening it, then go to System Settings → Privacy & Security and click Open Anyway (see Install). If you'd rather not, build it from source yourself — that's what open source is for.
 
-```bash
-git clone https://github.com/akira82-ai/echo-app.git
-cd echo-app
-./build-app.sh
-open dist/Echo.app
-```
-
-The script builds and packages the app, using `Echo Self-Sign` when available or ad-hoc signing otherwise. Launch `dist/Echo.app` so bundled resources and permissions work as expected. The first build downloads dependencies.
+**Why does Auto Paste need Accessibility permission?**
+Writing back into the target app requires it. Without granting it, everything still works: press Return to copy, then `⌘V` in the target app (see Usage). Basic clipboard capture and the `⌘\` shortcut need no permission at all.
 
 ## Usage
 
@@ -97,6 +101,31 @@ In Settings → Model settings, save your **DeepSeek API key**. The endpoint (`h
 Type `@ question` and press Return. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Remove `@` to return to search. Reopening restores the last question in memory, without its answer or an automatic resend.
 
 The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides/search) with the same key, without a separate switch. It is instructed to cite sources; check important facts and links. Questions are independent: no previous conversation or clipboard history is automatically included.
+
+## Install
+
+Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Apple Silicon**; Intel Macs require a source build.
+
+### Download a Release
+
+Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
+
+Current version: **2.11.2 (build 21)**.
+
+Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
+
+### Build from source
+
+Install Xcode or Apple's Command Line Tools with **Swift 6.2 or later** (required by the current dependencies), then run:
+
+```bash
+git clone https://github.com/akira82-ai/echo-app.git
+cd echo-app
+./build-app.sh
+open dist/Echo.app
+```
+
+The script builds and packages the app, using `Echo Self-Sign` when available or ad-hoc signing otherwise. Launch `dist/Echo.app` so bundled resources and permissions work as expected. The first build downloads dependencies.
 
 ## Privacy and permissions
 
