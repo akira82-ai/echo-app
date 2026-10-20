@@ -22,7 +22,7 @@ Featured in [Awesome Swift macOS Apps](https://github.com/jaywcjlove/awesome-swi
 
 ## Demo
 
-https://github.com/user-attachments/assets/cfd745c4-c36e-4929-8fda-0585ff2de70a
+https://github.com/user-attachments/assets/2fa21d5d-e4a0-42c7-bee8-ceb0c1b1ccef
 
 ## Features
 
