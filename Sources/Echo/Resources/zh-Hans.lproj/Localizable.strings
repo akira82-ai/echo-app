@@ -139,3 +139,7 @@
 "chat.tooLong" = "内容过长：问题上限 16000 字符，回答上限 100000 字符。";
 "chat.requestError" = "请求失败，请检查网络、接口地址、模型、Key 或服务配额后按回车重试。";
 "chat.shortcuts" = "↵ 发送/重试    ⌘C 复制回答    esc 关闭";
+"chat.systemPrompt" = "系统提示词";
+"chat.restorePrompt" = "恢复默认";
+"chat.promptNote" = "配置保存在本地，提问时随请求发送给模型。保存后从下一次提问生效；恢复默认也需保存。";
+"chat.promptInvalid" = "无法读取系统提示词，或内容为空／超过 16000 字符。请在模型设置中恢复默认或修改后保存。";

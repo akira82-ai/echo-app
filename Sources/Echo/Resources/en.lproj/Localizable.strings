@@ -139,3 +139,7 @@
 "chat.tooLong" = "Content limit: 16000 characters per question, 100000 per answer.";
 "chat.requestError" = "Request failed. Check network, URL, model, key or service quota, then press Return to retry.";
 "chat.shortcuts" = "↵ Send/retry    ⌘C Copy    esc Close";
+"chat.systemPrompt" = "System prompt";
+"chat.restorePrompt" = "Restore default";
+"chat.promptNote" = "Stored locally and sent to the model with each question. Changes apply after saving, starting with the next question; save after restoring the default.";
+"chat.promptInvalid" = "System prompt is unavailable, blank, or over 16000 characters. Restore the default or edit and save in model settings.";

@@ -2,6 +2,67 @@ import Foundation
 import OpenAI
 
 @MainActor
+func runPromptRequestChecks(port: Int) async -> Bool {
+    var configured = "First custom prompt"
+    var reads = 0
+    let state = ChatState(makeClient: {
+        OpenAI(configuration: .init(token: nil, host: "127.0.0.1", port: port,
+            scheme: "http", basePath: "/v1", timeoutInterval: 5, parsingOptions: .relaxed))
+    }, modelName: { "mock" }, makeWeb: { nil }, readPrompt: {
+        reads += 1
+        return configured
+    })
+    for (question, expected) in [("first", "First custom prompt"), ("second", "Next custom prompt")] {
+        state.send(question)
+        configured = "Next custom prompt"
+        for _ in 0..<100 {
+            if !state.busy { break }
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        guard !state.busy, state.errorKey == nil, state.answer == expected else {
+            print("FAIL prompt request snapshot: \(state.errorKey ?? state.answer)")
+            return false
+        }
+    }
+    guard reads == 2 else { return false }
+    print("PASS actual system/user requests, per-question snapshot and next-question update")
+    return true
+}
+
+func runPromptChecks() -> Bool {
+    let domain = "Echo.PromptChecks.\(UUID().uuidString)"
+    guard let defaults = UserDefaults(suiteName: domain) else { return false }
+    defer { defaults.removePersistentDomain(forName: domain) }
+    do {
+        let settings = ChatPrompt(defaults: defaults)
+        let original = try ChatPrompt.defaultText()
+        guard try settings.effectiveText() == original else { return false }
+        let custom = "  Custom instructions\nPreserve this newline.  "
+        try settings.save(custom)
+        guard try ChatPrompt(defaults: defaults).effectiveText() == custom else { return false }
+        for invalid in [" \n\t", String(repeating: "x", count: ChatPrompt.limit + 1)] {
+            do { try settings.save(invalid); return false }
+            catch ChatFailure.promptInvalid { }
+            guard try settings.effectiveText() == custom else { return false }
+        }
+        let zone = TimeZone(secondsFromGMT: 0)!
+        let system = ChatPrompt.systemMessage(custom, date: Date(timeIntervalSince1970: 0), timeZone: zone, webAvailable: false)
+        guard system.hasPrefix(custom), system.contains("1970-01-01"),
+              system.contains("No web access"), system.contains("untrusted data") else { return false }
+        let online = ChatPrompt.systemMessage(custom, date: Date(), timeZone: zone, webAvailable: true)
+        guard online.contains("web_search"), !online.contains("No web access") else { return false }
+        try settings.save(original)
+        guard defaults.object(forKey: ChatPrompt.key) == nil,
+              try settings.effectiveText() == original else { return false }
+        defaults.set("", forKey: ChatPrompt.key)
+        do { _ = try settings.effectiveText(); return false }
+        catch ChatFailure.promptInvalid { }
+        print("PASS prompt resource, persistence, restore, validation and runtime context")
+        return true
+    } catch { print("FAIL prompt checks: \(error)"); return false }
+}
+
+@MainActor
 func runChatChecks(port: Int) async -> Bool {
     func client() -> OpenAI {
         OpenAI(configuration: .init(token: nil, host: "127.0.0.1", port: port,

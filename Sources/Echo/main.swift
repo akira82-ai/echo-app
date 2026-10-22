@@ -1,5 +1,17 @@
 import AppKit
 
+if CommandLine.arguments.contains("--prompt-self-test") {
+    exit(runPromptChecks() ? 0 : 1)
+}
+
+if let index = CommandLine.arguments.firstIndex(of: "--prompt-request-test"),
+   CommandLine.arguments.count > index + 1, let port = Int(CommandLine.arguments[index + 1]) {
+    Task { @MainActor in
+        exit(await runPromptRequestChecks(port: port) ? 0 : 1)
+    }
+    RunLoop.main.run()
+}
+
 if let index = CommandLine.arguments.firstIndex(of: "--chat-self-test"),
    CommandLine.arguments.count > index + 1, let port = Int(CommandLine.arguments[index + 1]) {
     Task { @MainActor in

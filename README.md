@@ -31,6 +31,7 @@ https://github.com/user-attachments/assets/2fa21d5d-e4a0-42c7-bee8-ceb0c1b1ccef
 - **Several clips. One paste.** — Combine up to five text items in the order you choose. Gather excerpts and piece together notes with fewer trips between apps.
 - **Do the math. Keep your focus.** — Start with `!`, then press Return to use the result. From simple arithmetic to common functions, no separate calculator needed.
 - **A quick question, right here.** — Type `@` to ask DeepSeek in the same panel. Watch the answer arrive as it is generated, with model-directed web search and page reading when needed. Bring your own API key.
+- **Make the assistant yours.** — Edit the system prompt in Model Settings, restore Echo's default, and shape the tone and rules of every new quick question.
 - **Find the clip—and its source.** — See the source app or webpage when available. Reopen a captured URL in one step to keep reading or check the context.
 - **At home on your Mac.** — Follows your system's light or dark appearance, respects Reduce Motion, and speaks Chinese, English, and Japanese. Open it when needed; dismiss it when done.
 
@@ -46,7 +47,7 @@ Depends on which step you're missing:
 - Heavy Raycast user → stick with Raycast. Echo is for people who just want to paste some text, run a quick calculation, or ask a quick question — without installing a whole launcher for it.
 
 **Will my clipboard data be uploaded?**
-No. History and caches stay on your Mac and are cleared on restart (details under Privacy and permissions). The only thing that ever leaves your machine is a quick question — and only the question itself.
+No. History and caches stay on your Mac and are cleared on restart (details under Privacy and permissions). A quick question sends the question and your saved system prompt to DeepSeek; clipboard history is never uploaded automatically.
 
 **Does a quick question send my clipboard history to DeepSeek?**
 No. Only the question you type — plus anything you manually paste into it — is sent. Clipboard history is never attached automatically, and questions are independent, with no memory of each other. When verification is needed, the model's search queries and page URLs are sent to DeepSeek's search service.
@@ -96,6 +97,8 @@ Return pastes the result and closes the panel. With no text selected, `⌘C` cop
 
 ### Quick questions
 
+The system prompt is editable in Settings → Model Settings. Save to apply it to the next question; ongoing requests keep their original prompt. Custom prompts are stored locally, sent to the model with each question, and survive upgrades. Restore the default and save to use the bundled default, which can evolve with app updates. Date, timezone and actual tool availability are added at request time. Default answers are concise, conclusion-first and suited to the single-turn panel.
+
 In Settings → Model settings, save your **DeepSeek API key**. The endpoint (`https://api.deepseek.com/v1`) and model (`deepseek-chat`) are fixed; the key is stored in macOS Keychain.
 
 Type `@ question` and press Return. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Remove `@` to return to search. Reopening restores the last question in memory, without its answer or an automatic resend.
@@ -110,7 +113,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.11.2 (build 21)**.
+Current version: **2.12.0 (build 22)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 
@@ -131,7 +134,7 @@ The script builds and packages the app, using `Echo Self-Sign` when available or
 
 - **Local clipboard data:** History and Markdown caches are not restored after restarting Echo. Image originals are cached under `~/Library/Caches/Echo/images/`; files are removed when their entries are deleted or evicted, and the image cache is cleared on startup. Settings and existing usage counters remain local.
 - **Optional Accessibility access:** Basic recording and the global shortcut need no permission. Auto Paste and browser URL capture require Accessibility permission. Browser attribution may be missing or inaccurate.
-- **DeepSeek requests:** Quick questions send your input, model-generated search queries, and page URLs to DeepSeek; web results are returned to the model. Content you manually paste into a question is sent too. The provider may retain requests and charge for chat and web usage.
+- **DeepSeek requests:** Quick questions send your input, saved system prompt, model-generated search queries, and page URLs to DeepSeek; web results are returned to the model. Content you manually paste into a question is sent too. The provider may retain requests and charge for chat and web usage.
 
 If Auto Paste fails, enable Echo in **System Settings → Privacy & Security → Accessibility** and check **Enable Auto Paste** in Echo settings. You can still paste manually with `⌘V`.
 
