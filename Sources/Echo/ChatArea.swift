@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ChatArea: View {
     @ObservedObject var state: ChatState
+    var accent: Color = .secondary
     var onAnswerCompleted: () -> Void
 
     var body: some View {
@@ -11,7 +12,7 @@ struct ChatArea: View {
                     ChatActivityLabel(text: L10n.text(state.activityKey))
                 } else {
                     Text(L10n.text("chat.title"))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(accent)
                 }
                 if !state.answer.isEmpty {
                     Text(.init(state.answer)).font(.system(size: 13))

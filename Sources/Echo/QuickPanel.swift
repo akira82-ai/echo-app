@@ -53,7 +53,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
-        static let panelHeight: CGFloat = 400
+        static let panelHeight: CGFloat = 424
     }
 
     /// 选中某条历史项时调用(主线程)。
@@ -97,7 +97,10 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         frontmostAppAtShowTime = NSWorkspace.shared.frontmostApplication
 
         viewModel.configure(entries: entries)
-        if let restoredChatQuery { viewModel.query = restoredChatQuery }
+        if let restoredChatQuery {
+            viewModel.inputMode = .chat
+            viewModel.query = restoredChatQuery
+        }
         let viewModel = self.viewModel
         let hosting = NSHostingController(rootView: QuickPanelView(viewModel: viewModel) { [weak self] entry in
             self?.handleSelected(entry, source: .mouse, format: .original)
@@ -129,7 +132,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     }
 
     func sendChatQuestion() {
-        viewModel.chat.send(String(viewModel.query.dropFirst()))
+        viewModel.chat.send(viewModel.query)
         placeSearchCaretAtEnd()
         // SwiftUI's submit handling can select the field after the key event returns.
         DispatchQueue.main.async { [weak self] in
@@ -143,7 +146,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
               viewModel.chat.errorKey == nil, !viewModel.chat.answer.isEmpty,
               let field = panel?.firstResponder as? NSTextView,
               !field.hasMarkedText(), field.string == viewModel.query else { return }
-        field.setSelectedRange(NSRange(location: 1, length: field.string.utf16.count - 1))
+        field.setSelectedRange(NSRange(location: 0, length: field.string.utf16.count))
     }
 
     /// 隐藏面板。
@@ -482,27 +485,32 @@ final class QuickPanelViewModel: ObservableObject {
     /// 搜索/编号输入框文本
     @Published var query: String = "" {
         didSet {
-            // configure 期间禁止 didSet 触发 applyFilter(避免 query="" 清空还没配好的数据)
-            guard !isConfiguring, query != oldValue else { return }
-            chat.reset()
-            if isChat {
-                batchSelectionIDs = []
-                batchNotice = nil
-                return
-            }
-            if isCalculator {
-                calculation = Calculator.evaluate(String(query.dropFirst()))
-                batchSelectionIDs = []
-                batchNotice = nil
-                return
-            }
-            calculation = .empty
+            guard query != oldValue else { return }
+            refreshInput()
+        }
+    }
+
+    @Published var inputMode: QuickInputMode = .search {
+        didSet {
+            guard inputMode != oldValue else { return }
+            refreshInput()
+        }
+    }
+
+    private func refreshInput() {
+        guard !isConfiguring else { return }
+        chat.reset()
+        calculation = isCalculator ? Calculator.evaluate(query) : .empty
+        if isChat || isCalculator {
+            batchSelectionIDs = []
+            batchNotice = nil
+        } else {
             applyFilter()
         }
     }
 
-    var isCalculator: Bool { query.first == "!" || query.first == "！" }
-    var isChat: Bool { query.first == "@" }
+    var isCalculator: Bool { inputMode == .calculator }
+    var isChat: Bool { inputMode == .chat }
     let chat = ChatState()
     @Published private(set) var calculation: Calculation = .empty
     var calculationResult: String? {
@@ -580,6 +588,7 @@ final class QuickPanelViewModel: ObservableObject {
     func configure(entries: [ClipEntry]) {
         isConfiguring = true
         allEntries = entries
+        inputMode = .search
         query = ""
         currentPage = 0
         applyFilter()
@@ -601,6 +610,7 @@ final class QuickPanelViewModel: ObservableObject {
         isConverting = false
         conversionNotice = nil
         allEntries = []
+        inputMode = .search
         query = ""
         displayed = []
         currentPage = 0
@@ -617,6 +627,7 @@ final class QuickPanelViewModel: ObservableObject {
         showsAchievements.toggle()
         showsShortcutGuide = false
         if showsAchievements {
+            inputMode = .search
             query = ""
         }
         refreshMedals()
@@ -868,7 +879,7 @@ func runQuickPanelInputChecks() -> Bool {
     model.configure(entries: [ClipEntry(kind: .text(TextPayload(rawText: "hello", representations: [])))])
     model.query = "hello"
     let host = NSHostingView(rootView: QuickPanelView(viewModel: model, onSelected: { _ in }))
-    let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 400),
+    let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 424),
                           styleMask: [.borderless], backing: .buffered, defer: false)
     window.contentView = host
     func settle() {
@@ -909,7 +920,7 @@ func runQuickPanelInputChecks() -> Bool {
     let hit = input.hitTest(point)
     let overlayOwnsHit = hit.map { $0 === input || $0.isDescendant(of: input) } ?? false
     let passed = input.editor.isExpanded && after.height > before.height && sameTop
-        && host.frame.size == NSSize(width: 560, height: 400)
+        && host.frame.size == NSSize(width: 560, height: 424)
         && input.editor.selectedRange() == selection && overlayOwnsHit
     print("\(passed ? "PASS" : "FAIL") panel input: fixed frame, anchored top, native hit region, preserved selection")
     if !passed {
@@ -920,18 +931,45 @@ func runQuickPanelInputChecks() -> Bool {
     model.query = String(repeating: "hello 世界 ", count: 70)
     settle()
     let automaticPassed = input.editor.isExpanded && input.bounds.height > 48 && input.bounds.height < 160
-        && input.editor.string == model.query && host.frame.size == NSSize(width: 560, height: 400)
+        && input.editor.string == model.query && host.frame.size == NSSize(width: 560, height: 424)
     print("\(automaticPassed ? "PASS" : "FAIL") panel input: binding-driven automatic expansion and six-line limit")
     let plainWidth = input.bounds.width
-    model.query = "@ 帮我整理下面的发布要点：\n1. 搜索框支持自动展开\n2. 多行内容完整保留\n3. 浮层覆盖列表，不挤压布局\n\n输出一段简短、自然的更新说明。"
+    model.inputMode = .chat
+    model.query = "帮我整理下面的发布要点：\n1. 搜索框支持自动展开\n2. 多行内容完整保留\n3. 浮层覆盖列表，不挤压布局\n\n输出一段简短、自然的更新说明。"
     settle()
     let modePassed = findInput(host) === input && abs(input.bounds.width - plainWidth) < 1
+        && input.editor.mode == .chat && input.editor.string == model.query
     print("\(modePassed ? "PASS" : "FAIL") panel input: mode changes preserve editor identity and width")
     capturePreview("input-expanded")
     host.appearance = NSAppearance(named: .darkAqua)
     settle()
     capturePreview("input-expanded-dark")
-    return passed && automaticPassed && modePassed
+    model.query = ""
+    model.inputMode = .search
+    settle()
+    let origin = input.convert(NSPoint.zero, to: host)
+    input.editor.insertText("!", replacementRange: NSRange(location: 0, length: 0))
+    settle()
+    let triggerPassed = model.isCalculator && model.query.isEmpty && input.editor.string.isEmpty
+        && input.convert(NSPoint.zero, to: host) == origin && findInput(host) === input
+    print("\(triggerPassed ? "PASS" : "FAIL") panel mode: typed trigger, empty body, fixed input origin")
+    model.query = "1+2"
+    settle()
+    host.appearance = NSAppearance(named: .aqua)
+    settle()
+    capturePreview("input-calculator")
+    let calculationPassed = model.calculationResult == "3" && input.editor.string == "1+2"
+    print("\(calculationPassed ? "PASS" : "FAIL") panel mode: calculation uses complete body")
+    model.query = ""
+    settle()
+    input.editor.deleteBackward(nil)
+    settle()
+    let exitPassed = model.inputMode == .search && model.query.isEmpty && !model.isCalculator
+    model.query = "@ literal search"
+    settle()
+    let literalPassed = !model.isChat && input.editor.string == model.query
+    print("\(exitPassed && literalPassed ? "PASS" : "FAIL") panel mode: Backspace exit and literal search prefix")
+    return passed && automaticPassed && modePassed && triggerPassed && calculationPassed && exitPassed && literalPassed
 }
 
 // MARK: - SwiftUI 视图
@@ -947,8 +985,8 @@ struct QuickPanelView: View {
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
-        static let panelHeight: CGFloat = 400
-        static let searchHeight: CGFloat = 61
+        static let panelHeight: CGFloat = 424
+        static let searchHeight: CGFloat = 85
         static let rowHeight: CGFloat = 56
         static let listVerticalPadding: CGFloat = 11
         static let listHeight: CGFloat = 302
@@ -970,7 +1008,7 @@ struct QuickPanelView: View {
     }
 
     private var palette: EchoTheme.Palette {
-        EchoTheme.panelPalette(for: colorScheme)
+        EchoTheme.panelPalette(for: colorScheme, mode: viewModel.inputMode)
     }
 
     var body: some View {
@@ -979,7 +1017,7 @@ struct QuickPanelView: View {
             Color.clear.frame(height: Layout.searchHeight)
             Divider().foregroundStyle(palette.border)
             if viewModel.isChat {
-                ChatArea(state: viewModel.chat) {
+                ChatArea(state: viewModel.chat, accent: palette.accent) {
                     QuickPanelController.shared.selectCompletedChatQuestion()
                 }
                     .frame(height: Layout.listHeight)
@@ -995,7 +1033,22 @@ struct QuickPanelView: View {
             footer
         }
         .frame(width: Layout.panelWidth, height: Layout.panelHeight)
-        .overlay(alignment: .top) { searchBar }
+        .overlay(alignment: .top) {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("echo").tracking(2)
+                    Spacer()
+                    if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
+                        Text("v" + version)
+                    }
+                }
+                .font(.system(size: 10))
+                .foregroundStyle(palette.textTertiary)
+                .padding(.horizontal, 21)
+                .frame(height: 24)
+                searchBar
+            }
+        }
         .allowsHitTesting(!viewModel.isConverting)
         // 设计稿:单一深色面板 + 毛玻璃底,避免重复叠背景导致发灰
         .background(palette.windowBackground)
@@ -1028,7 +1081,7 @@ struct QuickPanelView: View {
     private var calculatorArea: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L10n.text(viewModel.calculationResult == nil ? "calc.title" : "calc.result"))
-                .font(.system(size: 12)).foregroundStyle(palette.textTertiary)
+                .font(.system(size: 12)).foregroundStyle(palette.accent)
             if let result = viewModel.calculationResult {
                 ScrollView {
                     Text(result).font(.system(size: 40, weight: .medium, design: .monospaced))
@@ -1062,13 +1115,22 @@ struct QuickPanelView: View {
     private var searchBar: some View {
         VStack(alignment: .leading, spacing: 0) {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: showsMultiSelectFeedback ? "checkmark.circle.fill" : "magnifyingglass")
-                .foregroundStyle(showsMultiSelectFeedback ? palette.accent : palette.textTertiary)
-                .font(.system(size: 16))
+            Group {
+                if viewModel.isCalculator {
+                    Text("!").font(.system(size: 20, weight: .medium))
+                } else if viewModel.isChat {
+                    Text("@").font(.system(size: 19, weight: .medium))
+                } else {
+                    Image(systemName: showsMultiSelectFeedback ? "checkmark.circle.fill" : "magnifyingglass")
+                        .font(.system(size: 16))
+                }
+            }
+                .foregroundStyle(palette.accent)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: viewModel.inputMode)
                 .frame(width: 17, height: 25)
-                .opacity(viewModel.isCalculator || viewModel.isChat ? 0 : 1)
-            ModeSearchField(text: $viewModel.query,
-                            placeholder: L10n.text("quick.search.placeholder"),
+                .accessibilityLabel(L10n.text(viewModel.inputMode.labelKey))
+            ModeSearchField(text: $viewModel.query, mode: $viewModel.inputMode,
+                            placeholder: L10n.text(viewModel.inputMode.placeholderKey),
                             focused: fieldFocused,
                             enabled: !viewModel.showsAchievements && !viewModel.showsShortcutGuide && !viewModel.isConverting,
                             onHeightChange: { height in
@@ -1115,7 +1177,8 @@ struct QuickPanelView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 9))
         .overlay(RoundedRectangle(cornerRadius: 9)
-            .stroke(inputHeight > 25 ? palette.accent.opacity(0.65) : palette.borderStrong, lineWidth: 1))
+            .stroke(palette.accent.opacity(inputHeight > 25 ? 0.65 : 0.35), lineWidth: 1)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: viewModel.inputMode))
         .contentShape(Rectangle())
         .shadow(color: .black.opacity(inputHeight > 25 ? 0.16 : 0), radius: 14, y: 10)
         .padding(.horizontal, 9)

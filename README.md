@@ -94,7 +94,7 @@ Merged/nested tables and image attachments are not fully supported. Conversion f
 
 Type `! (128+36)/4` to calculate. Supports full-width parentheses, arithmetic, `sqrt(81)`, `pow(2,3)`, and more; `%` means remainder.
 
-Return pastes the result and closes the panel. With no text selected, `⌘C` copies the result and keeps the panel open. Remove the prefix to restore search. Results use floating-point arithmetic with up to 15 significant digits, not exact decimal accounting.
+Return pastes the result and closes the panel. With no text selected, `⌘C` copies the result and keeps the panel open. Typing `!` (or `！`) in an empty input switches the input to calculation mode; the symbol is not part of the editable text. `@` similarly switches to quick questions. Delete the expression or question, then press Backspace again to restore search. Pasted text stays literal. Results use floating-point arithmetic with up to 15 significant digits, not exact decimal accounting.
 
 ### Quick questions
 
@@ -102,7 +102,7 @@ The system prompt is editable in Settings → Model Settings. Save to apply it t
 
 In Settings → Model settings, save your **DeepSeek API key**. The endpoint (`https://api.deepseek.com/v1`) and model (`deepseek-chat`) are fixed; the key is stored in macOS Keychain.
 
-Type `@ question` and press Return. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Remove `@` to return to search. Reopening restores the last question in memory, without its answer or an automatic resend.
+Type `@` in an empty input to switch the left mode icon, enter your question, and press Return. The trigger is not part of the editable or submitted text. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Delete the question, then press Backspace again to return to search. Reopening restores the last question and its mode in memory, without its answer or an automatic resend.
 
 The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides/search) with the same key, without a separate switch. It is instructed to cite sources; check important facts and links. Questions are independent: no previous conversation or clipboard history is automatically included.
 
@@ -114,7 +114,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.13.0 (build 23)**.
+Current version: **2.14.0 (build 24)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 

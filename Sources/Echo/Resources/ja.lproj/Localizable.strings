@@ -9,6 +9,8 @@
 
 "quick.batch.textOnly" = "複数貼り付けはテキストのみ対応";
 "quick.search.placeholder" = "クリップボードを検索";
+"quick.calc.placeholder" = "数式を入力";
+"quick.chat.placeholder" = "質問を入力";
 "quick.input.expand" = "入力欄を展開";
 "quick.input.collapse" = "入力欄を折りたたむ（Esc）";
 "quick.input.keys" = "↵ 実行　⇧↵ 改行";

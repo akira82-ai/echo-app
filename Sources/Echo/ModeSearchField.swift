@@ -4,6 +4,7 @@ import SwiftUI
 /// One editor for both presentations, preserving selection, undo and IME state.
 struct ModeSearchField: NSViewRepresentable {
     @Binding var text: String
+    @Binding var mode: QuickInputMode
     var placeholder: String
     var focused: Bool
     var enabled: Bool
@@ -15,6 +16,9 @@ struct ModeSearchField: NSViewRepresentable {
     func makeNSView(context: Context) -> ModeSearchContainer {
         let view = ModeSearchContainer()
         view.editor.delegate = context.coordinator
+        view.editor.onModeChange = { [weak coordinator = context.coordinator] mode in
+            coordinator?.parent.mode = mode
+        }
         view.onHeightChange = { [weak coordinator = context.coordinator] height in
             // Native layout can run during a SwiftUI update.
             DispatchQueue.main.async { [weak coordinator] in coordinator?.parent.onHeightChange(height) }
@@ -25,12 +29,15 @@ struct ModeSearchField: NSViewRepresentable {
     func updateNSView(_ view: ModeSearchContainer, context: Context) {
         let coordinator = context.coordinator
         coordinator.parent = self
+        view.editor.mode = mode
         view.placeholder.stringValue = placeholder
+        view.editor.setAccessibilityLabel(L10n.text(mode.labelKey))
         view.editor.isEditable = enabled
         view.editor.isSelectable = enabled
         view.toggle.isEnabled = enabled
         if !view.editor.hasMarkedText() {
             if view.editor.string != text {
+                view.editor.breakUndoCoalescing()
                 view.editor.string = text
                 view.editor.undoManager?.removeAllActions()
                 view.editor.manuallyCollapsed = false
@@ -81,6 +88,37 @@ final class ModeSearchTextView: NSTextView {
     var manuallyCollapsed = false
     var forcedExpanded = false
     var isExpanded = false
+    var mode: QuickInputMode = .search
+    var onModeChange: ((QuickInputMode) -> Void)?
+    private var isPasting = false
+
+    /// Only a typed trigger in an empty editor changes mode. Paste is literal.
+    override func insertText(_ insertString: Any, replacementRange: NSRange) {
+        let text = (insertString as? String) ?? (insertString as? NSAttributedString)?.string
+        if isEditable, !isPasting, !hasMarkedText(), string.isEmpty,
+           let text, let next = QuickInputMode.trigger(text) {
+            changeMode(next)
+            return
+        }
+        super.insertText(insertString, replacementRange: replacementRange)
+    }
+
+    override func deleteBackward(_ sender: Any?) {
+        if isEditable, !hasMarkedText(), string.isEmpty, mode != .search {
+            changeMode(.search)
+            return
+        }
+        super.deleteBackward(sender)
+    }
+
+    private func changeMode(_ next: QuickInputMode) {
+        guard mode != next else { return }
+        breakUndoCoalescing()
+        let previous = mode
+        undoManager?.registerUndo(withTarget: self) { editor in editor.changeMode(previous) }
+        mode = next
+        onModeChange?(next)
+    }
 
     @discardableResult
     func collapseIfExpanded() -> Bool {
@@ -92,6 +130,20 @@ final class ModeSearchTextView: NSTextView {
     }
 
     override func paste(_ sender: Any?) { pasteAsPlainText(sender) }
+
+    override func pasteAsPlainText(_ sender: Any?) {
+        let previous = isPasting
+        isPasting = true
+        defer { isPasting = previous }
+        super.pasteAsPlainText(sender)
+    }
+
+    override func readSelection(from pboard: NSPasteboard, type: NSPasteboard.PasteboardType) -> Bool {
+        let previous = isPasting
+        isPasting = true
+        defer { isPasting = previous }
+        return super.readSelection(from: pboard, type: type)
+    }
 }
 
 final class ModeSearchContainer: NSView {
@@ -175,9 +227,6 @@ final class ModeSearchContainer: NSView {
         if let storage = editor.textStorage {
             storage.beginEditing()
             storage.setAttributes(attributes, range: NSRange(location: 0, length: storage.length))
-            if let first = editor.string.first, ["!", "！", "@"].contains(String(first)) {
-                storage.addAttribute(.kern, value: 6, range: NSRange(location: 0, length: 1))
-            }
             storage.endEditing()
         }
         editor.typingAttributes = attributes
@@ -270,10 +319,46 @@ func runModeSearchChecks() -> Bool {
     editor.forcedExpanded = true
     view.refresh()
     check(editor.isExpanded && height >= 48, "manual expansion works for empty text")
-    editor.string = "！ 1 + 2"
-    view.refresh()
-    check(editor.textStorage?.attribute(.kern, at: 0, effectiveRange: nil) as? Int == 6, "prefix spacing retained")
+    editor.string = ""
     editor.forcedExpanded = false
+    window.makeFirstResponder(editor)
+    editor.undoManager?.removeAllActions()
+    editor.insertText("！", replacementRange: NSRange(location: 0, length: 0))
+    check(editor.mode == .calculator && editor.string.isEmpty, "full-width trigger changes mode without inserting text")
+    check(editor.selectedRange() == NSRange(location: 0, length: 0), "mode trigger leaves caret at original start")
+    editor.undoManager?.undo()
+    check(editor.mode == .search && editor.string.isEmpty, "undo restores previous mode")
+    editor.undoManager?.redo()
+    check(editor.mode == .calculator && editor.string.isEmpty, "redo restores calculation mode")
+    editor.deleteBackward(nil)
+    check(editor.mode == .search, "empty Backspace returns to search")
+    editor.insertText("@", replacementRange: NSRange(location: 0, length: 0))
+    check(editor.mode == .chat && editor.string.isEmpty, "question trigger is not body text")
+    editor.insertText("a@b!", replacementRange: NSRange(location: 0, length: 0))
+    check(editor.string == "a@b!" && editor.mode == .chat, "symbols inside body are literal")
+    editor.selectAll(nil)
+    editor.deleteBackward(nil)
+    check(editor.string.isEmpty && editor.mode == .chat, "deleting body retains mode")
+    editor.deleteBackward(nil)
+    check(editor.mode == .search, "next Backspace exits question mode")
+    editor.setMarkedText("@", selectedRange: NSRange(location: 1, length: 0), replacementRange: NSRange(location: 0, length: 0))
+    editor.insertText("@", replacementRange: NSRange(location: NSNotFound, length: 0))
+    check(editor.mode == .search && editor.string == "@", "IME marked text is not intercepted")
+    editor.string = ""
+    editor.undoManager?.removeAllActions()
+    editor.insertText("@ pasted question", replacementRange: NSRange(location: 0, length: 0))
+    check(editor.mode == .search && editor.string == "@ pasted question", "multi-character insertion remains literal")
+    editor.breakUndoCoalescing()
+    editor.string = ""
+    editor.setSelectedRange(NSRange(location: 0, length: 0))
+    let pasteboard = NSPasteboard.withUniqueName()
+    pasteboard.setString("@", forType: .string)
+    check(editor.readSelection(from: pasteboard, type: .string), "plain text paste imports successfully")
+    check(editor.mode == .search && editor.string == "@", "pasted single trigger remains literal")
+    pasteboard.releaseGlobally()
+    editor.forcedExpanded = false
+    editor.breakUndoCoalescing()
+    editor.undoManager?.removeAllActions()
     editor.string = "hello"
     view.refresh()
     window.makeFirstResponder(editor)

@@ -9,6 +9,8 @@
 
 "quick.batch.textOnly" = "Multi-paste supports text only";
 "quick.search.placeholder" = "Search clipboard";
+"quick.calc.placeholder" = "Enter an expression";
+"quick.chat.placeholder" = "Ask a question";
 "quick.input.expand" = "Expand input";
 "quick.input.collapse" = "Collapse input (Esc)";
 "quick.input.keys" = "↵ Run　⇧↵ New line";
