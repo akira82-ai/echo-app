@@ -9,6 +9,10 @@
 
 "quick.batch.textOnly" = "複数貼り付けはテキストのみ対応";
 "quick.search.placeholder" = "クリップボードを検索";
+"quick.input.expand" = "入力欄を展開";
+"quick.input.collapse" = "入力欄を折りたたむ（Esc）";
+"quick.input.keys" = "↵ 実行　⇧↵ 改行";
+"quick.input.count" = "%d 文字";
 "quick.multiSelect" = "複数選択";
 "quick.shortcut.general" = "基本操作";
 "quick.shortcut.move" = "上下移動";

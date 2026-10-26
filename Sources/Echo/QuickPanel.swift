@@ -8,7 +8,7 @@ import Calculator
 private final class QuickPanel: NSPanel {
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         guard isKeyWindow, let editor = firstResponder as? NSTextView,
-              editor.isFieldEditor, editor.isEditable else {
+              (editor.isFieldEditor || editor is ModeSearchTextView), editor.isEditable else {
             return super.performKeyEquivalent(with: event)
         }
         let modifiers = event.modifierFlags.intersection([.command, .control, .option, .shift])
@@ -184,6 +184,14 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             viewModel.setCommandPressed(event.modifierFlags.contains(.command))
             return event
         }
+        if let editor = panel?.firstResponder as? ModeSearchTextView {
+            // IME owns composition keys, including Return, arrows and Escape.
+            if editor.hasMarkedText() { return event }
+            if event.keyCode == 53, editor.collapseIfExpanded() { return nil }
+            if [36, 76].contains(event.keyCode), event.modifierFlags.contains(.shift) { return event }
+            if [123, 124].contains(event.keyCode), !editor.string.isEmpty { return event }
+            if editor.isExpanded && [125, 126, 51].contains(event.keyCode) { return event }
+        }
         if viewModel.isChat {
             if event.keyCode == 53 { hide(); return nil }
             if event.keyCode == 36 || event.keyCode == 76 {
@@ -195,7 +203,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             }
             if event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command,
                event.charactersIgnoringModifiers?.lowercased() == "c",
-               let field = panel?.firstResponder as? NSTextView, field.isFieldEditor {
+               let field = panel?.firstResponder as? ModeSearchTextView {
                 if field.selectedRange().length > 0 {
                     field.copy(nil)
                     return nil
@@ -220,7 +228,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             }
             if event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command,
                event.charactersIgnoringModifiers?.lowercased() == "c",
-               let field = panel?.firstResponder as? NSTextView, field.isFieldEditor,
+               let field = panel?.firstResponder as? ModeSearchTextView,
                field.selectedRange().length == 0,
                let result = viewModel.calculationResult {
                 NSPasteboard.general.clearContents()
@@ -854,6 +862,78 @@ final class QuickPanelViewModel: ObservableObject {
     }
 }
 
+/// Offscreen integration checks without showing a panel or sending model requests.
+func runQuickPanelInputChecks() -> Bool {
+    let model = QuickPanelViewModel()
+    model.configure(entries: [ClipEntry(kind: .text(TextPayload(rawText: "hello", representations: [])))])
+    model.query = "hello"
+    let host = NSHostingView(rootView: QuickPanelView(viewModel: model, onSelected: { _ in }))
+    let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 400),
+                          styleMask: [.borderless], backing: .buffered, defer: false)
+    window.contentView = host
+    func settle() {
+        for _ in 0..<8 {
+            host.layoutSubtreeIfNeeded()
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.02))
+        }
+    }
+    func findInput(_ view: NSView) -> ModeSearchContainer? {
+        if let input = view as? ModeSearchContainer { return input }
+        for child in view.subviews { if let input = findInput(child) { return input } }
+        return nil
+    }
+    func capturePreview(_ name: String) {
+        guard let directory = ProcessInfo.processInfo.environment["ECHO_INPUT_PREVIEW_DIR"],
+              let bitmap = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return }
+        host.cacheDisplay(in: host.bounds, to: bitmap)
+        guard let data = bitmap.representation(using: .png, properties: [:]) else { return }
+        do {
+            try data.write(to: URL(fileURLWithPath: directory).appendingPathComponent(name + ".png"))
+        } catch {
+            print("FAIL panel preview: \(error)")
+        }
+    }
+    settle()
+    capturePreview("input-collapsed")
+    guard let input = findInput(host) else { print("FAIL panel: missing native input"); return false }
+    let before = input.convert(input.bounds, to: host)
+    let selection = NSRange(location: 1, length: 2)
+    input.editor.setSelectedRange(selection)
+    input.toggle.performClick(nil)
+    settle()
+    let after = input.convert(input.bounds, to: host)
+    let sameTop = abs((host.isFlipped ? before.minY : before.maxY) - (host.isFlipped ? after.minY : after.maxY)) < 1
+    // NSHostingView routes native events via SwiftUI's event graph; its offscreen
+    // hitTest returns the host itself. Check the expanded native subtree directly.
+    let point = input.convert(NSPoint(x: 10, y: input.bounds.height - 5), to: input.superview)
+    let hit = input.hitTest(point)
+    let overlayOwnsHit = hit.map { $0 === input || $0.isDescendant(of: input) } ?? false
+    let passed = input.editor.isExpanded && after.height > before.height && sameTop
+        && host.frame.size == NSSize(width: 560, height: 400)
+        && input.editor.selectedRange() == selection && overlayOwnsHit
+    print("\(passed ? "PASS" : "FAIL") panel input: fixed frame, anchored top, native hit region, preserved selection")
+    if !passed {
+        print("panel diagnostics: before=\(before), after=\(after), host=\(host.frame), expanded=\(input.editor.isExpanded), selection=\(input.editor.selectedRange()), hit=\(String(describing: hit)), ownsHit=\(overlayOwnsHit)")
+    }
+    input.editor.collapseIfExpanded()
+    settle()
+    model.query = String(repeating: "hello 世界 ", count: 70)
+    settle()
+    let automaticPassed = input.editor.isExpanded && input.bounds.height > 48 && input.bounds.height < 160
+        && input.editor.string == model.query && host.frame.size == NSSize(width: 560, height: 400)
+    print("\(automaticPassed ? "PASS" : "FAIL") panel input: binding-driven automatic expansion and six-line limit")
+    let plainWidth = input.bounds.width
+    model.query = "@ 帮我整理下面的发布要点：\n1. 搜索框支持自动展开\n2. 多行内容完整保留\n3. 浮层覆盖列表，不挤压布局\n\n输出一段简短、自然的更新说明。"
+    settle()
+    let modePassed = findInput(host) === input && abs(input.bounds.width - plainWidth) < 1
+    print("\(modePassed ? "PASS" : "FAIL") panel input: mode changes preserve editor identity and width")
+    capturePreview("input-expanded")
+    host.appearance = NSAppearance(named: .darkAqua)
+    settle()
+    capturePreview("input-expanded-dark")
+    return passed && automaticPassed && modePassed
+}
+
 // MARK: - SwiftUI 视图
 
 struct QuickPanelView: View {
@@ -863,6 +943,7 @@ struct QuickPanelView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var selectionNamespace
     @State private var hasAppeared = false
+    @State private var inputHeight: CGFloat = 25
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
@@ -894,7 +975,8 @@ struct QuickPanelView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            searchBar
+            // The editor is overlaid below; this slot never changes size.
+            Color.clear.frame(height: Layout.searchHeight)
             Divider().foregroundStyle(palette.border)
             if viewModel.isChat {
                 ChatArea(state: viewModel.chat) {
@@ -913,6 +995,7 @@ struct QuickPanelView: View {
             footer
         }
         .frame(width: Layout.panelWidth, height: Layout.panelHeight)
+        .overlay(alignment: .top) { searchBar }
         .allowsHitTesting(!viewModel.isConverting)
         // 设计稿:单一深色面板 + 毛玻璃底,避免重复叠背景导致发灰
         .background(palette.windowBackground)
@@ -977,57 +1060,66 @@ struct QuickPanelView: View {
     }
 
     private var searchBar: some View {
-        HStack(spacing: 10) {
-            if !viewModel.isCalculator && !viewModel.isChat {
+        VStack(alignment: .leading, spacing: 0) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: showsMultiSelectFeedback ? "checkmark.circle.fill" : "magnifyingglass")
                 .foregroundStyle(showsMultiSelectFeedback ? palette.accent : palette.textTertiary)
                 .font(.system(size: 16))
-            }
+                .frame(width: 17, height: 25)
+                .opacity(viewModel.isCalculator || viewModel.isChat ? 0 : 1)
             ModeSearchField(text: $viewModel.query,
                             placeholder: L10n.text("quick.search.placeholder"),
                             focused: fieldFocused,
-                            enabled: !viewModel.showsAchievements && !viewModel.showsShortcutGuide && !viewModel.isConverting) {
+                            enabled: !viewModel.showsAchievements && !viewModel.showsShortcutGuide && !viewModel.isConverting,
+                            onHeightChange: { height in
+                                if inputHeight != height { inputHeight = height }
+                            }) {
                     // Input methods may consume Return before the event monitor can send.
                     if viewModel.isChat {
                         QuickPanelController.shared.sendChatQuestion()
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 24)
-            if viewModel.isChat {
-                Text(L10n.text("chat.title")).font(.system(size: 11)).foregroundStyle(palette.textTertiary)
-            } else if viewModel.isCalculator {
-                Text(L10n.text("calc.title")).font(.system(size: 11)).foregroundStyle(palette.textTertiary)
-            } else if !viewModel.isCommandPressed {
-                Text(L10n.text("quick.directHint"))
-                    .font(.system(size: 9))
-                    .foregroundStyle(palette.textTertiary)
-            }
-            if viewModel.isCommandPressed && !viewModel.isChat && !viewModel.isCalculator && !viewModel.showsAchievements && !viewModel.showsShortcutGuide {
-                HStack(spacing: 4) {
-                    Image(systemName: "command")
-                    Text(L10n.text("quick.multiSelect"))
-                }
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(colorScheme == .dark ? Color(red: 0.65, green: 0.82, blue: 1) : palette.accent)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(palette.accentSoft)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(colorScheme == .dark ? palette.accent.opacity(0.45) : .clear, lineWidth: 1))
-                .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.94)))
-            }
+                .frame(height: inputHeight)
         }
-        // 设计稿:.qp-search padding:14px 18px + border-bottom
-        .padding(.horizontal, 18)
-        .frame(height: Layout.searchHeight)
-        .background(showsMultiSelectFeedback ? palette.accentSoft.opacity(0.42) : .clear)
-        .overlay(
-            Rectangle()
-                .fill(showsMultiSelectFeedback ? palette.accent.opacity(0.42) : palette.border)
-                .frame(height: 1),
-            alignment: .bottom
-        )
+        if inputHeight > 25 {
+            VStack(spacing: 8) {
+                Rectangle().fill(palette.border).frame(height: 1)
+                HStack(spacing: 8) {
+                    Text(L10n.text("quick.input.keys"))
+                    if viewModel.isChat {
+                        Text(L10n.text("chat.title"))
+                    } else if viewModel.isCalculator {
+                        Text(L10n.text("calc.title"))
+                    } else if showsMultiSelectFeedback {
+                        Text("⌘ " + L10n.text("quick.multiSelect"))
+                    }
+                    Spacer(minLength: 0)
+                    Text(L10n.format("quick.input.count", viewModel.query.count))
+                }
+                .font(.system(size: 10))
+                .foregroundStyle(palette.textTertiary)
+            }
+            .padding(.leading, 27)
+            .padding(.top, 9)
+        }
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background {
+            (colorScheme == .dark ? Color(nsColor: NSColor(calibratedWhite: 0.19, alpha: 1)) : .white)
+                .overlay(showsMultiSelectFeedback ? palette.accentSoft.opacity(0.42) : .clear)
+                .contentShape(Rectangle())
+                .onTapGesture { }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 9))
+        .overlay(RoundedRectangle(cornerRadius: 9)
+            .stroke(inputHeight > 25 ? palette.accent.opacity(0.65) : palette.borderStrong, lineWidth: 1))
+        .contentShape(Rectangle())
+        .shadow(color: .black.opacity(inputHeight > 25 ? 0.16 : 0), radius: 14, y: 10)
+        .padding(.horizontal, 9)
+        .padding(.top, 8)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: viewModel.isCommandPressed)
         .onAppear { fieldFocused = !viewModel.showsAchievements && !viewModel.showsShortcutGuide }
         .onReceive(NotificationCenter.default.publisher(for: NSText.didBeginEditingNotification)) { notification in

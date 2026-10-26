@@ -9,6 +9,10 @@
 
 "quick.batch.textOnly" = "批量粘贴仅支持文本";
 "quick.search.placeholder" = "搜索剪贴板";
+"quick.input.expand" = "展开输入框";
+"quick.input.collapse" = "收起输入框（Esc）";
+"quick.input.keys" = "↵ 执行　⇧↵ 换行";
+"quick.input.count" = "%d 字";
 "quick.multiSelect" = "多选";
 "quick.shortcut.general" = "通用快捷键";
 "quick.shortcut.move" = "上下移动";

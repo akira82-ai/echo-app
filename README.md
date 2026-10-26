@@ -32,6 +32,7 @@ https://github.com/user-attachments/assets/2fa21d5d-e4a0-42c7-bee8-ceb0c1b1ccef
 - **Do the math. Keep your focus.** — Start with `!`, then press Return to use the result. From simple arithmetic to common functions, no separate calculator needed.
 - **A quick question, right here.** — Type `@` to ask DeepSeek in the same panel. Watch the answer arrive as it is generated, with model-directed web search and page reading when needed. Bring your own API key.
 - **Make the assistant yours.** — Edit the system prompt in Model Settings, restore Echo's default, and shape the tone and rules of every new quick question.
+- **Room for real questions.** — The input stays compact for quick searches, then expands in place for longer or multi-line prompts without moving the panel frame. Press `⇧↵` for a new line and `Esc` to collapse it.
 - **Find the clip—and its source.** — See the source app or webpage when available. Reopen a captured URL in one step to keep reading or check the context.
 - **At home on your Mac.** — Follows your system's light or dark appearance, respects Reduce Motion, and speaks Chinese, English, and Japanese. Open it when needed; dismiss it when done.
 
@@ -113,7 +114,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.12.0 (build 22)**.
+Current version: **2.13.0 (build 23)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 

@@ -1,5 +1,11 @@
 import AppKit
 
+if CommandLine.arguments.contains("--input-self-test") {
+    let nativePassed = runModeSearchChecks()
+    let panelPassed = runQuickPanelInputChecks()
+    exit(nativePassed && panelPassed ? 0 : 1)
+}
+
 if CommandLine.arguments.contains("--prompt-self-test") {
     exit(runPromptChecks() ? 0 : 1)
 }

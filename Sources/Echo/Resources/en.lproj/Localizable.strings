@@ -9,6 +9,10 @@
 
 "quick.batch.textOnly" = "Multi-paste supports text only";
 "quick.search.placeholder" = "Search clipboard";
+"quick.input.expand" = "Expand input";
+"quick.input.collapse" = "Collapse input (Esc)";
+"quick.input.keys" = "↵ Run　⇧↵ New line";
+"quick.input.count" = "%d characters";
 "quick.multiSelect" = "Multi-select";
 "quick.shortcut.general" = "Shortcuts";
 "quick.shortcut.move" = "Move";
