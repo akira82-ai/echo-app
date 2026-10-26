@@ -53,7 +53,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
-        static let panelHeight: CGFloat = 424
+        static let panelHeight: CGFloat = 434
     }
 
     /// 选中某条历史项时调用(主线程)。
@@ -879,7 +879,7 @@ func runQuickPanelInputChecks() -> Bool {
     model.configure(entries: [ClipEntry(kind: .text(TextPayload(rawText: "hello", representations: [])))])
     model.query = "hello"
     let host = NSHostingView(rootView: QuickPanelView(viewModel: model, onSelected: { _ in }))
-    let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 424),
+    let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 434),
                           styleMask: [.borderless], backing: .buffered, defer: false)
     window.contentView = host
     func settle() {
@@ -920,7 +920,7 @@ func runQuickPanelInputChecks() -> Bool {
     let hit = input.hitTest(point)
     let overlayOwnsHit = hit.map { $0 === input || $0.isDescendant(of: input) } ?? false
     let passed = input.editor.isExpanded && after.height > before.height && sameTop
-        && host.frame.size == NSSize(width: 560, height: 424)
+        && host.frame.size == NSSize(width: 560, height: 434)
         && input.editor.selectedRange() == selection && overlayOwnsHit
     print("\(passed ? "PASS" : "FAIL") panel input: fixed frame, anchored top, native hit region, preserved selection")
     if !passed {
@@ -931,7 +931,7 @@ func runQuickPanelInputChecks() -> Bool {
     model.query = String(repeating: "hello 世界 ", count: 70)
     settle()
     let automaticPassed = input.editor.isExpanded && input.bounds.height > 48 && input.bounds.height < 160
-        && input.editor.string == model.query && host.frame.size == NSSize(width: 560, height: 424)
+        && input.editor.string == model.query && host.frame.size == NSSize(width: 560, height: 434)
     print("\(automaticPassed ? "PASS" : "FAIL") panel input: binding-driven automatic expansion and six-line limit")
     let plainWidth = input.bounds.width
     model.inputMode = .chat
@@ -985,8 +985,9 @@ struct QuickPanelView: View {
 
     private enum Layout {
         static let panelWidth: CGFloat = 560
-        static let panelHeight: CGFloat = 424
-        static let searchHeight: CGFloat = 85
+        static let panelHeight: CGFloat = 434
+        // HTML: 36pt brand bar + 59pt input anchor (47pt editor + 12pt gap).
+        static let searchHeight: CGFloat = 95
         static let rowHeight: CGFloat = 56
         static let listVerticalPadding: CGFloat = 11
         static let listHeight: CGFloat = 302
@@ -1045,7 +1046,7 @@ struct QuickPanelView: View {
                 .font(.system(size: 10))
                 .foregroundStyle(palette.textTertiary)
                 .padding(.horizontal, 21)
-                .frame(height: 24)
+                .frame(height: 36)
                 searchBar
             }
         }
@@ -1167,8 +1168,9 @@ struct QuickPanelView: View {
         }
         }
         .padding(.horizontal, 12)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        // CSS borders occupy layout space; SwiftUI strokes do not.
+        .padding(.top, 13)
+        .padding(.bottom, 9)
         .background {
             (colorScheme == .dark ? Color(nsColor: NSColor(calibratedWhite: 0.19, alpha: 1)) : .white)
                 .overlay(showsMultiSelectFeedback ? palette.accentSoft.opacity(0.42) : .clear)
@@ -1182,7 +1184,6 @@ struct QuickPanelView: View {
         .contentShape(Rectangle())
         .shadow(color: .black.opacity(inputHeight > 25 ? 0.16 : 0), radius: 14, y: 10)
         .padding(.horizontal, 9)
-        .padding(.top, 8)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: viewModel.isCommandPressed)
         .onAppear { fieldFocused = !viewModel.showsAchievements && !viewModel.showsShortcutGuide }
         .onReceive(NotificationCenter.default.publisher(for: NSText.didBeginEditingNotification)) { notification in
