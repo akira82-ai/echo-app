@@ -132,7 +132,12 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     }
 
     func sendChatQuestion() {
+        guard !viewModel.chat.busy else { return }
         viewModel.chat.send(viewModel.query)
+        guard viewModel.chat.busy else { return }
+        if let editor = panel?.firstResponder as? ModeSearchTextView {
+            editor.collapseIfExpanded()
+        }
         placeSearchCaretAtEnd()
         // SwiftUI's submit handling can select the field after the key event returns.
         DispatchQueue.main.async { [weak self] in
