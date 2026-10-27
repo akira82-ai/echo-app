@@ -3,7 +3,6 @@ import SwiftUI
 struct ChatArea: View {
     @ObservedObject var state: ChatState
     var accent: Color = .secondary
-    var onAnswerCompleted: () -> Void
 
     var body: some View {
         ScrollView {
@@ -32,11 +31,6 @@ struct ChatArea: View {
                     }.buttonStyle(.link)
                 }
             }.padding(22).frame(maxWidth: .infinity, alignment: .topLeading)
-        }
-        .onChange(of: state.busy) { busy in
-            if !busy, state.errorKey == nil, !state.answer.isEmpty {
-                onAnswerCompleted()
-            }
         }
     }
 }

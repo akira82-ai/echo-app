@@ -141,14 +141,6 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         }
     }
 
-    func selectCompletedChatQuestion() {
-        guard viewModel.isChat, !viewModel.chat.busy,
-              viewModel.chat.errorKey == nil, !viewModel.chat.answer.isEmpty,
-              let field = panel?.firstResponder as? NSTextView,
-              !field.hasMarkedText(), field.string == viewModel.query else { return }
-        field.setSelectedRange(NSRange(location: 0, length: field.string.utf16.count))
-    }
-
     /// 隐藏面板。
     func hide() {
         lastChatQuery = viewModel.isChat ? viewModel.query : nil
@@ -205,11 +197,12 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
                 return nil
             }
             if event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command,
-               event.charactersIgnoringModifiers?.lowercased() == "c",
-               let field = panel?.firstResponder as? ModeSearchTextView {
-                if field.selectedRange().length > 0 {
-                    field.copy(nil)
-                    return nil
+               event.charactersIgnoringModifiers?.lowercased() == "c" {
+                // Let the native responder copy a selection in either the question or answer.
+                if let field = panel?.firstResponder as? NSTextView {
+                    if field.hasMarkedText() || field.selectedRanges.contains(where: { $0.rangeValue.length > 0 }) {
+                        return event
+                    }
                 }
                 guard !viewModel.chat.busy, viewModel.chat.errorKey == nil, !viewModel.chat.answer.isEmpty else { return event }
                 NSPasteboard.general.clearContents()
@@ -1018,9 +1011,7 @@ struct QuickPanelView: View {
             Color.clear.frame(height: Layout.searchHeight)
             Divider().foregroundStyle(palette.border)
             if viewModel.isChat {
-                ChatArea(state: viewModel.chat, accent: palette.accent) {
-                    QuickPanelController.shared.selectCompletedChatQuestion()
-                }
+                ChatArea(state: viewModel.chat, accent: palette.accent)
                     .frame(height: Layout.listHeight)
             } else if viewModel.isCalculator {
                 calculatorArea
