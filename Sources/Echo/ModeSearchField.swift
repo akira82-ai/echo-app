@@ -92,8 +92,24 @@ final class ModeSearchTextView: NSTextView {
     var onModeChange: ((QuickInputMode) -> Void)?
     private var isPasting = false
 
+    override func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
+        super.setMarkedText(string, selectedRange: selectedRange, replacementRange: replacementRange)
+        container?.updatePlaceholder()
+    }
+
+    override func unmarkText() {
+        super.unmarkText()
+        container?.updatePlaceholder()
+    }
+
+    override func didChangeText() {
+        super.didChangeText()
+        container?.updatePlaceholder()
+    }
+
     /// Only a typed trigger in an empty editor changes mode. Paste is literal.
     override func insertText(_ insertString: Any, replacementRange: NSRange) {
+        defer { container?.updatePlaceholder() }
         let text = (insertString as? String) ?? (insertString as? NSAttributedString)?.string
         if isEditable, !isPasting, !hasMarkedText(), string.isEmpty,
            let text, let next = QuickInputMode.trigger(text) {
@@ -211,7 +227,12 @@ final class ModeSearchContainer: NSView {
         window?.makeFirstResponder(editor)
     }
 
+    func updatePlaceholder() {
+        placeholder.isHidden = !editor.string.isEmpty || editor.hasMarkedText()
+    }
+
     func refresh() {
+        updatePlaceholder()
         guard !refreshing, scroll.bounds.width > 1, !editor.hasMarkedText() else { return }
         refreshing = true
         defer { refreshing = false }
@@ -261,7 +282,6 @@ final class ModeSearchContainer: NSView {
         toggle.layer?.backgroundColor = NSColor.quaternaryLabelColor.withAlphaComponent(0.08).cgColor
         toggle.setAccessibilityLabel(L10n.text(editor.isExpanded ? "quick.input.collapse" : "quick.input.expand"))
         toggle.toolTip = L10n.text(editor.isExpanded ? "quick.input.collapse" : "quick.input.expand")
-        placeholder.isHidden = !editor.string.isEmpty
         editor.scrollRangeToVisible(editor.selectedRange())
         if reportedHeight != height {
             reportedHeight = height
@@ -311,6 +331,21 @@ func runModeSearchChecks() -> Bool {
     view.refresh()
     check(!editor.isExpanded && height == 25, "clearing returns to one line")
     check(!view.placeholder.isHidden, "empty editor shows placeholder")
+    editor.setMarkedText("hel", selectedRange: NSRange(location: 3, length: 0), replacementRange: NSRange(location: 0, length: 0))
+    check(editor.hasMarkedText() && view.placeholder.isHidden, "IME composition immediately hides placeholder")
+    view.refresh()
+    check(view.placeholder.isHidden && editor.hasMarkedText(), "refresh preserves composition and hides placeholder")
+    editor.setMarkedText("hello", selectedRange: NSRange(location: 5, length: 0), replacementRange: NSRange(location: NSNotFound, length: 0))
+    check(view.placeholder.isHidden, "updated composition keeps placeholder hidden")
+    editor.insertText("你好", replacementRange: NSRange(location: NSNotFound, length: 0))
+    check(!editor.hasMarkedText() && editor.string == "你好" && view.placeholder.isHidden, "committed IME text keeps placeholder hidden")
+    editor.selectAll(nil)
+    editor.deleteBackward(nil)
+    check(editor.string.isEmpty && !view.placeholder.isHidden, "deleting committed text restores placeholder")
+    editor.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0), replacementRange: NSRange(location: 0, length: 0))
+    editor.setMarkedText("", selectedRange: NSRange(location: 0, length: 0), replacementRange: NSRange(location: NSNotFound, length: 0))
+    editor.unmarkText()
+    check(editor.string.isEmpty && !view.placeholder.isHidden, "canceling composition restores placeholder")
     editor.string = "first\nsecond"
     view.refresh()
     check(editor.isExpanded && !view.scroll.hasVerticalScroller, "two lines expand without overflow")
