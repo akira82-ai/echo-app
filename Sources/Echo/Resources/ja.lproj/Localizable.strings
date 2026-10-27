@@ -123,7 +123,7 @@
 "chat.title" = "質問";
 "chat.loading" = "回答中…";
 "chat.empty" = "質問を入力し、Return で送信";
-"chat.privacy" = "現在の質問を送信し、ウェブアクセス有効時は公開ページを検索・取得できます。クリップボードや会話履歴は含みません。";
+"chat.privacy" = "現在の質問を送信し、ウェブアクセス有効時は公開ページを検索・取得できます。明示的に参照した項目のみ含み、会話履歴は含みません。";
 "chat.searchKey" = "検索 Key";
 "chat.searchNote" = "チャット・検索・ウェブページの読み取りで同じ DeepSeek API Key を使用します。質問と URL は DeepSeek に送信され、サービスの料金が適用されます。";
 "chat.searching" = "ウェブを検索中…";
@@ -142,10 +142,19 @@
 "chat.endpointError" = "HTTPS のベース URL を入力してください。/chat/completions は不要。ローカルでは HTTP も使用できます。";
 "chat.keychainError" = "キーチェーンにアクセスできません。権限を確認し、設定を開き直してください。";
 "chat.emptyResponse" = "テキストが返されませんでした。Return で再試行。";
-"chat.tooLong" = "文字数上限：質問 16000、回答 100000。";
+"chat.tooLong" = "文字数上限：質問と参照の合計 16000、回答 100000。";
 "chat.requestError" = "通信失敗。ネットワーク、URL、モデル、Key、利用枠を確認して Return で再試行してください。";
 "chat.shortcuts" = "↵ 送信/再試行    ⌘C コピー    esc 閉じる";
 "chat.systemPrompt" = "システムプロンプト";
 "chat.restorePrompt" = "初期値に戻す";
 "chat.promptNote" = "設定はローカルに保存され、質問時にモデルへ送信されます。保存後の次の質問から適用されます。初期値に戻した後も保存してください。";
 "chat.promptInvalid" = "システムプロンプトを読み込めないか、空白または16000文字を超えています。モデル設定で初期値に戻すか、編集して保存してください。";
+
+"chat.reference.placeholder" = "質問を入力、または 1–5 で参照";
+"chat.reference.commandPlaceholder" = "処理の指示を入力";
+"chat.reference.missing" = "この番号の項目はありません。選び直してください。";
+"chat.reference.unsupported" = "参照できるのはテキストのみです。";
+"chat.reference.instruction" = "指示を入力して Return で送信。";
+"chat.reference.privacy" = "選択した内容と指示をモデルに送信します。";
+"chat.reference.help" = "先頭で削除、または選択行をクリックして選び直せます。";
+"chat.reference.noHistory" = "履歴はありません。質問は直接入力できます。";

@@ -123,7 +123,7 @@
 "chat.title" = "Ask";
 "chat.loading" = "Answering…";
 "chat.empty" = "Enter a question and press Return";
-"chat.privacy" = "Sends this question; web access can search and read public pages. Clipboard content and conversation history are not included.";
+"chat.privacy" = "Sends this question; web access can search and read public pages. Only explicitly referenced clipboard content is included; no conversation history is sent.";
 "chat.searchKey" = "Search key";
 "chat.searchNote" = "Chat, search and webpage reading share this DeepSeek API key. Queries and page URLs are sent to DeepSeek; usage is billed by the service.";
 "chat.searching" = "Searching the web…";
@@ -142,10 +142,19 @@
 "chat.endpointError" = "Invalid HTTPS base URL. Exclude /chat/completions. Localhost may use HTTP.";
 "chat.keychainError" = "Cannot access Keychain. Check system permissions and reopen settings.";
 "chat.emptyResponse" = "No text returned. Press Return to retry.";
-"chat.tooLong" = "Content limit: 16000 characters per question, 100000 per answer.";
+"chat.tooLong" = "Content limit: 16000 characters for question and reference combined, 100000 per answer.";
 "chat.requestError" = "Request failed. Check network, URL, model, key or service quota, then press Return to retry.";
 "chat.shortcuts" = "↵ Send/retry    ⌘C Copy    esc Close";
 "chat.systemPrompt" = "System prompt";
 "chat.restorePrompt" = "Restore default";
 "chat.promptNote" = "Stored locally and sent to the model with each question. Changes apply after saving, starting with the next question; save after restoring the default.";
 "chat.promptInvalid" = "System prompt is unavailable, blank, or over 16000 characters. Restore the default or edit and save in model settings.";
+
+"chat.reference.placeholder" = "Ask a question, or press 1–5 to reference";
+"chat.reference.commandPlaceholder" = "Enter an instruction";
+"chat.reference.missing" = "No item at this number. Choose another.";
+"chat.reference.unsupported" = "Only text references are supported. Choose a text item.";
+"chat.reference.instruction" = "Enter an instruction, then press Return.";
+"chat.reference.privacy" = "Sends this selected item and your instruction to the model.";
+"chat.reference.help" = "Backspace at the start, or click the selected row to choose again.";
+"chat.reference.noHistory" = "No clipboard items. You can still ask a question.";

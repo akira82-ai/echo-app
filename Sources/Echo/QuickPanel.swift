@@ -72,6 +72,8 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     private var conversionTask: Task<Void, Never>?
     private var conversionID: UUID?
     private var lastChatQuery: String?
+    private var lastChatPage: [QuickPanelViewModel.DisplayItem] = []
+    private var lastChatReference: QuickPanelViewModel.DisplayItem?
 
     private override init() {
         super.init()
@@ -85,6 +87,8 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     /// 显示面板:读取历史快照、定位到屏幕中央、设为 key 窗口。
     func show() {
         let restoredChatQuery = viewModel.isChat ? viewModel.query : lastChatQuery
+        let restoredPage = viewModel.isChat ? viewModel.chatPage : lastChatPage
+        let restoredReference = viewModel.isChat ? viewModel.chatReference : lastChatReference
         Paster.shared.cancelPendingPaste()
         let entries = HistoryStore.shared.snapshot()
         currentEntries = entries
@@ -99,7 +103,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         viewModel.configure(entries: entries)
         if let restoredChatQuery {
             viewModel.inputMode = .chat
-            viewModel.query = restoredChatQuery
+            viewModel.restoreChat(page: restoredPage, reference: restoredReference, query: restoredChatQuery)
         }
         let viewModel = self.viewModel
         let hosting = NSHostingController(rootView: QuickPanelView(viewModel: viewModel) { [weak self] entry in
@@ -133,7 +137,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     func sendChatQuestion() {
         guard !viewModel.chat.busy else { return }
-        viewModel.chat.send(viewModel.query)
+        viewModel.sendChat()
         guard viewModel.chat.busy else { return }
         if let editor = panel?.firstResponder as? ModeSearchTextView {
             editor.collapseIfExpanded()
@@ -149,6 +153,8 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     /// 隐藏面板。
     func hide() {
         lastChatQuery = viewModel.isChat ? viewModel.query : nil
+        lastChatPage = viewModel.isChat ? viewModel.chatPage : []
+        lastChatReference = viewModel.isChat ? viewModel.chatReference : nil
         viewModel.chat.reset()
         conversionID = nil
         conversionTask?.cancel()
@@ -491,6 +497,9 @@ final class QuickPanelViewModel: ObservableObject {
     @Published var inputMode: QuickInputMode = .search {
         didSet {
             guard inputMode != oldValue else { return }
+            if inputMode == .chat { chatPage = pageItems }
+            chatReference = nil
+            chatReferenceNotice = nil
             refreshInput()
         }
     }
@@ -498,6 +507,7 @@ final class QuickPanelViewModel: ObservableObject {
     private func refreshInput() {
         guard !isConfiguring else { return }
         chat.reset()
+        chatReferenceNotice = nil
         calculation = isCalculator ? Calculator.evaluate(query) : .empty
         if isChat || isCalculator {
             batchSelectionIDs = []
@@ -510,6 +520,54 @@ final class QuickPanelViewModel: ObservableObject {
     var isCalculator: Bool { inputMode == .calculator }
     var isChat: Bool { inputMode == .chat }
     let chat = ChatState()
+    @Published private(set) var chatPage: [DisplayItem] = []
+    @Published private(set) var chatReference: DisplayItem?
+    @Published private(set) var chatReferenceNotice: String?
+
+    var showsChatChoices: Bool { chatReference == nil && query.isEmpty }
+
+    func selectChatReference(_ number: Int) {
+        guard isChat, chatReference == nil, query.isEmpty else { return }
+        guard let item = chatPage.first(where: { $0.displayNumber == number }) else {
+            chatReferenceNotice = "chat.reference.missing"; return
+        }
+        guard case .text = item.entry.kind else {
+            chatReferenceNotice = "chat.reference.unsupported"; return
+        }
+        chat.reset()
+        chatReferenceNotice = nil
+        chatReference = item
+    }
+
+    @discardableResult
+    func cancelChatReference() -> Bool {
+        guard chatReference != nil else { return false }
+        chatReference = nil
+        query = ""
+        chatReferenceNotice = nil
+        chat.reset()
+        return true
+    }
+
+    func restoreChat(page: [DisplayItem], reference: DisplayItem?, query: String) {
+        chatPage = page
+        chatReference = reference
+        self.query = query
+    }
+
+    func sendChat() {
+        guard chatReferenceNotice == nil else { return }
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            if chatReference != nil { chatReferenceNotice = "chat.reference.instruction" }
+            return
+        }
+        let context: String?
+        if let reference = chatReference, case .text(let payload) = reference.entry.kind {
+            context = payload.rawText
+        } else { context = nil }
+        chat.send(query, reference: context)
+    }
+
     @Published private(set) var calculation: Calculation = .empty
     var calculationResult: String? {
         if case .result(let value) = calculation { return value }
@@ -586,6 +644,9 @@ final class QuickPanelViewModel: ObservableObject {
     func configure(entries: [ClipEntry]) {
         isConfiguring = true
         allEntries = entries
+        chatPage = []
+        chatReference = nil
+        chatReferenceNotice = nil
         inputMode = .search
         query = ""
         currentPage = 0
@@ -608,6 +669,9 @@ final class QuickPanelViewModel: ObservableObject {
         isConverting = false
         conversionNotice = nil
         allEntries = []
+        chatPage = []
+        chatReference = nil
+        chatReferenceNotice = nil
         inputMode = .search
         query = ""
         displayed = []
@@ -880,8 +944,8 @@ func runQuickPanelInputChecks() -> Bool {
     let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 434),
                           styleMask: [.borderless], backing: .buffered, defer: false)
     window.contentView = host
-    func settle() {
-        for _ in 0..<8 {
+    func settle(_ turns: Int = 8) {
+        for _ in 0..<turns {
             host.layoutSubtreeIfNeeded()
             RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.02))
         }
@@ -967,7 +1031,72 @@ func runQuickPanelInputChecks() -> Bool {
     settle()
     let literalPassed = !model.isChat && input.editor.string == model.query
     print("\(exitPassed && literalPassed ? "PASS" : "FAIL") panel mode: Backspace exit and literal search prefix")
-    return passed && automaticPassed && modePassed && triggerPassed && calculationPassed && exitPassed && literalPassed
+    var referencePassed = true
+    func checkReference(_ condition: Bool, _ name: String) {
+        if !condition { referencePassed = false }
+        print("\(condition ? "PASS" : "FAIL") reference: \(name)")
+    }
+    let entries = (1...7).map { ClipEntry(kind: .text(TextPayload(rawText: "Reference text \($0)", representations: []))) }
+    model.configure(entries: entries)
+    model.moveNextPage()
+    let originalPage = model.pageItems.map(\.id)
+    model.inputMode = .chat
+    model.query = ""
+    settle()
+    capturePreview("reference-choices")
+    checkReference(model.chatPage.map(\.id) == originalPage && model.chatPage.first?.entry.id == entries[5].id,
+                   "captures current page and local numbering")
+    input.editor.insertText("2", replacementRange: NSRange(location: 0, length: 0))
+    // Another key before SwiftUI updates must be instruction text, not a new reference.
+    input.editor.insertText("2", replacementRange: NSRange(location: 0, length: 0))
+    settle()
+    checkReference(model.chatReference?.entry.id == entries[6].id && model.query == "2" && input.editor.string == "2",
+                   "first digit locks reference; next digit is instruction without a space")
+    let identity = model.chatReference?.id
+    model.query = "Translate"
+    settle()
+    checkReference(model.chatReference?.id == identity, "editing instruction preserves selected content")
+    input.editor.setSelectedRange(NSRange(location: 0, length: 0))
+    input.editor.deleteBackward(nil)
+    settle()
+    checkReference(model.chatReference == nil && model.isChat && model.query.isEmpty && model.chatPage.map(\.id) == originalPage,
+                   "Backspace returns to the same frozen page")
+    model.selectChatReference(5)
+    checkReference(model.chatReference == nil && model.chatReferenceNotice == "chat.reference.missing", "missing index reports error")
+    model.configure(entries: [ClipEntry(kind: .files([URL(fileURLWithPath: "/tmp/example.txt")]))])
+    model.inputMode = .chat
+    model.selectChatReference(1)
+    checkReference(model.chatReference == nil && model.chatReferenceNotice == "chat.reference.unsupported", "file references are rejected")
+    model.configure(entries: entries)
+    model.query = "Reference text 3"
+    model.inputMode = .chat
+    model.query = ""
+    checkReference(model.chatPage.count == 1 && model.chatPage.first?.id == entries[2].id, "search results freeze before entering chat")
+    model.configure(entries: entries)
+    model.inputMode = .chat
+    model.selectChatReference(3)
+    model.sendChat()
+    checkReference(!model.chat.busy && model.chatReferenceNotice == "chat.reference.instruction", "empty instruction cannot send")
+    model.query = "解释这个报错"
+    settle()
+    settle(40)
+    capturePreview("reference-selected")
+    host.appearance = NSAppearance(named: .darkAqua)
+    settle(40)
+    capturePreview("reference-selected-dark")
+    checkReference(model.chatReference?.id == entries[2].id && input.editor.hasReference && input.editor.string == model.query,
+                   "native editor and reference remain in sync")
+    let draftPage = model.chatPage
+    let draftReference = model.chatReference
+    model.configure(entries: [])
+    model.inputMode = .chat
+    model.restoreChat(page: draftPage, reference: draftReference, query: "restored instruction")
+    checkReference(model.chatReference?.id == entries[2].id && model.chatPage.map(\.id) == draftPage.map(\.id),
+                   "reopening a draft restores its original reference and page")
+    model.cancelChatReference()
+    model.query = "ordinary question"
+    checkReference(model.chatReference == nil && !model.showsChatChoices, "ordinary question carries no reference")
+    return referencePassed && passed && automaticPassed && modePassed && triggerPassed && calculationPassed && exitPassed && literalPassed
 }
 
 // MARK: - SwiftUI 视图
@@ -1016,7 +1145,7 @@ struct QuickPanelView: View {
             Color.clear.frame(height: Layout.searchHeight)
             Divider().foregroundStyle(palette.border)
             if viewModel.isChat {
-                ChatArea(state: viewModel.chat, accent: palette.accent)
+                chatReferenceArea
                     .frame(height: Layout.listHeight)
             } else if viewModel.isCalculator {
                 calculatorArea
@@ -1098,6 +1227,56 @@ struct QuickPanelView: View {
         .frame(height: Layout.listHeight)
     }
 
+    private var chatReferenceArea: some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(viewModel.chatPage) { item in
+                let selected = viewModel.chatReference?.id == item.id
+                itemRow(item, batchOrder: nil)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if selected { viewModel.cancelChatReference() }
+                        else { viewModel.selectChatReference(item.displayNumber) }
+                    }
+                    .padding(.horizontal, 6)
+                    .offset(y: CGFloat(selected ? 0 : item.displayNumber - 1) * Layout.rowHeight + Layout.listVerticalPadding)
+                    // On cancellation, let the instruction area disappear before moving the row back.
+                    .animation(reduceMotion ? nil : .timingCurve(0.22, 1, 0.36, 1, duration: 0.32)
+                        .delay(viewModel.showsChatChoices ? 0.16 : 0), value: viewModel.chatReference?.id)
+                    .opacity(viewModel.showsChatChoices || selected ? 1 : 0)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.16)
+                        .delay(viewModel.showsChatChoices ? 0.16 : 0), value: viewModel.showsChatChoices)
+                    .allowsHitTesting(viewModel.showsChatChoices || selected)
+                    .accessibilityHidden(!(viewModel.showsChatChoices || selected))
+            }
+            if !viewModel.showsChatChoices {
+                VStack(alignment: .leading, spacing: 8) {
+                    if viewModel.chatReference != nil {
+                        Text(L10n.text("chat.reference.privacy"))
+                            .font(.caption).foregroundStyle(palette.textTertiary)
+                            .padding(.horizontal, 22)
+                    }
+                    ChatArea(state: viewModel.chat, accent: palette.accent,
+                             hasReference: viewModel.chatReference != nil)
+                }
+                .padding(.top, viewModel.chatReference == nil ? 0 : 78)
+                .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 6)), removal: .opacity))
+            }
+            if let notice = viewModel.chatReferenceNotice {
+                Text(L10n.text(notice)).font(.caption).foregroundStyle(palette.accent)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .background(alignment: .bottom) { palette.windowBackground.frame(height: 40) }
+            } else if viewModel.showsChatChoices && viewModel.chatPage.isEmpty {
+                Text(L10n.text("chat.reference.noHistory"))
+                    .font(.caption).foregroundStyle(palette.textTertiary).padding(22)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .clipped()
+        .animation(reduceMotion ? nil : .easeOut(duration: viewModel.showsChatChoices ? 0.16 : 0.2)
+            .delay(viewModel.showsChatChoices ? 0 : 0.22), value: viewModel.showsChatChoices)
+    }
+
     private var calculationMessageKey: String {
         switch viewModel.calculation {
         case .empty: return "calc.empty"
@@ -1116,7 +1295,13 @@ struct QuickPanelView: View {
                 if viewModel.isCalculator {
                     Text("!").font(.system(size: 20, weight: .medium))
                 } else if viewModel.isChat {
-                    Text("@").font(.system(size: 19, weight: .medium))
+                    HStack(spacing: 0) {
+                        Text("@")
+                        if let reference = viewModel.chatReference {
+                            Text("\(reference.displayNumber)")
+                                .transition(.opacity.combined(with: .move(edge: .leading)))
+                        }
+                    }.font(.system(size: 19, weight: .medium))
                 } else {
                     Image(systemName: showsMultiSelectFeedback ? "checkmark.circle.fill" : "magnifyingglass")
                         .font(.system(size: 16))
@@ -1124,15 +1309,20 @@ struct QuickPanelView: View {
             }
                 .foregroundStyle(palette.accent)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: viewModel.inputMode)
-                .frame(width: 17, height: 25)
+                .frame(width: viewModel.isChat && viewModel.chatReference != nil ? 32 : 17, height: 25)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: viewModel.chatReference?.id)
                 .accessibilityLabel(L10n.text(viewModel.inputMode.labelKey))
             ModeSearchField(text: $viewModel.query, mode: $viewModel.inputMode,
-                            placeholder: L10n.text(viewModel.inputMode.placeholderKey),
+                            placeholder: L10n.text(viewModel.isChat
+                                ? (viewModel.chatReference == nil ? "chat.reference.placeholder" : "chat.reference.commandPlaceholder")
+                                : viewModel.inputMode.placeholderKey),
                             focused: fieldFocused,
                             enabled: !viewModel.showsAchievements && !viewModel.showsShortcutGuide && !viewModel.isConverting,
                             onHeightChange: { height in
                                 if inputHeight != height { inputHeight = height }
-                            }) {
+                            }, hasReference: viewModel.chatReference != nil,
+                            onReference: { viewModel.selectChatReference($0); return viewModel.chatReference != nil },
+                            onCancelReference: { viewModel.cancelChatReference() }) {
                     // Input methods may consume Return before the event monitor can send.
                     if viewModel.isChat {
                         QuickPanelController.shared.sendChatQuestion()

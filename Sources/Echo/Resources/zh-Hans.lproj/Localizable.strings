@@ -123,7 +123,7 @@
 "chat.title" = "问一下";
 "chat.loading" = "正在回答…";
 "chat.empty" = "输入问题，按回车发送";
-"chat.privacy" = "发送当前问题；启用联网后可自动搜索、读取公开网页。不自动读取剪贴板，不保留多轮对话。";
+"chat.privacy" = "发送当前问题；启用联网后可自动搜索、读取公开网页。仅显式引用时附带所选剪贴板内容，不保留多轮对话。";
 "chat.searchKey" = "搜索 Key";
 "chat.searchNote" = "聊天、搜索和网页读取共用此 DeepSeek API Key。问题和网页地址会发送至 DeepSeek，按服务规则计费。";
 "chat.searching" = "正在搜索网页…";
@@ -142,10 +142,19 @@
 "chat.endpointError" = "地址无效：请填写 HTTPS 基础地址（不含 /chat/completions）；本机可使用 HTTP。";
 "chat.keychainError" = "无法读写钥匙串，请检查系统授权后重新打开设置。";
 "chat.emptyResponse" = "服务未返回文本，按回车重试。";
-"chat.tooLong" = "内容过长：问题上限 16000 字符，回答上限 100000 字符。";
+"chat.tooLong" = "内容过长：问题与引用内容合计上限 16000 字符，回答上限 100000 字符。";
 "chat.requestError" = "请求失败，请检查网络、接口地址、模型、Key 或服务配额后按回车重试。";
 "chat.shortcuts" = "↵ 发送/重试    ⌘C 复制回答    esc 关闭";
 "chat.systemPrompt" = "系统提示词";
 "chat.restorePrompt" = "恢复默认";
 "chat.promptNote" = "配置保存在本地，提问时随请求发送给模型。保存后从下一次提问生效；恢复默认也需保存。";
 "chat.promptInvalid" = "无法读取系统提示词，或内容为空／超过 16000 字符。请在模型设置中恢复默认或修改后保存。";
+
+"chat.reference.placeholder" = "输入问题，或按 1–5 引用";
+"chat.reference.commandPlaceholder" = "输入处理指令";
+"chat.reference.missing" = "这条序号不存在，请重新选择。";
+"chat.reference.unsupported" = "暂不支持引用图片或文件，请选择文本。";
+"chat.reference.instruction" = "输入处理指令，再按回车发送。";
+"chat.reference.privacy" = "发送时，将此条内容和指令一同交给模型。";
+"chat.reference.help" = "在指令开头按退格，或点击选中行重新选择。";
+"chat.reference.noHistory" = "暂无剪贴板记录，仍可直接输入问题。";

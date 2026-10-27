@@ -48,10 +48,10 @@ Depends on which step you're missing:
 - Heavy Raycast user → stick with Raycast. Echo is for people who just want to paste some text, run a quick calculation, or ask a quick question — without installing a whole launcher for it.
 
 **Will my clipboard data be uploaded?**
-No. History and caches stay on your Mac and are cleared on restart (details under Privacy and permissions). A quick question sends the question and your saved system prompt to DeepSeek; clipboard history is never uploaded automatically.
+No. History and caches stay on your Mac and are cleared on restart (details under Privacy and permissions). A quick question sends the question and your saved system prompt to DeepSeek; clipboard history is never uploaded automatically. Explicit `@1`–`@5` references send only the selected text and instruction.
 
 **Does a quick question send my clipboard history to DeepSeek?**
-No. Only the question you type — plus anything you manually paste into it — is sent. Clipboard history is never attached automatically, and questions are independent, with no memory of each other. When verification is needed, the model's search queries and page URLs are sent to DeepSeek's search service.
+No. Only the question you type, manually pasted content, and explicitly selected `@1`–`@5` text references are sent. Clipboard history is never attached automatically, and questions are independent, with no memory of each other. When verification is needed, the model's search queries and page URLs are sent to DeepSeek's search service.
 
 **Why do I need my own API key for quick questions?**
 Echo doesn't proxy or touch your quota: the key lives in the macOS Keychain, and requests go straight from your machine to DeepSeek. You stay in full control of usage and cost.
@@ -104,7 +104,7 @@ In Settings → Model settings, save your **DeepSeek API key**. The endpoint (`h
 
 Type `@` in an empty input to switch the left mode icon, enter your question, and press Return. The trigger is not part of the editable or submitted text. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Delete the question, then press Backspace again to return to search. Reopening restores the last question and its mode in memory, without its answer or an automatic resend.
 
-The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides/search) with the same key, without a separate switch. It is instructed to cite sources; check important facts and links. Questions are independent: no previous conversation or clipboard history is automatically included.
+The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides/search) with the same key, without a separate switch. It is instructed to cite sources; check important facts and links. Questions are independent: no previous conversation or clipboard history is automatically included. After `@`, the current page stays visible. The first `1`–`5` immediately references that text item; subsequent input is the instruction, with no space required. Press Return to send, or Backspace at the start / click the selected row to choose again. Image and file references are not supported yet.
 
 ## Install
 
@@ -114,7 +114,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.14.4 (build 28)**.
+Current version: **2.15.0 (build 29)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 

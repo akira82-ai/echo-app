@@ -9,6 +9,9 @@ struct ModeSearchField: NSViewRepresentable {
     var focused: Bool
     var enabled: Bool
     var onHeightChange: (CGFloat) -> Void
+    var hasReference = false
+    var onReference: ((Int) -> Bool)? = nil
+    var onCancelReference: (() -> Bool)? = nil
     var onSubmit: () -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -18,6 +21,12 @@ struct ModeSearchField: NSViewRepresentable {
         view.editor.delegate = context.coordinator
         view.editor.onModeChange = { [weak coordinator = context.coordinator] mode in
             coordinator?.parent.mode = mode
+        }
+        view.editor.onReference = { [weak coordinator = context.coordinator] number in
+            coordinator?.parent.onReference?(number) ?? false
+        }
+        view.editor.onCancelReference = { [weak coordinator = context.coordinator] in
+            coordinator?.parent.onCancelReference?() ?? false
         }
         view.onHeightChange = { [weak coordinator = context.coordinator] height in
             // Native layout can run during a SwiftUI update.
@@ -30,6 +39,7 @@ struct ModeSearchField: NSViewRepresentable {
         let coordinator = context.coordinator
         coordinator.parent = self
         view.editor.mode = mode
+        view.editor.hasReference = hasReference
         view.placeholder.stringValue = placeholder
         view.editor.setAccessibilityLabel(L10n.text(mode.labelKey))
         view.editor.isEditable = enabled
@@ -90,6 +100,9 @@ final class ModeSearchTextView: NSTextView {
     var isExpanded = false
     var mode: QuickInputMode = .search
     var onModeChange: ((QuickInputMode) -> Void)?
+    var onReference: ((Int) -> Bool)?
+    var onCancelReference: (() -> Bool)?
+    var hasReference = false
     private var isPasting = false
 
     override func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
@@ -111,15 +124,23 @@ final class ModeSearchTextView: NSTextView {
     override func insertText(_ insertString: Any, replacementRange: NSRange) {
         defer { container?.updatePlaceholder() }
         let text = (insertString as? String) ?? (insertString as? NSAttributedString)?.string
-        if isEditable, !isPasting, !hasMarkedText(), string.isEmpty,
+        if isEditable, !isPasting, !hasMarkedText(), !hasReference, string.isEmpty,
            let text, let next = QuickInputMode.trigger(text) {
             changeMode(next)
+            return
+        }
+        if isEditable, !isPasting, !hasMarkedText(), mode == .chat, !hasReference,
+           string.isEmpty, let text, text.count == 1, let number = Int(text), (1...5).contains(number),
+           let onReference {
+            hasReference = onReference(number)
             return
         }
         super.insertText(insertString, replacementRange: replacementRange)
     }
 
     override func deleteBackward(_ sender: Any?) {
+        if isEditable, !hasMarkedText(), selectedRange() == NSRange(location: 0, length: 0),
+           mode == .chat, onCancelReference?() == true { hasReference = false; return }
         if isEditable, !hasMarkedText(), string.isEmpty, mode != .search {
             changeMode(.search)
             return

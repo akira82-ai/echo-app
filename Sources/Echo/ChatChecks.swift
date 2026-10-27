@@ -57,6 +57,18 @@ func runPromptChecks() -> Bool {
         defaults.set("", forKey: ChatPrompt.key)
         do { _ = try settings.effectiveText(); return false }
         catch ChatFailure.promptInvalid { }
+        let referenceMessages = ChatState.userMessages("Translate", reference: "Only selected text")
+        let payload = try JSONEncoder().encode(ChatQuery(messages: referenceMessages, model: "mock"))
+        guard let json = try JSONSerialization.jsonObject(with: payload) as? [String: Any],
+              let messages = json["messages"] as? [[String: Any]], messages.count == 2,
+              (messages[0]["content"] as? String)?.contains("Only selected text") == true,
+              messages[1]["content"] as? String == "Translate",
+              messages.allSatisfy({ $0["role"] as? String == "user" }),
+              ChatState.userMessages("ordinary", reference: nil).count == 1 else { return false }
+        let state = ChatState()
+        state.send("Translate", reference: String(repeating: "x", count: 16000))
+        guard state.errorKey == "chat.tooLong", !state.busy else { return false }
+        print("PASS reference request serialization, isolated instruction, ordinary question and combined input limit")
         print("PASS prompt resource, persistence, restore, validation and runtime context")
         return true
     } catch { print("FAIL prompt checks: \(error)"); return false }

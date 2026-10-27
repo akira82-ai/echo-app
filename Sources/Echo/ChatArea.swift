@@ -3,6 +3,7 @@ import SwiftUI
 struct ChatArea: View {
     @ObservedObject var state: ChatState
     var accent: Color = .secondary
+    var hasReference = false
 
     var body: some View {
         ScrollView {
@@ -21,8 +22,8 @@ struct ChatArea: View {
                 if let key = state.errorKey {
                     Text(L10n.text(key)).foregroundStyle(.secondary)
                 } else if !state.busy && state.answer.isEmpty {
-                    Text(L10n.text("chat.empty"))
-                    Text(L10n.text("chat.privacy")).font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.text(hasReference ? "chat.reference.instruction" : "chat.empty"))
+                    Text(L10n.text(hasReference ? "chat.reference.help" : "chat.privacy")).font(.caption).foregroundStyle(.secondary)
                 }
                 if state.answer.isEmpty && !state.busy {
                     Button(L10n.text("chat.settings")) {
