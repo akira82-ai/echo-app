@@ -24,6 +24,17 @@
 
 https://github.com/user-attachments/assets/2fa21d5d-e4a0-42c7-bee8-ceb0c1b1ccef
 
+<table>
+  <tr>
+    <td width="50%"><img src="assets/demo-1.gif" width="100%" alt="Echo demo 1"></td>
+    <td width="50%"><img src="assets/demo-2.gif" width="100%" alt="Echo demo 2"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/demo-3.gif" width="100%" alt="Echo demo 3"></td>
+    <td width="50%"><img src="assets/demo-4.gif" width="100%" alt="Echo demo 4"></td>
+  </tr>
+</table>
+
 ## 特性
 
 - **复制过，随手找回** — 文本、图片、Finder 文件自动收录。按下 `⌘\`，搜一下、选一条，接着用。
