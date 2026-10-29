@@ -42,7 +42,7 @@ https://github.com/user-attachments/assets/2fa21d5d-e4a0-42c7-bee8-ceb0c1b1ccef
 - **Several clips. One paste.** — Combine up to five text items in the order you choose. Gather excerpts and piece together notes with fewer trips between apps.
 - **Do the math. Keep your focus.** — Start with `!`, then press Return to use the result. From simple arithmetic to common functions, no separate calculator needed.
 - **A quick question, right here.** — Type `@` to ask DeepSeek in the same panel. Watch the answer arrive as it is generated, with model-directed web search and page reading when needed. Bring your own API key.
-- **Make the assistant yours.** — Edit the system prompt in Model Settings, restore Echo's default, and shape the tone and rules of every new quick question.
+- **Make the assistant yours.** — Edit the system prompt in Model Configuration, restore Echo's default, and shape the tone and rules of every new quick question.
 - **Room for real questions.** — The input stays compact for quick searches, then expands in place for longer or multi-line prompts without moving the panel frame. Press `⇧↵` for a new line and `Esc` to collapse it.
 - **Find the clip—and its source.** — See the source app or webpage when available. Reopen a captured URL in one step to keep reading or check the context.
 - **At home on your Mac.** — Follows your system's light or dark appearance, respects Reduce Motion, and speaks Chinese, English, and Japanese. Open it when needed; dismiss it when done.
@@ -78,6 +78,8 @@ Writing back into the target app requires it. Without granting it, everything st
 
 ## Usage
 
+Settings brings everyday preferences, model configuration, and data controls into one page. Record a custom panel shortcut, adjust history capacity, or check Auto Paste permissions. General preferences apply immediately; save API key, model, and system prompt changes with the Save button inside the system prompt section. API keys are hidden by default. Test Connection fetches the available model list; it does not test a generated answer or web tools.
+
 Copy normally, press `⌘\`, select an item, and press Return. Auto Paste requires Accessibility permission; without it, return to the target app and press `⌘V`.
 
 Edit the input with familiar Mac shortcuts: `⌘A` selects all, `⌘V` pastes plain text, and `⌘X` / `⌘C` cut or copy selected text. `⌘Z` / `⇧⌘Z` undo or redo when available. These work in clipboard search, calculation, and quick questions; `Ctrl+A` keeps its macOS text-editing behavior.
@@ -109,9 +111,9 @@ Return pastes the result and closes the panel. With no text selected, `⌘C` cop
 
 ### Quick questions
 
-The system prompt is editable in Settings → Model Settings. Save to apply it to the next question; ongoing requests keep their original prompt. Custom prompts are stored locally, sent to the model with each question, and survive upgrades. Restore the default and save to use the bundled default, which can evolve with app updates. Date, timezone and actual tool availability are added at request time. Default answers are concise, conclusion-first and suited to the single-turn panel.
+The system prompt is editable in Settings → Model Configuration. Save to apply it to the next question; ongoing requests keep their original prompt. Custom prompts are stored locally, sent to the model with each question, and survive upgrades. Restore the default and save to use the bundled default, which can evolve with app updates. Date, timezone and actual tool availability are added at request time. Default answers are concise, conclusion-first and suited to the single-turn panel.
 
-In Settings → Model settings, save your **DeepSeek API key**. The endpoint (`https://api.deepseek.com/v1`) and model (`deepseek-chat`) are fixed; the key is stored in macOS Keychain.
+In Settings → Model Configuration, save your **DeepSeek API key**. The endpoint is `https://api.deepseek.com/v1`. After entering a key, test the connection and choose an available model (default: `deepseek-chat`). The key is stored in macOS Keychain.
 
 Type `@` in an empty input to switch the left mode icon, enter your question, and press Return. The trigger is not part of the editable or submitted text. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Delete the question, then press Backspace again to return to search. Every time you reopen the panel, it starts in clipboard mode with an empty input; previous questions, answers, and references are not restored. Type `!` or `@` to switch modes again.
 
@@ -125,7 +127,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.15.1 (build 30)**.
+Current version: **2.16.0 (build 31)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 

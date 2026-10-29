@@ -4,7 +4,29 @@ import OpenAI
 
 enum ChatSettings {
     static let endpoint = "https://api.deepseek.com/v1"
-    static let model = "deepseek-chat"
+    static var model: String {
+        get { UserDefaults.standard.string(forKey: "chat.model") ?? "deepseek-chat" }
+        set { UserDefaults.standard.set(newValue, forKey: "chat.model") }
+    }
+
+    /// Only explicit settings actions fetch models. No clipboard data is included.
+    static func availableModels(key: String, session: URLSession = .shared) async throws -> [String] {
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ChatFailure.configuration }
+        var request = URLRequest(url: URL(string: endpoint + "/models")!)
+        request.timeoutInterval = 20
+        request.setValue("Bearer " + key, forHTTPHeaderField: "Authorization")
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
+              data.count <= 1_000_000 else { throw ChatFailure.configuration }
+        struct ModelList: Decodable {
+            struct Item: Decodable { let id: String }
+            let data: [Item]
+        }
+        let models = try JSONDecoder().decode(ModelList.self, from: data).data.map(\.id)
+        let unique = Array(Set(models.filter { !$0.isEmpty && $0.count <= 200 })).sorted()
+        guard !unique.isEmpty else { throw ChatFailure.empty }
+        return unique
+    }
     private static var keyQuery: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.akira82.echo.chat", kSecAttrAccount as String: "apiKey"]
     }

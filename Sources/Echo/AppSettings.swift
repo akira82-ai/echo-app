@@ -65,7 +65,13 @@ final class AppSettings {
     static let defaultHotkeyKeyCode: UInt32 = 42  // "\"
 
     /// 人类可读的热键描述,用于菜单/设置页显示。
+    var hotkeyLabel: String {
+        get { defaults.string(forKey: "hotkeyLabel") ?? "" }
+        set { defaults.set(newValue, forKey: "hotkeyLabel") }
+    }
+
     var hotkeyDisplayText: String {
+        if !hotkeyLabel.isEmpty { return hotkeyLabel }
         let keyChar = Self.keycodeToSymbol(hotkeyKeyCode)
         var prefix = ""
         if hotkeyModifiers & 0x0100 != 0 { prefix += "⌘" }       // cmd

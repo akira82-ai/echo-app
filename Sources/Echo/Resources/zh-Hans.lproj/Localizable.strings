@@ -68,26 +68,26 @@
 "achievement.yearProgress" = "%d / 365 天";
 
 "settings.windowTitle" = "Echo 设置";
-"settings.general" = "通用";
-"settings.historyLimit" = "历史上限";
-"settings.historyLimit.note" = "文本/图片/文件共享名额。超出后最旧条目被淘汰，图片同步删盘。";
+"settings.general" = "基本配置";
+"settings.historyLimit" = "保留条数";
+"settings.historyLimit.note" = "各类内容共用额度；满额移除最早记录，退出后清空";
 "settings.globalShortcut" = "全局热键";
 "settings.openShortcut" = "呼出快捷键";
-"settings.openShortcut.note" = "在任意 App 中按此快捷键呼出历史选择面板。⌘\\ 为默认。";
+"settings.openShortcut.note" = "在任意应用中打开 Echo";
 "settings.paste" = "粘贴";
-"settings.autoPaste" = "启用自动粘贴";
-"settings.autoPaste.on" = "选中后自动模拟 ⌘V。需要辅助功能权限。";
+"settings.autoPaste" = "自动粘贴";
+"settings.autoPaste.on" = "选中内容后，直接粘贴回原应用";
 "settings.autoPaste.off" = "关闭后只写回剪贴板。";
-"settings.data" = "数据";
+"settings.data" = "数据与隐私";
 "settings.currentHistory" = "当前历史";
 "settings.historyCount" = "%d / %d 条";
-"settings.clearAll" = "清空所有历史";
+"settings.clearAll" = "清空历史";
 "settings.clearAll.note" = "立即删除历史和图片缓存。";
-"settings.clear" = "清空";
+"settings.clear" = "清空…";
 "settings.resetAchievements" = "重置使用成就";
-"settings.resetAchievements.note" = "只删除勋章统计，不会影响当前或下次剪贴板历史。";
-"settings.reset" = "重置";
-"settings.footer" = "Echo · 好用的剪贴板 · 本地运行，数据不出本机";
+"settings.resetAchievements.note" = "仅清除勋章统计，不影响历史记录";
+"settings.reset" = "重置…";
+"settings.footer" = "Echo · Mac 极简智能剪贴板";
 "settings.accessibility.granted" = "辅助功能权限：已授予";
 "settings.accessibility.denied" = "辅助功能权限：未授予（自动粘贴不可用）";
 "settings.openSystemSettings" = "打开设置";
@@ -131,7 +131,7 @@
 "chat.webLimit" = "联网任务已达次数、时间或大小上限，请缩小问题后重试。";
 "chat.webError" = "搜索或网页读取失败，请检查 DeepSeek Key、余额和网络后重试。";
 "chat.incompleteResponse" = "回答未完整生成，请重试。";
-"chat.settings" = "模型设置";
+"chat.settings" = "模型配置";
 "chat.endpoint" = "接口地址（例如 https://api.openai.com/v1）";
 "chat.model" = "模型名称";
 "chat.endpointLabel" = "接口地址";
@@ -158,3 +158,43 @@
 "chat.reference.privacy" = "发送时，将此条内容和指令一同交给模型。";
 "chat.reference.help" = "在指令开头按退格，或点击选中行重新选择。";
 "chat.reference.noHistory" = "暂无剪贴板记录，仍可直接输入问题。";
+
+"settings.shortTitle" = "设置";
+
+"settings.tagline" = "让复制粘贴，更顺手。";
+
+"settings.itemCount" = "%d 条";
+
+"settings.clearCount" = "%d 条记录及图片缓存";
+
+"settings.cancel" = "取消";
+
+"settings.clearConfirm" = "清空全部历史？";
+
+"settings.clearConfirm.note" = "全部剪贴板记录与图片缓存将被删除，无法恢复。";
+
+"settings.resetConfirm" = "重置使用成就？";
+
+"settings.hotkeyFailed" = "快捷键注册失败，请尝试其他组合。";
+
+"settings.keyPlaceholder" = "粘贴你的 DeepSeek API Key";
+
+"settings.hide" = "隐藏";
+
+"settings.show" = "显示";
+
+"settings.testConnection" = "测试连接";
+
+"settings.connecting" = "测试中…";
+
+"settings.chooseModel" = "选择模型";
+
+"settings.retry" = "重试";
+
+"settings.modelsFailed" = "无法读取模型列表，请检查 Key、网络及服务状态。";
+
+"settings.modelNotice" = "密钥存于钥匙串，偏好留在本机；仅发送问题及所选引用。模型调用由服务商计费。";
+
+"settings.configuration" = "模型配置";
+
+"settings.connectionOK" = "连接成功，已读取可用模型。此测试不代表所有模型均可完成问答。";

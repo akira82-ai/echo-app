@@ -28,6 +28,11 @@ if let index = CommandLine.arguments.firstIndex(of: "--chat-self-test"),
     RunLoop.main.run()
 }
 
+if CommandLine.arguments.contains("--settings-self-test") {
+    Task { @MainActor in exit(await runSettingsModelChecks() ? 0 : 1) }
+    RunLoop.main.run()
+}
+
 // 菜单栏后台 App 入口。
 // 不使用 SwiftUI / @main，直接用 AppKit 手动启动 NSApplication，
 // 通过 setActivationPolicy(.accessory) 隐藏 Dock 图标（等价于 LSUIElement=true）。

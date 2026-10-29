@@ -153,3 +153,45 @@ func runChatChecks(port: Int) async -> Bool {
         return true
     } catch { return false }
 }
+
+/// Verifies model discovery without contacting a provider or using a real key.
+private final class SettingsModelProtocol: URLProtocol {
+    static var status = 200
+    static var payload = Data()
+    static var sawExpectedRequest = false
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        Self.sawExpectedRequest = request.url?.absoluteString == ChatSettings.endpoint + "/models"
+            && request.value(forHTTPHeaderField: "Authorization") == "Bearer settings-test"
+            && request.httpBody == nil && request.httpMethod == "GET"
+        let response = HTTPURLResponse(url: request.url!, statusCode: Self.status, httpVersion: nil, headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Self.payload)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() { }
+}
+
+@MainActor
+func runSettingsModelChecks() async -> Bool {
+    let config = URLSessionConfiguration.ephemeral
+    config.protocolClasses = [SettingsModelProtocol.self]
+    let session = URLSession(configuration: config)
+    defer { session.invalidateAndCancel() }
+    do {
+        SettingsModelProtocol.payload = Data(#"{"data":[{"id":"model-b"},{"id":"model-a"},{"id":"model-b"}]}"#.utf8)
+        let models = try await ChatSettings.availableModels(key: "settings-test", session: session)
+        guard models == ["model-a", "model-b"], SettingsModelProtocol.sawExpectedRequest else { return false }
+        for (status, payload) in [(401, #"{"error":"secret must never surface"}"#), (200, #"{"data":[]}"#), (200, "invalid")] {
+            SettingsModelProtocol.status = status
+            SettingsModelProtocol.payload = Data(payload.utf8)
+            do { _ = try await ChatSettings.availableModels(key: "settings-test", session: session); return false }
+            catch { }
+        }
+        do { _ = try await ChatSettings.availableModels(key: " ", session: session); return false }
+        catch ChatFailure.configuration { }
+        print("PASS model discovery, authorization, deduplication, empty/malformed responses and authentication failure")
+        return true
+    } catch { print("FAIL settings model checks"); return false }
+}

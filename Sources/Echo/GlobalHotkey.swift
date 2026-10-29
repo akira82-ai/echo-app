@@ -64,6 +64,25 @@ final class GlobalHotkey {
         register()
     }
 
+    /// Register the replacement before releasing the old shortcut; failed changes preserve it.
+    func replace(modifiers: UInt32, keycode: UInt32) -> Bool {
+        if modifiers == AppSettings.shared.hotkeyModifiers && keycode == AppSettings.shared.hotkeyKeyCode { return true }
+        installEventHandlerIfNeeded()
+        var replacement: EventHotKeyRef?
+        let status = RegisterEventHotKey(keycode, modifiers,
+            EventHotKeyID(signature: fourCharCode("Echo"), id: 1),
+            GetApplicationEventTarget(), 0, &replacement)
+        guard status == noErr, let replacement else {
+            NSLog("[Echo] Shortcut replacement failed: %d", status)
+            return false
+        }
+        unregister()
+        hotKeyRef = replacement
+        AppSettings.shared.hotkeyModifiers = modifiers
+        AppSettings.shared.hotkeyKeyCode = keycode
+        return true
+    }
+
     // MARK: - 事件处理器
 
     /// 安装全局热键事件处理器(只装一次)。

@@ -68,26 +68,26 @@
 "achievement.yearProgress" = "%d / 365 days";
 
 "settings.windowTitle" = "Echo Settings";
-"settings.general" = "General";
-"settings.historyLimit" = "History Limit";
-"settings.historyLimit.note" = "Text, images, and files share this limit. The oldest item is removed when the limit is reached.";
+"settings.general" = "Basics";
+"settings.historyLimit" = "History limit";
+"settings.historyLimit.note" = "Shared across content types; oldest removed at limit, cleared on quit";
 "settings.globalShortcut" = "Global Shortcut";
 "settings.openShortcut" = "Open Panel Shortcut";
-"settings.openShortcut.note" = "Press this shortcut in any app to open the history panel. The default is ⌘\\.";
+"settings.openShortcut.note" = "Open Echo from any app";
 "settings.paste" = "Paste";
-"settings.autoPaste" = "Enable Auto-Paste";
-"settings.autoPaste.on" = "Automatically presses ⌘V after selection. Accessibility permission is required.";
+"settings.autoPaste" = "Auto paste";
+"settings.autoPaste.on" = "Paste selected content back into the previous app";
 "settings.autoPaste.off" = "When off, items are copied to the clipboard only.";
-"settings.data" = "Data";
+"settings.data" = "Data & privacy";
 "settings.currentHistory" = "Current History";
 "settings.historyCount" = "%d / %d items";
-"settings.clearAll" = "Clear All History";
+"settings.clearAll" = "Clear history";
 "settings.clearAll.note" = "Delete history and cached images immediately.";
-"settings.clear" = "Clear";
+"settings.clear" = "Clear…";
 "settings.resetAchievements" = "Reset Achievements";
-"settings.resetAchievements.note" = "Deletes achievement statistics only. Clipboard history is unaffected.";
-"settings.reset" = "Reset";
-"settings.footer" = "Echo · A Better Clipboard · Local, data stays on this Mac";
+"settings.resetAchievements.note" = "Only resets achievements, not clipboard history";
+"settings.reset" = "Reset…";
+"settings.footer" = "Echo · Minimal, smart clipboard for Mac";
 "settings.accessibility.granted" = "Accessibility: Granted";
 "settings.accessibility.denied" = "Accessibility: Not Granted (auto-paste unavailable)";
 "settings.openSystemSettings" = "Open Settings";
@@ -131,7 +131,7 @@
 "chat.webLimit" = "Web task reached its call, time or size limit. Narrow your question and retry.";
 "chat.webError" = "Search or fetch failed. Check your DeepSeek key, balance and network.";
 "chat.incompleteResponse" = "The answer was not completed. Please retry.";
-"chat.settings" = "Model settings";
+"chat.settings" = "Model configuration";
 "chat.endpoint" = "Base URL (e.g. https://api.openai.com/v1)";
 "chat.model" = "Model name";
 "chat.endpointLabel" = "Base URL";
@@ -158,3 +158,43 @@
 "chat.reference.privacy" = "Sends this selected item and your instruction to the model.";
 "chat.reference.help" = "Backspace at the start, or click the selected row to choose again.";
 "chat.reference.noHistory" = "No clipboard items. You can still ask a question.";
+
+"settings.shortTitle" = "Settings";
+
+"settings.tagline" = "Copy, paste. Effortlessly.";
+
+"settings.itemCount" = "%d items";
+
+"settings.clearCount" = "%d records and image cache";
+
+"settings.cancel" = "Cancel";
+
+"settings.clearConfirm" = "Clear all history?";
+
+"settings.clearConfirm.note" = "All clipboard records and cached images will be deleted. This cannot be undone.";
+
+"settings.resetConfirm" = "Reset achievements?";
+
+"settings.hotkeyFailed" = "Shortcut unavailable. Try another combination.";
+
+"settings.keyPlaceholder" = "Paste your DeepSeek API key";
+
+"settings.hide" = "Hide";
+
+"settings.show" = "Show";
+
+"settings.testConnection" = "Test connection";
+
+"settings.connecting" = "Testing…";
+
+"settings.chooseModel" = "Choose model";
+
+"settings.retry" = "Retry";
+
+"settings.modelsFailed" = "Could not load models. Check your key, network and service status.";
+
+"settings.modelNotice" = "Key in Keychain, preferences on this Mac. Only questions and selected references are sent; provider fees apply.";
+
+"settings.configuration" = "Model configuration";
+
+"settings.connectionOK" = "Connected and model list loaded. This does not verify chat access for every model.";
