@@ -71,9 +71,6 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     private var keyMonitor: Any?
     private var conversionTask: Task<Void, Never>?
     private var conversionID: UUID?
-    private var lastChatQuery: String?
-    private var lastChatPage: [QuickPanelViewModel.DisplayItem] = []
-    private var lastChatReference: QuickPanelViewModel.DisplayItem?
 
     private override init() {
         super.init()
@@ -86,9 +83,6 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 显示面板:读取历史快照、定位到屏幕中央、设为 key 窗口。
     func show() {
-        let restoredChatQuery = viewModel.isChat ? viewModel.query : lastChatQuery
-        let restoredPage = viewModel.isChat ? viewModel.chatPage : lastChatPage
-        let restoredReference = viewModel.isChat ? viewModel.chatReference : lastChatReference
         Paster.shared.cancelPendingPaste()
         let entries = HistoryStore.shared.snapshot()
         currentEntries = entries
@@ -101,10 +95,6 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         frontmostAppAtShowTime = NSWorkspace.shared.frontmostApplication
 
         viewModel.configure(entries: entries)
-        if let restoredChatQuery {
-            viewModel.inputMode = .chat
-            viewModel.restoreChat(page: restoredPage, reference: restoredReference, query: restoredChatQuery)
-        }
         let viewModel = self.viewModel
         let hosting = NSHostingController(rootView: QuickPanelView(viewModel: viewModel) { [weak self] entry in
             self?.handleSelected(entry, source: .mouse, format: .original)
@@ -152,9 +142,6 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 隐藏面板。
     func hide() {
-        lastChatQuery = viewModel.isChat ? viewModel.query : nil
-        lastChatPage = viewModel.isChat ? viewModel.chatPage : []
-        lastChatReference = viewModel.isChat ? viewModel.chatReference : nil
         viewModel.chat.reset()
         conversionID = nil
         conversionTask?.cancel()
@@ -547,12 +534,6 @@ final class QuickPanelViewModel: ObservableObject {
         chatReferenceNotice = nil
         chat.reset()
         return true
-    }
-
-    func restoreChat(page: [DisplayItem], reference: DisplayItem?, query: String) {
-        chatPage = page
-        chatReference = reference
-        self.query = query
     }
 
     func sendChat() {
@@ -1086,14 +1067,18 @@ func runQuickPanelInputChecks() -> Bool {
     capturePreview("reference-selected-dark")
     checkReference(model.chatReference?.id == entries[2].id && input.editor.hasReference && input.editor.string == model.query,
                    "native editor and reference remain in sync")
-    let draftPage = model.chatPage
-    let draftReference = model.chatReference
-    model.configure(entries: [])
+    for previousMode in [QuickInputMode.search, .calculator, .chat] {
+        model.inputMode = previousMode
+        model.query = "previous input"
+        model.reset()
+        model.configure(entries: entries)
+        settle()
+        checkReference(model.inputMode == .search && model.query.isEmpty
+                       && model.chatReference == nil && model.chatPage.isEmpty
+                       && input.editor.mode == .search && input.editor.string.isEmpty,
+                       "reopening from \(previousMode) starts in clipboard mode")
+    }
     model.inputMode = .chat
-    model.restoreChat(page: draftPage, reference: draftReference, query: "restored instruction")
-    checkReference(model.chatReference?.id == entries[2].id && model.chatPage.map(\.id) == draftPage.map(\.id),
-                   "reopening a draft restores its original reference and page")
-    model.cancelChatReference()
     model.query = "ordinary question"
     checkReference(model.chatReference == nil && !model.showsChatChoices, "ordinary question carries no reference")
     return referencePassed && passed && automaticPassed && modePassed && triggerPassed && calculationPassed && exitPassed && literalPassed

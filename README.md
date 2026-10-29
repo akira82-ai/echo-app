@@ -113,7 +113,7 @@ The system prompt is editable in Settings → Model Settings. Save to apply it t
 
 In Settings → Model settings, save your **DeepSeek API key**. The endpoint (`https://api.deepseek.com/v1`) and model (`deepseek-chat`) are fixed; the key is stored in macOS Keychain.
 
-Type `@` in an empty input to switch the left mode icon, enter your question, and press Return. The trigger is not part of the editable or submitted text. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Delete the question, then press Backspace again to return to search. Reopening restores the last question and its mode in memory, without its answer or an automatic resend.
+Type `@` in an empty input to switch the left mode icon, enter your question, and press Return. The trigger is not part of the editable or submitted text. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Delete the question, then press Backspace again to return to search. Every time you reopen the panel, it starts in clipboard mode with an empty input; previous questions, answers, and references are not restored. Type `!` or `@` to switch modes again.
 
 The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides/search) with the same key, without a separate switch. It is instructed to cite sources; check important facts and links. Questions are independent: no previous conversation or clipboard history is automatically included. After `@`, the current page stays visible. The first `1`–`5` immediately references that text item; subsequent input is the instruction, with no space required. Press Return to send, or Backspace at the start / click the selected row to choose again. Image and file references are not supported yet.
 
@@ -125,7 +125,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.15.0 (build 29)**.
+Current version: **2.15.1 (build 30)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 
