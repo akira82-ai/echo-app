@@ -101,11 +101,12 @@ struct ChatConfigurationView: View {
             }.font(.system(size: 11)).foregroundStyle(SettingsStyle.accent(scheme))
         }
         .onAppear(perform: load)
+        .onChange(of: changed) { SettingsEditingState.shared.hasUnsavedChanges = $0 }
         .onChange(of: key) { _ in
             request?.cancel(); generation = UUID(); loading = false; models = []; choosingModel = false
             model = key == savedKey ? savedModel : ""
         }
-        .onDisappear { request?.cancel(); generation = UUID(); loading = false; revealed = false }
+        .onDisappear { SettingsEditingState.shared.hasUnsavedChanges = false; request?.cancel(); generation = UUID(); loading = false; revealed = false }
         .alert(L10n.text("settings.configuration"), isPresented: Binding(get: { status != nil }, set: { if !$0 { status = nil } })) {
             Button("OK") { status = nil }
         } message: { Text(L10n.text(status ?? "")) }

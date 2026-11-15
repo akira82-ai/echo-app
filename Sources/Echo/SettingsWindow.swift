@@ -124,6 +124,8 @@ struct SettingsView: View {
                 }
             }
             Divider()
+            UpdateSettingsView()
+            Divider()
             HStack {
                 Text(L10n.text("settings.footer"))
                 Spacer()

@@ -198,3 +198,23 @@
 "settings.configuration" = "Model configuration";
 
 "settings.connectionOK" = "Connected and model list loaded. This does not verify chat access for every model.";
+
+// Application updates
+"updates.title" = "Software updates";
+"updates.automatic" = "Automatically check for updates";
+"updates.manualInstall" = "Checks only. You choose when to download, install, and restart.";
+"updates.check" = "Check for Updates…";
+"updates.unconfigured" = "Updates are not configured in this build";
+"updates.configurationNote" = "Use an update-enabled release. Development builds require an HTTPS feed and an update signing public key.";
+"updates.ready" = "Ready to check for updates";
+"updates.startFailed" = "Unable to start the updater";
+"updates.available" = "An update is available";
+"updates.current" = "You’re up to date";
+"updates.failed" = "Update check or installation failed. Please try again.";
+"updates.versionAvailable" = "Version %@ is available";
+"updates.restart" = "Restart and Update";
+"updates.later" = "Later";
+"updates.restartTitle" = "Restart to finish updating?";
+"updates.restartNote" = "Restarting clears temporary clipboard history. Preferences, prompts, and Keychain secrets are preserved.";
+"updates.finishWork" = "Finish your current work first";
+"updates.finishWork.note" = "Wait for the answer to finish and save configuration changes, then choose Restart and Update again.";

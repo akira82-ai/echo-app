@@ -1,5 +1,13 @@
 import AppKit
 
+if let index = CommandLine.arguments.firstIndex(of: "--copy-self-test"),
+   CommandLine.arguments.count > index + 1, let port = Int(CommandLine.arguments[index + 1]) {
+    let application = NSApplication.shared
+    application.setActivationPolicy(.accessory)
+    Task { @MainActor in exit(await QuickPanelController.runCopyChecks(port: port) ? 0 : 1) }
+    application.run()
+}
+
 if CommandLine.arguments.contains("--input-self-test") {
     let nativePassed = runModeSearchChecks()
     let panelPassed = runQuickPanelInputChecks()
@@ -31,6 +39,10 @@ if let index = CommandLine.arguments.firstIndex(of: "--chat-self-test"),
 if CommandLine.arguments.contains("--settings-self-test") {
     Task { @MainActor in exit(await runSettingsModelChecks() ? 0 : 1) }
     RunLoop.main.run()
+}
+
+if CommandLine.arguments.contains("--updates-self-test") {
+    exit(runUpdateChecks() ? 0 : 1)
 }
 
 // 菜单栏后台 App 入口。

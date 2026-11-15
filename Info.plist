@@ -9,9 +9,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.akira82.echo</string>
     <key>CFBundleVersion</key>
-    <string>31</string>
+    <string>32</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.16.0</string>
+    <string>2.17.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
@@ -24,6 +24,17 @@
         <string>en</string>
         <string>ja</string>
     </array>
+    <!-- Distribution builds inject SUFeedURL and SUPublicEDKey together. -->
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUAutomaticallyUpdate</key>
+    <false/>
+    <key>SUAllowsAutomaticUpdates</key>
+    <false/>
+    <key>SUEnableSystemProfiling</key>
+    <false/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <!-- 作为菜单栏后台 App，不显示在 Dock -->

@@ -127,7 +127,7 @@ Echo 使用自签名，未经 Apple 公证。先尝试打开，再到「系统�
 
 在最新 [Release](https://github.com/akira82-ai/echo-app/releases/latest) 下载 `Echo.dmg`，打开后将 Echo 拖入「应用程序」。也可下载 ZIP。
 
-当前版本：**2.16.0（build 31）**。
+当前版本：**2.17.0（build 32）**。
 
 Release 使用 `Echo Self-Sign` 自签名，未经 Apple Developer ID 签名或公证。首次启动若被 macOS 拦截，尝试打开后，前往「系统设置 → 隐私与安全性」，点击「仍要打开」并确认。
 
@@ -155,3 +155,26 @@ open dist/Echo.app
 ## 许可证
 
 [MIT](LICENSE) · Copyright © 2026 akira82-ai。依赖的许可证与版权声明随应用资源一起提供。
+
+### 应用内更新（直接分发版）
+
+**当前自签名安装包未配置更新源和公钥，应用内更新保持禁用，请继续手动下载 Release。** 本次仅接入更新框架和发行准备工具，不代表自动更新链路已可用。Developer ID 签名、Apple 公证及两个真实发行版本之间的完整升级验收尚未完成。
+
+使用 Sparkle 2.8.1，后台仅检查稳定版本；用户主动下载、安装和重启。菜单与设置均有检查入口，后台发现更新不抢焦点。正在生成回答或设置未保存时推迟重启；重启前提醒临时历史会清空。没有更新源与公钥的本地构建明确禁用更新。
+
+发行准备：
+
+1. 使用 Sparkle 自带 `generate_keys` 建立发行用 Ed25519 密钥，私钥保留在钥匙串，备份由发行负责人管理，勿提交到仓库。工具位于 SwiftPM 解析后的 `.build/artifacts/*/Sparkle/bin/`。
+2. 通过构建环境变量配置 `ECHO_UPDATE_FEED_URL`（长期稳定的 HTTPS appcast 地址）、`ECHO_UPDATE_PUBLIC_KEY`（公钥）、`ECHO_SIGN_IDENTITY`（Developer ID Application 身份）；设置 `ECHO_UNIVERSAL=1` 后执行 `./build-app.sh`，生成 arm64 + x86_64 通用包。两个更新配置必须一起提供。
+3. 为 App 完成 Apple 公证并装订公证票据，再运行：
+   ```bash
+   scripts/prepare-update.sh /absolute/path/Echo.app \
+     https://github.com/akira82-ai/echo-app/releases/download/VERSION/ \
+     /absolute/path/release-notes.txt
+   ```
+   脚本要求通用包、有效代码签名、公证及更新配置；从钥匙串读取签名密钥（可通过 `ECHO_UPDATE_KEY_ACCOUNT` 选择账户），生成无增量更新的稳定 appcast，并使用 App 内公钥验证实际 ZIP。输出到 `dist/update-BUILD/`，不会上传任何内容。重复目录不覆盖。
+4. 每次发布递增 `CFBundleVersion`。先上传不可变的更新 ZIP，核实公开下载内容后，再将生成的 appcast 发布到客户端配置的地址。需要保留旧系统兼容版本时，合并保留既有兼容条目；不要覆盖已经发布的 ZIP，不发布未通过校验的 feed。
+
+自签名本地包不等于 Developer ID 签名／公证的发行包。`build-app.sh` 的 ZIP、DMG 若在公证前生成，不能直接当作最终公证产物；更新 ZIP 由 `prepare-update.sh` 从已装订的 App 重新生成。商店版本应使用 Mac App Store 更新机制。没有更新器的旧版需要手动安装一次更新器版本。
+
+验证命令：`swift run Echo --updates-self-test` 检查配置拒绝规则；`scripts/verify-update.swift` 通过 `swift` 运行，校验真实 appcast 与 ZIP。正式启用前仍需用两个真实发行版本验证 HTTPS 检查、下载、安装、重启及失败恢复；仅构建通过不代表发布链路验收完成。

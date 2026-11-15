@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var statusMenuItem: NSMenuItem!
     private var countMenuItem: NSMenuItem!
+    private var updatesMenuItem: NSMenuItem!
 
     /// 设置窗口控制器(懒加载)
     private lazy var settingsWindowController = SettingsWindowController()
@@ -32,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 启动剪贴板监听(零权限,覆盖所有复制来源)
         ClipboardWatcher.shared.start()
         updateStatusMenuItem()
+        UpdateController.shared.start()
     }
 
     // MARK: - Setup
@@ -89,6 +91,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         openSettings.target = self
         menu.addItem(openSettings)
+
+        let checkUpdates = NSMenuItem(title: L10n.text("updates.check"), action: #selector(checkForUpdates), keyEquivalent: "")
+        updatesMenuItem = checkUpdates
+        checkUpdates.target = self
+        menu.addItem(checkUpdates)
 
         let openAccessibility = NSMenuItem(
             title: L10n.text("menu.openAccessibility"),
@@ -159,6 +166,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PermissionsManager.shared.openSystemSettings()
     }
 
+    @objc private func checkForUpdates() { UpdateController.shared.checkForUpdates() }
+
     @objc private func quit() {
         NSApp.terminate(nil)
     }
@@ -195,6 +204,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 extension AppDelegate: NSMenuDelegate {
     /// 菜单即将打开时刷新状态
     func menuWillOpen(_ menu: NSMenu) {
+        let updates = UpdateController.shared
+        updatesMenuItem.title = updates.pendingRestart ? L10n.text("updates.restart") :
+            updates.availableVersion.map { L10n.format("updates.versionAvailable", $0) } ?? L10n.text("updates.check")
         updateStatusMenuItem()
     }
 }

@@ -198,3 +198,23 @@
 "settings.configuration" = "模型配置";
 
 "settings.connectionOK" = "连接成功，已读取可用模型。此测试不代表所有模型均可完成问答。";
+
+// Application updates
+"updates.title" = "软件更新";
+"updates.automatic" = "自动检查更新";
+"updates.manualInstall" = "仅检查；下载、安装与重启由你决定";
+"updates.check" = "检查更新…";
+"updates.unconfigured" = "此版本尚未配置自动更新";
+"updates.configurationNote" = "请使用开发者发布的更新版本；开发构建需配置 HTTPS 更新源与更新签名公钥。";
+"updates.ready" = "自动检查已就绪";
+"updates.startFailed" = "更新器启动失败";
+"updates.available" = "有可用更新";
+"updates.current" = "已是最新版本";
+"updates.failed" = "检查或安装更新失败，请重试";
+"updates.versionAvailable" = "发现新版本 %@";
+"updates.restart" = "重启并更新";
+"updates.later" = "稍后";
+"updates.restartTitle" = "重启以完成更新？";
+"updates.restartNote" = "重启会清空临时剪贴板历史。偏好设置、提示词和钥匙串密钥将保留。";
+"updates.finishWork" = "请先完成当前任务";
+"updates.finishWork.note" = "请等待回答完成，并保存设置中的更改，然后再次选择“重启并更新”。";

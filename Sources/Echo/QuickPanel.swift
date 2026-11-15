@@ -3,6 +3,7 @@ import AppKit
 import QuartzCore
 import MarkdownConversion
 import Calculator
+import OpenAI
 
 /// Menu-bar panels have no Edit menu to route standard editing shortcuts.
 private final class QuickPanel: NSPanel {
@@ -51,6 +52,8 @@ private final class QuickPanel: NSPanel {
 final class QuickPanelController: NSObject, NSWindowDelegate {
     static let shared = QuickPanelController()
 
+    var isAnswering: Bool { viewModel.chat.busy }
+
     private enum Layout {
         static let panelWidth: CGFloat = 560
         static let panelHeight: CGFloat = 434
@@ -66,13 +69,14 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     /// 当前显示的历史快照
     private var currentEntries: [ClipEntry] = []
     /// SwiftUI 视图模型(驱动列表与选中状态)
-    private let viewModel = QuickPanelViewModel()
+    private let viewModel: QuickPanelViewModel
     /// 本地键盘事件监听器(面板显示期间接收方向键/回车/Esc/修饰键状态)
     private var keyMonitor: Any?
     private var conversionTask: Task<Void, Never>?
     private var conversionID: UUID?
 
-    private override init() {
+    private init(viewModel: QuickPanelViewModel = QuickPanelViewModel()) {
+        self.viewModel = viewModel
         super.init()
     }
 
@@ -162,7 +166,9 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     /// 用 NSEvent.addLocalMonitorForEvents(兼容 macOS 13,替代 SwiftUI onKeyPress 的 macOS 14 要求)。
     private func installKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
-            self?.handleKeyEvent(event) ?? event
+            guard let self else { return event }
+            // nil means handled. Replacing it with event dispatches the shortcut twice.
+            return self.handleKeyEvent(event)
         }
     }
 
@@ -196,13 +202,16 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
             }
             if event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command,
                event.charactersIgnoringModifiers?.lowercased() == "c" {
-                // Let the native responder copy a selection in either the question or answer.
                 if let field = panel?.firstResponder as? NSTextView {
-                    if field.hasMarkedText() || field.selectedRanges.contains(where: { $0.rangeValue.length > 0 }) {
-                        return event
+                    if field.hasMarkedText() { return event }
+                    if field.selectedRanges.contains(where: { $0.rangeValue.length > 0 }) {
+                        // Read-only text has no Edit menu in this menu-bar app either.
+                        field.copy(nil)
+                        return nil
                     }
                 }
-                guard !viewModel.chat.busy, viewModel.chat.errorKey == nil, !viewModel.chat.answer.isEmpty else { return event }
+                // No selection: do not copy incomplete output or clear the clipboard via native copy.
+                guard !viewModel.chat.busy, viewModel.chat.errorKey == nil, !viewModel.chat.answer.isEmpty else { return nil }
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(viewModel.chat.answer, forType: .string)
                 return nil
@@ -506,7 +515,11 @@ final class QuickPanelViewModel: ObservableObject {
 
     var isCalculator: Bool { inputMode == .calculator }
     var isChat: Bool { inputMode == .chat }
-    let chat = ChatState()
+    let chat: ChatState
+
+    init(chat: ChatState = ChatState()) {
+        self.chat = chat
+    }
     @Published private(set) var chatPage: [DisplayItem] = []
     @Published private(set) var chatReference: DisplayItem?
     @Published private(set) var chatReferenceNotice: String?
@@ -913,6 +926,179 @@ final class QuickPanelViewModel: ObservableObject {
             source: source,
             paged: currentPage > 0
         )
+    }
+}
+
+extension QuickPanelController {
+    /// Exercises the real event monitor and native paste against a local mock provider.
+    @MainActor
+    static func runCopyChecks(port: Int) async -> Bool {
+        let app = NSApplication.shared
+        app.setActivationPolicy(.accessory)
+        let state = ChatState(makeClient: {
+            OpenAI(configuration: .init(token: nil, host: "127.0.0.1", port: port,
+                scheme: "http", basePath: "/v1", timeoutInterval: 5, parsingOptions: .relaxed))
+        }, modelName: { "mock" }, makeWeb: { nil }, readPrompt: { "Copy checks" })
+        let model = QuickPanelViewModel(chat: state)
+        model.inputMode = .chat
+        model.query = "问题：复制回答"
+        let controller = QuickPanelController(viewModel: model)
+        let content = NSViewController()
+        content.view = NSView(frame: NSRect(x: 0, y: 0, width: 560, height: 434))
+        let panel = makePanel(contentViewController: content)
+        controller.panel = panel
+        let question = ModeSearchTextView(frame: NSRect(x: 0, y: 330, width: 560, height: 80))
+        question.string = model.query
+        let answer = NSTextView(frame: NSRect(x: 0, y: 0, width: 560, height: 300))
+        answer.isEditable = false
+        answer.isSelectable = true
+        content.view.addSubview(question)
+        content.view.addSubview(answer)
+        let pasteboard = NSPasteboard.general
+        let saved = (pasteboard.pasteboardItems ?? []).map { item in
+            item.types.compactMap { type in item.data(forType: type).map { (type, $0) } }
+        }
+        defer {
+            controller.hide()
+            pasteboard.clearContents()
+            let items = saved.map { values in
+                let item = NSPasteboardItem()
+                for (type, data) in values { item.setData(data, forType: type) }
+                return item
+            }
+            if !items.isEmpty { pasteboard.writeObjects(items) }
+        }
+        controller.installKeyMonitor()
+        app.activate(ignoringOtherApps: true)
+        panel.makeKeyAndOrderFront(nil)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        panel.makeKey()
+        panel.makeFirstResponder(question)
+        question.setSelectedRange(NSRange(location: question.string.utf16.count, length: 0))
+        var failures = 0
+        var count = 0
+        func check(_ value: Bool, _ label: String) {
+            count += 1
+            if !value { failures += 1 }
+            print("\(value ? "PASS" : "FAIL") copy: \(label)")
+        }
+        func copyAndPaste(_ expected: String, _ label: String) {
+            pasteboard.clearContents()
+            pasteboard.setString("untouched", forType: .string)
+            let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: .command,
+                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: panel.windowNumber,
+                context: nil, characters: "c", charactersIgnoringModifiers: "c", isARepeat: false, keyCode: 8)!
+            app.sendEvent(event)
+            let destination = NSTextView()
+            destination.pasteAsPlainText(nil)
+            check(pasteboard.string(forType: .string) == expected && destination.string == expected, label)
+        }
+        func wait() async {
+            for _ in 0..<200 {
+                if !state.busy { return }
+                try? await Task.sleep(nanoseconds: 20_000_000)
+            }
+        }
+        check(panel.isKeyWindow && panel.firstResponder === question, "real panel owns input focus")
+        if !panel.isKeyWindow || panel.firstResponder !== question {
+            print("copy focus diagnostics: key=\(panel.isKeyWindow), responder=\(String(describing: panel.firstResponder)), accepts=\(question.acceptsFirstResponder)")
+            return false
+        }
+        copyAndPaste("untouched", "no answer preserves clipboard")
+        state.send("copy-short")
+        await wait()
+        let short = "**回答**\n\n- 中文与 emoji 👋\n- `code`\n"
+        check(!state.busy && state.errorKey == nil && state.answer == short, "mock answer completes")
+        copyAndPaste(short, "direct Command+C preserves Markdown through native paste")
+        question.setSelectedRange(NSRange(location: 0, length: 2))
+        copyAndPaste("问题", "question selection uses native copy")
+        question.setSelectedRange(NSRange(location: 2, length: 0))
+        copyAndPaste(short, "cancel question selection copies full answer")
+        answer.string = "回答中的一部分"
+        panel.makeFirstResponder(answer)
+        answer.setSelectedRange(NSRange(location: 0, length: 2))
+        copyAndPaste("回答", "read-only answer selection uses native copy")
+        answer.setSelectedRange(NSRange(location: 2, length: 0))
+        copyAndPaste(short, "answer focus without selection copies full answer")
+        answer.removeFromSuperview()
+        let renderedAnswer = NSHostingView(rootView: ChatArea(state: state))
+        renderedAnswer.frame = NSRect(x: 0, y: 0, width: 560, height: 300)
+        content.view.addSubview(renderedAnswer)
+        func findAnswerField(_ view: NSView) -> NSTextField? {
+            if let field = view as? NSTextField, field.stringValue.contains("回答") { return field }
+            for child in view.subviews {
+                if let field = findAnswerField(child) { return field }
+            }
+            return nil
+        }
+        for _ in 0..<20 {
+            renderedAnswer.layoutSubtreeIfNeeded()
+            if findAnswerField(renderedAnswer) != nil { break }
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+        if let field = findAnswerField(renderedAnswer) {
+            field.selectText(nil)
+            if let editor = panel.firstResponder as? NSTextView {
+                check(editor.string.hasPrefix("回答"), "actual SwiftUI answer exposes native selection")
+                editor.setSelectedRange(NSRange(location: 0, length: 2))
+                copyAndPaste("回答", "actual SwiftUI answer selection copies rendered text")
+                editor.setSelectedRange(NSRange(location: 2, length: 0))
+                copyAndPaste(short, "cancel actual answer selection copies Markdown source")
+            } else {
+                check(false, "actual SwiftUI answer has a native selection responder")
+            }
+        } else {
+            check(false, "actual SwiftUI answer selection overlay is available")
+        }
+        renderedAnswer.rootView = ChatArea(state: ChatState())
+        renderedAnswer.removeFromSuperview()
+        panel.makeFirstResponder(content.view)
+        copyAndPaste(short, "panel background focus copies full answer")
+        panel.makeFirstResponder(question)
+        question.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0),
+            replacementRange: NSRange(location: 0, length: question.string.utf16.count))
+        let imeEvent = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: .command,
+            timestamp: 0, windowNumber: panel.windowNumber, context: nil, characters: "c",
+            charactersIgnoringModifiers: "c", isARepeat: false, keyCode: 8)!
+        let changeCount = pasteboard.changeCount
+        check(controller.handleKeyEvent(imeEvent) === imeEvent && question.hasMarkedText()
+              && pasteboard.changeCount == changeCount, "IME composition is passed to native handling")
+        question.unmarkText()
+        question.setSelectedRange(NSRange(location: question.string.utf16.count, length: 0))
+        copyAndPaste(short, "copy after IME composition")
+        question.string = model.query
+        question.setSelectedRange(NSRange(location: question.string.utf16.count, length: 0))
+        state.send("copy-slow")
+        for _ in 0..<100 {
+            if !state.answer.isEmpty { break }
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+        check(state.busy && !state.answer.isEmpty, "partial answer is still generating")
+        copyAndPaste("untouched", "generating answer preserves clipboard")
+        question.setSelectedRange(NSRange(location: 0, length: 2))
+        copyAndPaste("问题", "selection remains copyable while generating")
+        question.setSelectedRange(NSRange(location: 2, length: 0))
+        state.send("copy-error")
+        await wait()
+        check(!state.busy && state.errorKey != nil, "mock failure reaches failed state")
+        copyAndPaste("untouched", "failed answer preserves clipboard")
+        state.send("copy-incomplete")
+        await wait()
+        check(!state.busy && state.errorKey != nil && !state.answer.isEmpty, "failed stream retains partial output")
+        copyAndPaste("untouched", "failed partial answer is not copied as a completed answer")
+        question.setSelectedRange(NSRange(location: 0, length: 2))
+        copyAndPaste("问题", "selection remains copyable after failure")
+        question.setSelectedRange(NSRange(location: 2, length: 0))
+        state.send("copy-long")
+        await wait()
+        let long = String(repeating: "## 长回答 👋\n\n```swift\nlet text = \"中文\"\n```\n\n", count: 1000)
+        check(!state.busy && state.errorKey == nil && state.answer == long, "next question replaces failed answer")
+        copyAndPaste(long, "long Markdown preserves every character through native paste")
+        state.send("copy-short")
+        await wait()
+        copyAndPaste(short, "consecutive questions copy only latest answer")
+        print("\(failures == 0 ? "PASS" : "FAIL") copy checks: \(count - failures)/\(count)")
+        return failures == 0
     }
 }
 

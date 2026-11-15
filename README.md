@@ -121,13 +121,19 @@ The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides
 
 ## Install
 
+### In-app update availability
+
+Sparkle 2.8.1 is integrated, but **in-app updates are disabled in the current self-signed packages**: no update feed or verification public key is configured. Continue downloading releases manually. Update-enabled distribution requires an HTTPS appcast, Ed25519 signing, Developer ID signing, Apple notarization, and end-to-end upgrade verification. Earlier versions without the updater require one manual installation first.
+
+Configured builds check for stable updates; users choose when to download, install, and restart. Restart confirmation warns that temporary clipboard history is cleared, and waits for active answers or unsaved model settings. These installation flows have not yet been verified with two real distribution releases. See the [distribution preparation guide](README.zh-CN.md#应用内更新直接分发版) and the local-only `scripts/prepare-update.sh` / `scripts/verify-update.swift` tools.
+
 Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Apple Silicon**; Intel Macs require a source build.
 
 ### Download a Release
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.16.0 (build 31)**.
+Current version: **2.17.0 (build 32)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 
