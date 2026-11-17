@@ -111,13 +111,15 @@ Return pastes the result and closes the panel. With no text selected, `⌘C` cop
 
 ### Quick questions
 
+In this release, any HTTP/HTTPS URL in the question or selected reference requires `deepseek-flash`, including when you only want to translate or reformat text containing a URL. URL reading happens through DeepSeek, not locally; URLs and fetched page contents are processed by the provider. Real-provider URL reading has not yet been verified for this release.
+
 The system prompt is editable in Settings → Model Configuration. Save to apply it to the next question; ongoing requests keep their original prompt. Custom prompts are stored locally, sent to the model with each question, and survive upgrades. Restore the default and save to use the bundled default, which can evolve with app updates. Date, timezone and actual tool availability are added at request time. Default answers are concise, conclusion-first and suited to the single-turn panel.
 
 In Settings → Model Configuration, save your **DeepSeek API key**. The endpoint is `https://api.deepseek.com/v1`. After entering a key, test the connection and choose an available model (default: `deepseek-chat`). The key is stored in macOS Keychain.
 
 Type `@` in an empty input to switch the left mode icon, enter your question, and press Return. The trigger is not part of the editable or submitted text. With no text selected, `⌘C` copies the completed answer. Editing clears the answer and cancels the request; `Esc` closes and cancels. Delete the question, then press Backspace again to return to search. Every time you reopen the panel, it starts in clipboard mode with an empty input; previous questions, answers, and references are not restored. Type `!` or `@` to switch modes again.
 
-The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides/search) with the same key, without a separate switch. It is instructed to cite sources; check important facts and links. Questions are independent: no previous conversation or clipboard history is automatically included. After `@`, the current page stays visible. The first `1`–`5` immediately references that text item; subsequent input is the instruction, with no space required. Press Return to send, or Backspace at the start / click the selected row to choose again. Image and file references are not supported yet.
+The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides/search) with the same key, without a separate switch. It is instructed to cite sources; check important facts and links. Questions are independent: no previous conversation or clipboard history is automatically included. After `@`, the current page stays visible. The first `1`–`5` immediately references that text item; subsequent input is the instruction, with no space required. Press Return to send, or Backspace at the start / click the selected row to choose again. Image and file references are not supported yet. Input or selected text containing HTTP/HTTPS URLs uses native DeepSeek URL reading (requires `deepseek-flash`). An explicitly selected URL-only reference is fetched before answer generation; for other text containing URLs, the model decides whether reading is needed. Reads show the host, with source links below the answer. Only publicly accessible pages are supported; login-protected or restricted pages may fail, with an explicit error. Translation or reformatting of supplied text does not require fetching its URLs.
 
 ## Install
 
@@ -133,7 +135,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.17.0 (build 32)**.
+Current version: **2.18.0 (build 33)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 

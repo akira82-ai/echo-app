@@ -218,3 +218,8 @@
 "updates.restartNote" = "再起動で一時的な履歴は消去されます。設定、プロンプト、キーチェーンの秘密情報は保持されます。";
 "updates.finishWork" = "現在の作業を完了してください";
 "updates.finishWork.note" = "回答の完了を待ち、設定を保存してから、再び「再起動して更新」を選択してください。";
+
+"chat.urlModel" = "URL の処理には deepseek-flash が必要です。モデル設定で選択してください。";
+"chat.urlBlocked" = "公開 HTTP/HTTPS URL のみ対応しています。ローカル・内部・認証情報付き URL は利用できません。";
+"chat.urlRead" = "ページを読み取れませんでした。URL を確認して再試行してください。";
+"chat.sources" = "参照元";

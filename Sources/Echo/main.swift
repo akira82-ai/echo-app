@@ -14,6 +14,12 @@ if CommandLine.arguments.contains("--input-self-test") {
     exit(nativePassed && panelPassed ? 0 : 1)
 }
 
+if let index = CommandLine.arguments.firstIndex(of: "--url-self-test"),
+   CommandLine.arguments.count > index + 1, let port = Int(CommandLine.arguments[index + 1]) {
+    Task { @MainActor in exit(await runURLChecks(port: port) ? 0 : 1) }
+    RunLoop.main.run()
+}
+
 if CommandLine.arguments.contains("--prompt-self-test") {
     exit(runPromptChecks() ? 0 : 1)
 }

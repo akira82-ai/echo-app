@@ -84,7 +84,7 @@ struct WebTools {
             }
             output = ["results": cleaned]
         } else {
-            guard let content = json["content"] as? String else { throw Failure.request }
+            guard let content = json["content"] as? String, !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw Failure.request }
             output = ["url": body["url"]!, "title": String((json["title"] as? String ?? "").prefix(500)),
                       "content": String(content.prefix(18000)), "truncated": content.count > 18000]
         }

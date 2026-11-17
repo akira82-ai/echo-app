@@ -218,3 +218,8 @@
 "updates.restartNote" = "Restarting clears temporary clipboard history. Preferences, prompts, and Keychain secrets are preserved.";
 "updates.finishWork" = "Finish your current work first";
 "updates.finishWork.note" = "Wait for the answer to finish and save configuration changes, then choose Restart and Update again.";
+
+"chat.urlModel" = "URL processing requires deepseek-flash. Select it in model settings and retry.";
+"chat.urlBlocked" = "Only public HTTP/HTTPS URLs are supported; local, private or credential-bearing URLs are not allowed.";
+"chat.urlRead" = "Could not read the webpage. Check the URL or retry later.";
+"chat.sources" = "Sources";

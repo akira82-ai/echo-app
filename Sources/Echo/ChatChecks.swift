@@ -51,6 +51,9 @@ func runPromptChecks() -> Bool {
               system.contains("No web access"), system.contains("untrusted data") else { return false }
         let online = ChatPrompt.systemMessage(custom, date: Date(), timeZone: zone, webAvailable: true)
         guard online.contains("web_search"), !online.contains("No web access") else { return false }
+        let reading = ChatPrompt.systemMessage(custom, date: Date(), timeZone: zone, webAvailable: false, urlReading: true)
+        guard reading.contains("must call deepseek_read_url"), reading.contains("never ask for another permission"),
+              !reading.contains("No web access is available") else { return false }
         try settings.save(original)
         guard defaults.object(forKey: ChatPrompt.key) == nil,
               try settings.effectiveText() == original else { return false }
@@ -60,9 +63,9 @@ func runPromptChecks() -> Bool {
         let referenceMessages = ChatState.userMessages("Translate", reference: "Only selected text")
         let payload = try JSONEncoder().encode(ChatQuery(messages: referenceMessages, model: "mock"))
         guard let json = try JSONSerialization.jsonObject(with: payload) as? [String: Any],
-              let messages = json["messages"] as? [[String: Any]], messages.count == 2,
+              let messages = json["messages"] as? [[String: Any]], messages.count == 1,
               (messages[0]["content"] as? String)?.contains("Only selected text") == true,
-              messages[1]["content"] as? String == "Translate",
+              (messages[0]["content"] as? String)?.hasSuffix("User instruction:\nTranslate") == true,
               messages.allSatisfy({ $0["role"] as? String == "user" }),
               ChatState.userMessages("ordinary", reference: nil).count == 1 else { return false }
         let state = ChatState()
@@ -194,4 +197,68 @@ func runSettingsModelChecks() async -> Bool {
         print("PASS model discovery, authorization, deduplication, empty/malformed responses and authentication failure")
         return true
     } catch { print("FAIL settings model checks"); return false }
+}
+
+
+/// Native URL extension regression checks use a local SSE fixture, never a real key.
+@MainActor
+func runURLChecks(port: Int) async -> Bool {
+    do {
+        guard URLReader.links(in: "总结 https://example.com/文章").count == 1,
+              URLReader.links(in: "普通问题").isEmpty else { return false }
+        var parser = URLReader.Parser()
+        func chunk(_ choice: [String: Any]) throws -> String {
+            String(data: try JSONSerialization.data(withJSONObject: ["choices": [choice]]), encoding: .utf8)!
+        }
+        let call: [String: Any] = ["status": "completed", "page": ["url": "https://example.com/article", "title": "来源"]]
+        _ = try parser.consume(chunk(["server_tool_event": ["type": "call_completed", "call": call]]))
+        let events = try parser.consume(chunk(["delta": ["content": "中文回答", "annotations": [["type": "url_citation", "url_citation": ["url": "https://example.com/article", "title": "来源"]]]], "finish_reason": "stop"]))
+        guard events.count == 1 else { return false } // Citation already seen in completion event.
+        try parser.validateEnd()
+        var truncated = URLReader.Parser()
+        _ = try truncated.consume(chunk(["delta": ["content": "partial"]]))
+        do { try truncated.validateEnd(); return false } catch WebTools.Failure.incomplete { }
+        var failed = URLReader.Parser()
+        _ = try failed.consume(chunk(["server_tool_event": ["type": "call_completed", "call": ["status": "failed"]], "delta": ["content": "unverified"], "finish_reason": "stop"]))
+        do { try failed.validateEnd(); return false } catch ChatFailure.urlRead { }
+        var filtered = URLReader.Parser()
+        do { _ = try filtered.consume(chunk(["finish_reason": "content_filter"])); return false } catch WebTools.Failure.incomplete { }
+        var unsafe = URLReader.Parser()
+        guard try unsafe.consume(chunk(["delta": ["annotations": [["type": "url_citation", "url_citation": ["url": "file:///etc/passwd"]]]]])).isEmpty else { return false }
+        print("PASS URL detection, Unicode, source deduplication, unsafe citations, failed/truncated/refused streams")
+        let reader = URLReader(endpoint: URL(string: "http://127.0.0.1:\(port)/v1/chat/completions")!, key: "local-test")
+        let state = ChatState(modelName: { "deepseek-flash" },
+            makeWeb: { WebTools(baseURL: URL(string: "http://127.0.0.1:\(port)")!, key: "mock") }, makeReader: { reader })
+        func wait() async {
+            for _ in 0..<100 {
+                if !state.busy { return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+        state.send("总结", reference: "https://example.com/article")
+        await wait()
+        guard !state.busy, state.errorKey == nil, state.answer == "中文回答", state.sources.count == 1 else {
+            print("FAIL native success: \(state.errorKey ?? state.answer)"); return false
+        }
+        state.send("failed https://example.com/article")
+        await wait()
+        guard !state.busy, state.errorKey == "chat.urlRead", state.answer.isEmpty, state.sources.isEmpty else { return false }
+        state.send("truncated https://example.com/article")
+        await wait()
+        guard !state.busy, state.errorKey != nil, state.answer.isEmpty else { return false }
+        state.send("cancel https://example.com/article")
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        state.reset()
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        guard !state.busy, state.answer.isEmpty, state.sources.isEmpty, state.errorKey == nil else { return false }
+        let unsupported = ChatState(modelName: { "unsupported" }, makeReader: { fatalError("must not read key") })
+        unsupported.send("https://example.com/article")
+        for _ in 0..<100 {
+            if !unsupported.busy { break }
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+        guard unsupported.errorKey == "chat.urlModel" else { return false }
+        print("PASS native request, clipboard URL, failure cleanup, cancellation, model guard and single-turn isolation")
+        return true
+    } catch { print("FAIL URL checks: \(error)"); return false }
 }

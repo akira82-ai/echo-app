@@ -9,7 +9,7 @@ struct ChatArea: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 if state.busy {
-                    ChatActivityLabel(text: L10n.text(state.activityKey))
+                    ChatActivityLabel(text: L10n.text(state.activityKey) + (state.readingHost.map { " · " + $0 } ?? ""))
                 } else {
                     Text(L10n.text("chat.title"))
                         .font(.caption).foregroundStyle(accent)
@@ -18,6 +18,16 @@ struct ChatArea: View {
                     Text(.init(state.answer)).font(.system(size: 13))
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if !state.busy && state.errorKey == nil && !state.sources.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L10n.text("chat.sources")).font(.caption).foregroundStyle(.secondary)
+                        ForEach(state.sources) { source in
+                            Link(destination: source.url) {
+                                Text(source.title).lineLimit(2).font(.caption)
+                            }
+                        }
+                    }
                 }
                 if let key = state.errorKey {
                     Text(L10n.text(key)).foregroundStyle(.secondary)
