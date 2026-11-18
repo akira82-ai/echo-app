@@ -239,3 +239,6 @@
 "updates.inline.installFailed" = "安装失败 · 重试";
 "updates.inline.manual" = "请手动更新";
 "updates.inline.incompatible" = "暂无兼容更新";
+
+"chat.urlLimit" = "一次最多读取 3 个不同网址，请缩小处理范围。";
+"chat.urlPartial" = "以下网址未能读取；回答仅依据成功读取的内容。";

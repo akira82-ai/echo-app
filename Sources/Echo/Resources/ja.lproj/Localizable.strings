@@ -239,3 +239,6 @@
 "updates.inline.installFailed" = "更新失敗 · 再試行";
 "updates.inline.manual" = "手動更新が必要です";
 "updates.inline.incompatible" = "互換性のある更新なし";
+
+"chat.urlLimit" = "1 回に読み取れる URL は 3 件までです。対象を絞ってください。";
+"chat.urlPartial" = "以下の URL は読み取れませんでした。回答は取得できた内容のみを使用します。";

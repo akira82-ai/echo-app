@@ -240,6 +240,35 @@ func runURLChecks(port: Int) async -> Bool {
         guard !state.busy, state.errorKey == nil, state.answer == "中文回答", state.sources.count == 1 else {
             print("FAIL native success: \(state.errorKey ?? state.answer)"); return false
         }
+        for reference in ["http://CheaperInference.com。", "前文 https://example.com/文章 后文", "https://example.com/a https://example.com/a https://example.com/b"] {
+            state.send("总结", reference: reference)
+            await wait()
+            guard state.errorKey == nil, !state.sources.isEmpty else { return false }
+        }
+        state.send("比较", reference: "https://example.com/a https://example.com/unreadable")
+        await wait()
+        guard state.errorKey == nil, state.sources.count == 1, state.failedURLs.count == 1 else { return false }
+        state.send("总结", reference: "https://example.com/unreadable")
+        await wait()
+        guard state.errorKey == "chat.urlRead", state.answer.isEmpty else { return false }
+        state.send("翻译原文", reference: "你好 https://example.com/a")
+        await wait()
+        guard state.errorKey == nil, state.sources.isEmpty else { return false }
+        state.send("第二条", reference: "https://example.com/a https://example.com/b")
+        await wait()
+        guard state.errorKey == nil, state.sources.map(\.url.absoluteString) == ["https://example.com/b"] else { return false }
+        state.send("比较", reference: "https://example.com/a https://example.com/b https://example.com/c https://example.com/d")
+        await wait()
+        guard state.errorKey == "chat.urlLimit", state.sources.isEmpty else { return false }
+        guard URLReader.links(in: "https://EXAMPLE.com/a https://example.com/a#x").count == 1 else { return false }
+        do { _ = try URLReader.parseTargets("[99]", links: [URL(string: "https://example.com")!]); return false } catch { }
+        let sample = [URL(string: "https://example.com/a")!]
+        for invalid in ["[0]", "[2]", "[-1]", "[1.2]", "[true]", "not JSON"] {
+            do { _ = try URLReader.parseTargets(invalid, links: sample); return false } catch { }
+        }
+        guard try URLReader.parseTargets("[1,1]", links: sample).count == 1,
+              try URLReader.parseTargets("[]", links: sample).isEmpty else { return false }
+        print("PASS embedded/punctuated/Unicode URLs, deduplication, text-only intent, target subset, partial failure and URL limit")
         state.send("failed https://example.com/article")
         await wait()
         guard !state.busy, state.errorKey == "chat.urlRead", state.answer.isEmpty, state.sources.isEmpty else { return false }

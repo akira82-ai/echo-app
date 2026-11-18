@@ -239,3 +239,6 @@
 "updates.inline.installFailed" = "Install failed · Retry";
 "updates.inline.manual" = "Update manually";
 "updates.inline.incompatible" = "No compatible update";
+
+"chat.urlLimit" = "Read up to 3 distinct URLs per request. Please narrow the scope.";
+"chat.urlPartial" = "These URLs could not be read; the answer uses only successfully retrieved content.";

@@ -29,6 +29,12 @@ struct ChatArea: View {
                         }
                     }
                 }
+                if !state.busy && !state.failedURLs.isEmpty {
+                    Text(L10n.text("chat.urlPartial")).font(.caption).foregroundStyle(.secondary)
+                    ForEach(state.failedURLs, id: \.absoluteString) { url in
+                        Text(url.absoluteString).font(.caption).textSelection(.enabled)
+                    }
+                }
                 if let key = state.errorKey {
                     Text(L10n.text(key)).foregroundStyle(.secondary)
                 } else if !state.busy && state.answer.isEmpty {

@@ -14,7 +14,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         if self.path.startswith('/v1/tools/'):
-            self.send_response(500 if body.get('query') == 'fail' else 200)
+            self.send_response(500 if body.get('query') == 'fail' or '/unreadable' in body.get('url', '') else 200)
             self.end_headers()
             self.wfile.write(json.dumps({'results': [{'url': 'https://example.com/article', 'title': 'Source'}],
                                         'content': 'Verified content'}).encode())
@@ -22,12 +22,18 @@ class Handler(BaseHTTPRequestHandler):
         native = body['model'] == 'deepseek-flash'
         text = body['messages'][-1]['content'] if native else body['messages'][1]['content']
         if native:
-            assert body['tools'] == ([] if 'Application-fetched webpage' in text else [{'type': 'deepseek_read_url', 'name': 'deepseek_read_url'}])
-            assert len(body['messages']) == 2 and body['messages'][-1]['role'] == 'user'
-            assert 'No web access is available' not in body['messages'][0]['content']
-            if 'User instruction:' in text:
-                assert 'User instruction:\n总结' in text
-                assert 'Application-fetched webpage' in text and 'Verified content' in text
+            assert body['tools'] == []
+            assert len(body['messages']) == 2
+            if 'Select webpage reading targets' in body['messages'][0]['content']:
+                catalog = text.split('URL catalog:\n')[-1].splitlines()
+                ids = [] if '翻译原文' in text else list(range(1, len(catalog) + 1))
+                if '第二条' in text:
+                    ids = [2]
+                self.send_response(200)
+                self.end_headers()
+                choice = {'index': 0, 'delta': {'content': json.dumps(ids)}, 'finish_reason': 'stop'}
+                self.wfile.write(('data: ' + json.dumps({'choices': [choice]}) + '\n\ndata: [DONE]\n\n').encode())
+                return
         if text == 'error':
             self.send_response(500)
             self.end_headers()
@@ -45,16 +51,15 @@ class Handler(BaseHTTPRequestHandler):
 
         try:
             if native:
-                event({'server_tool_event': {'type': 'call_started', 'call': {
-                    'action': {'url': 'https://example.com/article'}}}})
+                if '"source_text"' in text:
+                    assert '翻译原文' in text
                 if text.startswith('cancel '):
                     time.sleep(.2)
                 event({'delta': {'content': '中文回答'}})
                 if text.startswith('truncated '):
                     return
-                call = {'status': 'failed'} if text.startswith('failed ') else {
-                    'status': 'completed', 'page': {'url': 'https://example.com/article', 'title': '来源'}}
-                event({'server_tool_event': {'type': 'call_completed', 'call': call}})
+                if text.startswith('failed '):
+                    event({'server_tool_event': {'type': 'call_completed', 'call': {'status': 'failed'}}})
             elif text in ('web', 'loop', 'web-error'):
                 tools = [m for m in body['messages'] if m['role'] == 'tool']
                 if len(tools) >= 2 and text != 'loop':
