@@ -22,7 +22,7 @@ if [[ "$SIGN_IDENTITY" == "-" ]] && security find-identity -v -p codesigning 2>/
     SIGN_IDENTITY="Echo Self-Sign"
 fi
 
-# Updates are opt-in per distribution build; never ship a placeholder key or feed.
+# The project embeds its public update configuration; optional overrides must be supplied together.
 python3 - <<'PYCONFIG'
 import os, base64, urllib.parse
 feed, key = os.environ.get("ECHO_UPDATE_FEED_URL", ""), os.environ.get("ECHO_UPDATE_PUBLIC_KEY", "")

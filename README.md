@@ -125,9 +125,9 @@ The model can use [DeepSeek Search / Fetch](https://api-docs.deepseek.com/guides
 
 ### In-app update availability
 
-Sparkle 2.8.1 is integrated, but **in-app updates are disabled in the current self-signed packages**: no update feed or verification public key is configured. Continue downloading releases manually. Update-enabled distribution requires an HTTPS appcast, Ed25519 signing, Developer ID signing, Apple notarization, and end-to-end upgrade verification. Earlier versions without the updater require one manual installation first.
+Sparkle 2.10.1 checks the signed stable feed at `https://github.com/akira82-ai/echo-app/releases/latest/download/appcast.xml`. The verification public key is bundled with Echo; the private key stays in the publisher's Keychain. Click the version label at the top right of the panel to check, download, view progress, and explicitly install once verification finishes. Menu and settings entries share the same updater, without a separate update window.
 
-Configured builds check for stable updates; users choose when to download, install, and restart. Restart confirmation warns that temporary clipboard history is cleared, and waits for active answers or unsaved model settings. These installation flows have not yet been verified with two real distribution releases. See the [distribution preparation guide](README.zh-CN.md#应用内更新直接分发版) and the local-only `scripts/prepare-update.sh` / `scripts/verify-update.swift` tools.
+Automatic checks follow your settings; downloads and installation require your action. Restarting clears temporary clipboard history; preferences, prompts and Keychain keys remain. Active answers and unsaved model settings block installation until you finish. Existing GitHub packages through 2.18.0 did not configure the feed/key: manually install an update-enabled release once. Local disposable-app integration checks cover replacement/relaunch and rejection of tampered archives/feeds; a real Echo upgrade over the public feed remains to be verified. Packages remain self-signed, not Apple-notarized. See the [distribution preparation guide](README.zh-CN.md#应用内更新直接分发版).
 
 Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Apple Silicon**; Intel Macs require a source build.
 
@@ -135,7 +135,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.18.0 (build 33)**.
+Current version: **2.19.0 (build 34)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 

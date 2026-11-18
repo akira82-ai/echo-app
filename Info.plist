@@ -9,9 +9,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.akira82.echo</string>
     <key>CFBundleVersion</key>
-    <string>33</string>
+    <string>34</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.18.0</string>
+    <string>2.19.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
@@ -24,7 +24,17 @@
         <string>en</string>
         <string>ja</string>
     </array>
-    <!-- Distribution builds inject SUFeedURL and SUPublicEDKey together. -->
+    <!-- Public update configuration; private signing key stays in Keychain. -->
+    <key>SUFeedURL</key>
+    <string>https://github.com/akira82-ai/echo-app/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>Gz0nmgQiSGBij0NY/rYjmmGONuAwbvkrSM9PgL6EA7k=</string>
+    <key>SURequireSignedFeed</key>
+    <true/>
+    <key>SUSignedFeedFailureExpirationInterval</key>
+    <integer>0</integer>
+    <key>SUVerifyUpdateBeforeExtraction</key>
+    <true/>
     <key>SUEnableAutomaticChecks</key>
     <true/>
     <key>SUAutomaticallyUpdate</key>

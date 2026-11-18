@@ -205,8 +205,8 @@ extension AppDelegate: NSMenuDelegate {
     /// 菜单即将打开时刷新状态
     func menuWillOpen(_ menu: NSMenu) {
         let updates = UpdateController.shared
-        updatesMenuItem.title = updates.pendingRestart ? L10n.text("updates.restart") :
-            updates.availableVersion.map { L10n.format("updates.versionAvailable", $0) } ?? L10n.text("updates.check")
+        updatesMenuItem.title = updates.phase == .idle ? L10n.text("updates.check") : updates.label
+        updatesMenuItem.isEnabled = !updates.isWorking
         updateStatusMenuItem()
     }
 }

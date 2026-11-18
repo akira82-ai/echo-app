@@ -223,3 +223,19 @@
 "chat.urlBlocked" = "公開 HTTP/HTTPS URL のみ対応しています。ローカル・内部・認証情報付き URL は利用できません。";
 "chat.urlRead" = "ページを読み取れませんでした。URL を確認して再試行してください。";
 "chat.sources" = "参照元";
+
+"updates.inline.checking" = "確認中…";
+"updates.inline.current" = "最新版です";
+"updates.inline.available" = "更新があります";
+"updates.inline.progress" = "ダウンロード %@%%";
+"updates.inline.downloading" = "ダウンロード中…";
+"updates.inline.verifying" = "検証中…";
+"updates.inline.install" = "クリックしてインストール";
+"updates.inline.installing" = "インストール中…";
+"updates.inline.blocked" = "後でインストール";
+"updates.inline.checkFailed" = "確認失敗 · 再試行";
+"updates.inline.downloadFailed" = "取得失敗 · 再試行";
+"updates.inline.verifyFailed" = "検証失敗 · 再試行";
+"updates.inline.installFailed" = "更新失敗 · 再試行";
+"updates.inline.manual" = "手動更新が必要です";
+"updates.inline.incompatible" = "互換性のある更新なし";

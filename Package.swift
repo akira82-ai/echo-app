@@ -12,10 +12,10 @@ let package = Package(
         .package(url: "https://github.com/MacPaw/OpenAI.git", exact: "0.5.3")
     ],
     targets: [
-        // Official Sparkle 2.8.1 artifact and checksum from its SwiftPM manifest.
+        // Official Sparkle 2.10.1 artifact and checksum from its SwiftPM manifest.
         .binaryTarget(name: "Sparkle",
-            url: "https://github.com/sparkle-project/Sparkle/releases/download/2.8.1/Sparkle-for-Swift-Package-Manager.zip",
-            checksum: "995f913935fe903d50b3be5344fc52a638f56b39ef7984bf7a44244786d28638"),
+            url: "https://github.com/sparkle-project/Sparkle/releases/download/2.10.1/Sparkle-for-Swift-Package-Manager.zip",
+            checksum: "4c2e48a3e50ebcc2c88a58a4c7264a1a99c3c31857ce754357afb9cdb323022a"),
         .target(name: "Calculator", dependencies: [.product(name: "Expression", package: "Expression")]),
         .executableTarget(name: "CalculatorProbe", dependencies: ["Calculator"]),
         .target(name: "MarkdownConversion", resources: [.process("Resources")]),

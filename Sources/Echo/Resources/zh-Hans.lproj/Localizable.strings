@@ -223,3 +223,19 @@
 "chat.urlBlocked" = "仅支持公开的 HTTP／HTTPS 网址，不支持本机、内网或含账号密码的网址。";
 "chat.urlRead" = "网页读取失败，请检查网址或稍后重试。";
 "chat.sources" = "参考来源";
+
+"updates.inline.checking" = "检查中…";
+"updates.inline.current" = "已是最新";
+"updates.inline.available" = "有新版本";
+"updates.inline.progress" = "下载 %@%%";
+"updates.inline.downloading" = "下载中…";
+"updates.inline.verifying" = "校验中…";
+"updates.inline.install" = "点击安装";
+"updates.inline.installing" = "安装中…";
+"updates.inline.blocked" = "稍后安装";
+"updates.inline.checkFailed" = "检查失败 · 重试";
+"updates.inline.downloadFailed" = "下载失败 · 重试";
+"updates.inline.verifyFailed" = "校验失败 · 重试";
+"updates.inline.installFailed" = "安装失败 · 重试";
+"updates.inline.manual" = "请手动更新";
+"updates.inline.incompatible" = "暂无兼容更新";

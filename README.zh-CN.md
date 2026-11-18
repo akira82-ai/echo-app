@@ -129,7 +129,7 @@ Echo 使用自签名，未经 Apple 公证。先尝试打开，再到「系统�
 
 在最新 [Release](https://github.com/akira82-ai/echo-app/releases/latest) 下载 `Echo.dmg`，打开后将 Echo 拖入「应用程序」。也可下载 ZIP。
 
-当前版本：**2.18.0（build 33）**。
+当前版本：**2.19.0（build 34）**。
 
 Release 使用 `Echo Self-Sign` 自签名，未经 Apple Developer ID 签名或公证。首次启动若被 macOS 拦截，尝试打开后，前往「系统设置 → 隐私与安全性」，点击「仍要打开」并确认。
 
@@ -160,23 +160,26 @@ open dist/Echo.app
 
 ### 应用内更新（直接分发版）
 
-**当前自签名安装包未配置更新源和公钥，应用内更新保持禁用，请继续手动下载 Release。** 本次仅接入更新框架和发行准备工具，不代表自动更新链路已可用。Developer ID 签名、Apple 公证及两个真实发行版本之间的完整升级验收尚未完成。
+使用 Sparkle 2.10.1 + GitHub Releases。更新源固定为 `https://github.com/akira82-ai/echo-app/releases/latest/download/appcast.xml`；公钥随应用打包，私钥只保存在本机钥匙串 `com.akira82.echo.sparkle` 账户，勿导出到仓库。从 2.19.0 起随 Release 发布签名清单和对应更新包；此前 GitHub 安装包未配置更新源和公钥，需先手动安装一次启用更新的版本。真实 Echo 的线上升级仍待验收。
 
-使用 Sparkle 2.8.1，后台仅检查稳定版本；用户主动下载、安装和重启。菜单与设置均有检查入口，后台发现更新不抢焦点。正在生成回答或设置未保存时推迟重启；重启前提醒临时历史会清空。没有更新源与公钥的本地构建明确禁用更新。
+主窗口右上角版本号可点击检查，启动时按自动检查偏好检查；发现新版后原位显示绿色提示，点击下载、显示百分比，校验完成后显示「点击安装」。不弹出更新窗口，菜单和设置复用相同操作。正在生成回答或设置未保存时推迟重启；重启会清空临时剪贴板历史，配置和钥匙串保留。
 
 发行准备：
 
-1. 使用 Sparkle 自带 `generate_keys` 建立发行用 Ed25519 密钥，私钥保留在钥匙串，备份由发行负责人管理，勿提交到仓库。工具位于 SwiftPM 解析后的 `.build/artifacts/*/Sparkle/bin/`。
-2. 通过构建环境变量配置 `ECHO_UPDATE_FEED_URL`（长期稳定的 HTTPS appcast 地址）、`ECHO_UPDATE_PUBLIC_KEY`（公钥）、`ECHO_SIGN_IDENTITY`（Developer ID Application 身份）；设置 `ECHO_UNIVERSAL=1` 后执行 `./build-app.sh`，生成 arm64 + x86_64 通用包。两个更新配置必须一起提供。
-3. 为 App 完成 Apple 公证并装订公证票据，再运行：
+1. 使用 `./build-app.sh` 构建并签名。默认使用 Echo Self-Sign；可以通过 `ECHO_SIGN_IDENTITY` 指定其他身份。支持 arm64、x86_64 和通用包，通用包使用 `ECHO_UNIVERSAL=1`。如需覆盖更新源，`ECHO_UPDATE_FEED_URL` 和 `ECHO_UPDATE_PUBLIC_KEY` 必须成对提供。
+2. 每次发行递增 `CFBundleVersion`，准备实际更新说明，再运行：
    ```bash
    scripts/prepare-update.sh /absolute/path/Echo.app \
      https://github.com/akira82-ai/echo-app/releases/download/VERSION/ \
      /absolute/path/release-notes.txt
    ```
-   脚本要求通用包、有效代码签名、公证及更新配置；从钥匙串读取签名密钥（可通过 `ECHO_UPDATE_KEY_ACCOUNT` 选择账户），生成无增量更新的稳定 appcast，并使用 App 内公钥验证实际 ZIP。输出到 `dist/update-BUILD/`，不会上传任何内容。重复目录不覆盖。
-4. 每次发布递增 `CFBundleVersion`。先上传不可变的更新 ZIP，核实公开下载内容后，再将生成的 appcast 发布到客户端配置的地址。需要保留旧系统兼容版本时，合并保留既有兼容条目；不要覆盖已经发布的 ZIP，不发布未通过校验的 feed。
+   脚本验证应用代码签名、钥匙串账户与内置公钥匹配，生成签名 ZIP、签名 appcast 和 SHA256SUMS.txt，再验证安装包。输出到 `dist/update-BUILD/`，不会上传，不覆盖已有输出。可用 `ECHO_UPDATE_KEY_ACCOUNT` 指定其他签名账户。
+3. 发布同一版本的签名 ZIP 和 appcast.xml，确保清单中的下载地址可访问，最后让该 Release 成为 latest。不要覆盖已经发布的 ZIP。合并兼容版本条目后必须重新签署清单；新架构版本的清单必须与目标机器兼容。
 
-自签名本地包不等于 Developer ID 签名／公证的发行包。`build-app.sh` 的 ZIP、DMG 若在公证前生成，不能直接当作最终公证产物；更新 ZIP 由 `prepare-update.sh` 从已装订的 App 重新生成。商店版本应使用 Mac App Store 更新机制。没有更新器的旧版需要手动安装一次更新器版本。
+本地自签名可用于这套更新机制，Developer ID 和 Apple 公证不是脚本的强制前置条件；自签名不能替代 Apple 公证，首次下载可能仍受 Gatekeeper 限制。公证过的发行包应从最终 App 重新生成更新 ZIP。商店版本使用 Mac App Store 更新机制。
+
+普通开发、提交和推送不更新 appcast；仅发布新版本时生成并验签清单和更新包。不要手工修改已签名清单，变更后须重新生成、签署并验证。发布不会替换、停止或启动本机 Echo，由用户通过更新器获取新版本。
+
+本地隔离验收：先运行 `swift build`，再运行 `scripts/test-update.sh`（默认使用 `Echo Self-Sign`，可通过 `ECHO_SIGN_IDENTITY` 指定）。脚本使用临时测试密钥、独立 App 身份和本机回环 HTTP，直接编译生产更新控制器（仅替换宿主依赖），验证发现新版等待点击下载、重启保护及解除后的真实替换与重启，以及篡改清单和安装包时旧版本保持可用；不修改实际 Echo 安装或发行密钥，不等同于线上 HTTPS 发行验收。
 
 验证命令：`swift run Echo --updates-self-test` 检查配置拒绝规则；`scripts/verify-update.swift` 通过 `swift` 运行，校验真实 appcast 与 ZIP。正式启用前仍需用两个真实发行版本验证 HTTPS 检查、下载、安装、重启及失败恢复；仅构建通过不代表发布链路验收完成。

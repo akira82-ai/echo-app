@@ -223,3 +223,19 @@
 "chat.urlBlocked" = "Only public HTTP/HTTPS URLs are supported; local, private or credential-bearing URLs are not allowed.";
 "chat.urlRead" = "Could not read the webpage. Check the URL or retry later.";
 "chat.sources" = "Sources";
+
+"updates.inline.checking" = "Checking…";
+"updates.inline.current" = "Up to date";
+"updates.inline.available" = "Update available";
+"updates.inline.progress" = "Downloading %@%%";
+"updates.inline.downloading" = "Downloading…";
+"updates.inline.verifying" = "Verifying…";
+"updates.inline.install" = "Click to install";
+"updates.inline.installing" = "Installing…";
+"updates.inline.blocked" = "Install later";
+"updates.inline.checkFailed" = "Check failed · Retry";
+"updates.inline.downloadFailed" = "Download failed · Retry";
+"updates.inline.verifyFailed" = "Verification failed · Retry";
+"updates.inline.installFailed" = "Install failed · Retry";
+"updates.inline.manual" = "Update manually";
+"updates.inline.incompatible" = "No compatible update";

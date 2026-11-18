@@ -1335,9 +1335,7 @@ struct QuickPanelView: View {
                 HStack {
                     Text("echo").tracking(2)
                     Spacer()
-                    if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
-                        Text("v" + version)
-                    }
+                    InlineUpdateButton()
                 }
                 .font(.system(size: 10))
                 .foregroundStyle(palette.textTertiary)
