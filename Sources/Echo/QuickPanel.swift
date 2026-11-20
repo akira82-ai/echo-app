@@ -531,7 +531,7 @@ final class QuickPanelViewModel: ObservableObject {
         guard let item = chatPage.first(where: { $0.displayNumber == number }) else {
             chatReferenceNotice = "chat.reference.missing"; return
         }
-        guard case .text = item.entry.kind else {
+        if case .files = item.entry.kind {
             chatReferenceNotice = "chat.reference.unsupported"; return
         }
         chat.reset()
@@ -559,7 +559,10 @@ final class QuickPanelViewModel: ObservableObject {
         if let reference = chatReference, case .text(let payload) = reference.entry.kind {
             context = payload.rawText
         } else { context = nil }
-        chat.send(query, reference: context)
+        let image: ImageRef?
+        if let reference = chatReference, case .image(let value) = reference.entry.kind { image = value }
+        else { image = nil }
+        chat.send(query, reference: context, image: image)
     }
 
     @Published private(set) var calculation: Calculation = .empty

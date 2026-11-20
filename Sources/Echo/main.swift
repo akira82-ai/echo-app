@@ -20,6 +20,17 @@ if let index = CommandLine.arguments.firstIndex(of: "--url-self-test"),
     RunLoop.main.run()
 }
 
+if let index = CommandLine.arguments.firstIndex(of: "--image-self-test"),
+   CommandLine.arguments.count > index + 1, let port = Int(CommandLine.arguments[index + 1]) {
+    Task { @MainActor in exit(await runImageChecks(port: port) ? 0 : 1) }
+    RunLoop.main.run()
+}
+
+if CommandLine.arguments.contains("--image-live-test") {
+    Task { @MainActor in exit(await runImageChecks(port: 0, live: true) ? 0 : 1) }
+    RunLoop.main.run()
+}
+
 if CommandLine.arguments.contains("--prompt-self-test") {
     exit(runPromptChecks() ? 0 : 1)
 }

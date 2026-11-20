@@ -153,7 +153,7 @@
 "chat.reference.placeholder" = "输入问题，或按 1–5 引用";
 "chat.reference.commandPlaceholder" = "输入处理指令";
 "chat.reference.missing" = "这条序号不存在，请重新选择。";
-"chat.reference.unsupported" = "暂不支持引用图片或文件，请选择文本。";
+"chat.reference.unsupported" = "暂时还不支持文件，先选一条文本或图片吧。";
 "chat.reference.instruction" = "输入处理指令，再按回车发送。";
 "chat.reference.privacy" = "发送时，将此条内容和指令一同交给模型。";
 "chat.reference.help" = "在指令开头按退格，或点击选中行重新选择。";
@@ -242,3 +242,11 @@
 
 "chat.urlLimit" = "这次最多能看 3 个网页，先挑几条最想看的吧。";
 "chat.urlPartial" = "有几个网页没读到，我先根据读到的内容帮你整理。";
+
+"chat.imageRead" = "这张图片读不到了，重新复制一下再试吧。";
+
+"chat.imageLimit" = "这张图片有点大，请换成 20 MiB 以内、单边不超过 8192 像素的图片。";
+
+"chat.imageModel" = "看图需要 deepseek-flash，在模型配置里切换后再试吧。";
+
+"chat.imageRejected" = "这张图片暂时无法处理，可以换张图片或复制其中的文字。";

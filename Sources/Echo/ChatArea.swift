@@ -43,7 +43,7 @@ struct ChatArea: View {
                     Text(L10n.text(hasReference ? "chat.reference.instruction" : "chat.empty"))
                     Text(L10n.text(hasReference ? "chat.reference.help" : "chat.privacy")).font(.caption).foregroundStyle(.secondary)
                 }
-                if state.answer.isEmpty && !state.busy && ["chat.configure", "chat.urlModel", "chat.endpointError", "chat.keychainError"].contains(state.errorKey ?? "") {
+                if state.answer.isEmpty && !state.busy && ["chat.configure", "chat.urlModel", "chat.imageModel", "chat.endpointError", "chat.keychainError"].contains(state.errorKey ?? "") {
                     Button(L10n.text("chat.settings")) {
                         QuickPanelController.shared.hide()
                         (NSApp.delegate as? AppDelegate)?.openSettingsWindow()

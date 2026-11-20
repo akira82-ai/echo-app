@@ -153,7 +153,7 @@
 "chat.reference.placeholder" = "Ask a question, or press 1–5 to reference";
 "chat.reference.commandPlaceholder" = "Enter an instruction";
 "chat.reference.missing" = "No item at this number. Choose another.";
-"chat.reference.unsupported" = "Only text references are supported. Choose a text item.";
+"chat.reference.unsupported" = "Files aren’t supported yet. Choose text or an image.";
 "chat.reference.instruction" = "Enter an instruction, then press Return.";
 "chat.reference.privacy" = "Sends this selected item and your instruction to the model.";
 "chat.reference.help" = "Backspace at the start, or click the selected row to choose again.";
@@ -242,3 +242,11 @@
 
 "chat.urlLimit" = "I can read up to 3 pages at a time. Pick the ones you’d like to start with.";
 "chat.urlPartial" = "I couldn’t read a few pages. I’ll work with the ones I could read.";
+
+"chat.imageRead" = "I couldn’t load this image. Copy it again and give it another try.";
+
+"chat.imageLimit" = "Try an image under 20 MiB, with neither side exceeding 8192 pixels.";
+
+"chat.imageModel" = "Images need deepseek-flash. Switch models in settings and try again.";
+
+"chat.imageRejected" = "This image couldn’t be processed. Try another image or copy its text.";

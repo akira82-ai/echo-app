@@ -1,5 +1,6 @@
 import Foundation
 import OpenAI
+import AppKit
 
 @MainActor
 func runPromptRequestChecks(port: Int) async -> Bool {
@@ -290,4 +291,62 @@ func runURLChecks(port: Int) async -> Bool {
         print("PASS native request, clipboard URL, failure cleanup, cancellation, model guard and single-turn isolation")
         return true
     } catch { print("FAIL URL checks: \(error)"); return false }
+}
+
+
+@MainActor
+func runImageChecks(port: Int, live: Bool = false) async -> Bool {
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent("echo-image-check-\(UUID().uuidString).png")
+    defer { try? FileManager.default.removeItem(at: path) }
+    guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 320, pixelsHigh: 160, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return false }
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
+    NSColor.red.setFill()
+    NSRect(x: 0, y: 0, width: 320, height: 160).fill()
+    NSGraphicsContext.restoreGraphicsState()
+    guard let data = bitmap.representation(using: .png, properties: [:]),
+          let image = ImageRef.make(pngData: data, diskPath: path) else { return false }
+    do {
+        try data.write(to: path)
+        let panel = QuickPanelViewModel()
+        panel.configure(entries: [ClipEntry(kind: .image(image))])
+        panel.inputMode = .chat
+        panel.query = ""
+        panel.selectChatReference(1)
+        guard panel.chatReference != nil, panel.chatReferenceNotice == nil else { return false }
+        panel.cancelChatReference()
+        let message = try ChatState.imageMessage("Describe the color", path: path)
+        let payload = try JSONSerialization.jsonObject(with: JSONEncoder().encode(ChatQuery(messages: [message], model: "deepseek-flash"))) as! [String: Any]
+        let content = (payload["messages"] as! [[String: Any]])[0]["content"] as! [[String: Any]]
+        guard content.count == 2, content[0]["text"] as? String == "Describe the color",
+              (content[1]["image_url"] as? [String: Any])?["url"] as? String == "data:image/png;base64," + data.base64EncodedString() else { return false }
+        let state = ChatState(makeClient: {
+            if live { return try ChatSettings.client() }
+            return OpenAI(configuration: .init(token: nil, host: "127.0.0.1", port: port, scheme: "http", basePath: "/v1", timeoutInterval: 5, parsingOptions: .relaxed))
+        }, modelName: { "deepseek-flash" }, makeWeb: { fatalError("Image must not invoke web tools") }, readPrompt: {
+            live ? "请识别图片主要颜色，回答必须以 VISION_OK 开头，只用一句中文。" : "Custom image system prompt"
+        })
+        state.send("Describe the color", image: image)
+        for _ in 0..<1800 {
+            if !state.busy { break }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+        guard !state.busy, state.errorKey == nil, !state.answer.isEmpty else { print("FAIL image: \(state.errorKey ?? "timeout")"); return false }
+        if live {
+            print("LIVE image answer: \(state.answer)")
+            guard state.answer.contains("VISION_OK"), state.answer.contains("红") else { return false }
+        } else {
+            guard state.answer == "你好" else { return false }
+            let unsupported = ChatState(modelName: { "unsupported" }, makeWeb: { nil })
+            unsupported.send("describe", image: image)
+            while unsupported.busy { try? await Task.sleep(nanoseconds: 10_000_000) }
+            guard unsupported.errorKey == "chat.imageModel" else { return false }
+            let missing = path.appendingPathExtension("missing")
+            do { _ = try ChatState.imageMessage("test", path: missing); return false } catch ChatFailure.imageRead { }
+            try Data("invalid".utf8).write(to: path)
+            do { _ = try ChatState.imageMessage("test", path: path); return false } catch ChatFailure.imageRead { }
+        }
+        print("PASS image request, PNG MIME, custom system prompt and streamed answer")
+        return true
+    } catch { print("FAIL image checks: \(type(of: error))"); return false }
 }

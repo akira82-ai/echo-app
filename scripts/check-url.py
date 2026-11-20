@@ -19,7 +19,15 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({'results': [{'url': 'https://example.com/article', 'title': 'Source'}],
                                         'content': 'Verified content'}).encode())
             return
-        native = body['model'] == 'deepseek-flash'
+        image = isinstance(body['messages'][-1]['content'], list)
+        if image:
+            assert len(body['messages']) == 2
+            assert body['messages'][0]['content'].startswith('Custom image system prompt')
+            assert not body.get('tools')
+            parts = body['messages'][-1]['content']
+            assert len(parts) == 2 and parts[1]['image_url']['url'].startswith('data:image/png;base64,')
+            assert parts[1]['image_url']['detail'] == 'high'
+        native = body['model'] == 'deepseek-flash' and not image
         text = body['messages'][-1]['content'] if native else body['messages'][1]['content']
         if native:
             assert body['tools'] == []
@@ -91,7 +99,7 @@ if __name__ == '__main__':
     server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
-        for flag in ('--url-self-test', '--chat-self-test'):
+        for flag in ('--image-self-test', '--url-self-test', '--chat-self-test'):
             result = subprocess.run([str(root / '.build/debug/Echo'), flag, str(server.server_port)], cwd=root)
             if result.returncode:
                 raise SystemExit(result.returncode)
