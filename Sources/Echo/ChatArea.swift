@@ -30,7 +30,9 @@ struct ChatArea: View {
                     }
                 }
                 if !state.busy && !state.failedURLs.isEmpty {
-                    Text(L10n.text("chat.urlPartial")).font(.caption).foregroundStyle(.secondary)
+                    if state.errorKey == nil && !state.answer.isEmpty {
+                        Text(L10n.text("chat.urlPartial")).font(.caption).foregroundStyle(.secondary)
+                    }
                     ForEach(state.failedURLs, id: \.absoluteString) { url in
                         Text(url.absoluteString).font(.caption).textSelection(.enabled)
                     }
@@ -41,7 +43,7 @@ struct ChatArea: View {
                     Text(L10n.text(hasReference ? "chat.reference.instruction" : "chat.empty"))
                     Text(L10n.text(hasReference ? "chat.reference.help" : "chat.privacy")).font(.caption).foregroundStyle(.secondary)
                 }
-                if state.answer.isEmpty && !state.busy {
+                if state.answer.isEmpty && !state.busy && ["chat.configure", "chat.urlModel", "chat.endpointError", "chat.keychainError"].contains(state.errorKey ?? "") {
                     Button(L10n.text("chat.settings")) {
                         QuickPanelController.shared.hide()
                         (NSApp.delegate as? AppDelegate)?.openSettingsWindow()

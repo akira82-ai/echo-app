@@ -220,8 +220,8 @@
 "updates.finishWork.note" = "Wait for the answer to finish and save configuration changes, then choose Restart and Update again.";
 
 "chat.urlModel" = "URL processing requires deepseek-flash. Select it in model settings and retry.";
-"chat.urlBlocked" = "Only public HTTP/HTTPS URLs are supported; local, private or credential-bearing URLs are not allowed.";
-"chat.urlRead" = "Could not read the webpage. Check the URL or retry later.";
+"chat.urlBlocked" = "I can’t read this link. Try a public URL, or copy the page text here.";
+"chat.urlRead" = "I couldn’t read this page. Copy the text here, and I can help you with it.";
 "chat.sources" = "Sources";
 
 "updates.inline.checking" = "Checking…";
@@ -240,5 +240,5 @@
 "updates.inline.manual" = "Update manually";
 "updates.inline.incompatible" = "No compatible update";
 
-"chat.urlLimit" = "Read up to 3 distinct URLs per request. Please narrow the scope.";
-"chat.urlPartial" = "These URLs could not be read; the answer uses only successfully retrieved content.";
+"chat.urlLimit" = "I can read up to 3 pages at a time. Pick the ones you’d like to start with.";
+"chat.urlPartial" = "I couldn’t read a few pages. I’ll work with the ones I could read.";

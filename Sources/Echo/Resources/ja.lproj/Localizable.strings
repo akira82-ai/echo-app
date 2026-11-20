@@ -220,8 +220,8 @@
 "updates.finishWork.note" = "回答の完了を待ち、設定を保存してから、再び「再起動して更新」を選択してください。";
 
 "chat.urlModel" = "URL の処理には deepseek-flash が必要です。モデル設定で選択してください。";
-"chat.urlBlocked" = "公開 HTTP/HTTPS URL のみ対応しています。ローカル・内部・認証情報付き URL は利用できません。";
-"chat.urlRead" = "ページを読み取れませんでした。URL を確認して再試行してください。";
+"chat.urlBlocked" = "このリンクは読み取れません。公開 URL を試すか、本文をコピーしてください。";
+"chat.urlRead" = "このページは今は読み取れません。本文をコピーしてくれれば、内容を確認できます。";
 "chat.sources" = "参照元";
 
 "updates.inline.checking" = "確認中…";
@@ -240,5 +240,5 @@
 "updates.inline.manual" = "手動更新が必要です";
 "updates.inline.incompatible" = "互換性のある更新なし";
 
-"chat.urlLimit" = "1 回に読み取れる URL は 3 件までです。対象を絞ってください。";
-"chat.urlPartial" = "以下の URL は読み取れませんでした。回答は取得できた内容のみを使用します。";
+"chat.urlLimit" = "一度に読めるのは 3 ページまでです。まず読みたいページを選んでください。";
+"chat.urlPartial" = "読み取れなかったページがあります。読み取れた内容から整理します。";

@@ -220,8 +220,8 @@
 "updates.finishWork.note" = "请等待回答完成，并保存设置中的更改，然后再次选择“重启并更新”。";
 
 "chat.urlModel" = "此网址处理需要 deepseek-flash，请在模型设置中选择后重试。";
-"chat.urlBlocked" = "仅支持公开的 HTTP／HTTPS 网址，不支持本机、内网或含账号密码的网址。";
-"chat.urlRead" = "网页读取失败，请检查网址或稍后重试。";
+"chat.urlBlocked" = "这个链接暂时读不了。可以换一个公开的网址，或把正文复制过来。";
+"chat.urlRead" = "这个网页暂时读不了。把正文复制过来，我也能帮你看看。";
 "chat.sources" = "参考来源";
 
 "updates.inline.checking" = "检查中…";
@@ -240,5 +240,5 @@
 "updates.inline.manual" = "请手动更新";
 "updates.inline.incompatible" = "暂无兼容更新";
 
-"chat.urlLimit" = "一次最多读取 3 个不同网址，请缩小处理范围。";
-"chat.urlPartial" = "以下网址未能读取；回答仅依据成功读取的内容。";
+"chat.urlLimit" = "这次最多能看 3 个网页，先挑几条最想看的吧。";
+"chat.urlPartial" = "有几个网页没读到，我先根据读到的内容帮你整理。";
