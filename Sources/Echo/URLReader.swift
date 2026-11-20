@@ -58,7 +58,7 @@ struct URLReader {
         return targets
     }
 
-    func run(system: String, user: String, model: String, pageFetched: Bool = false, outputLimit: Int = 8192,
+    func run(system: String, user: String, model: String, pageFetched: Bool = false, outputLimit: Int = 8192, fileID: String? = nil,
              receive: @escaping @MainActor (Event) -> Void) async throws {
         guard model == "deepseek-flash" else { throw ChatFailure.urlModel }
         guard pageFetched || Self.links(in: user).allSatisfy({ WebTools.isPublicURL($0.absoluteString) }) else {
@@ -69,10 +69,13 @@ struct URLReader {
         request.timeoutInterval = 180
         request.setValue("Bearer " + key, forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let userContent: Any = fileID.map { id -> Any in
+            [["type": "text", "text": user], ["type": "file", "file_id": id]]
+        } ?? user
         request.httpBody = try JSONSerialization.data(withJSONObject: [
             "model": model, "stream": true, "max_tokens": outputLimit, "thinking": ["type": "disabled"],
             "tools": pageFetched ? [] : [["type": "deepseek_read_url", "name": "deepseek_read_url"]],
-            "messages": [["role": "system", "content": system], ["role": "user", "content": user]]
+            "messages": [["role": "system", "content": system], ["role": "user", "content": userContent]]
         ])
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForResource = 240

@@ -31,6 +31,20 @@ if CommandLine.arguments.contains("--image-live-test") {
     RunLoop.main.run()
 }
 
+if let index = CommandLine.arguments.firstIndex(of: "--document-self-test"),
+   CommandLine.arguments.count > index + 1, let port = Int(CommandLine.arguments[index + 1]) {
+    Task { @MainActor in exit(await runDocumentChecks(port: port) ? 0 : 1) }
+    RunLoop.main.run()
+}
+if CommandLine.arguments.contains("--document-pdf-live-test") {
+    Task { @MainActor in exit(await runDocumentChecks(port: 0, live: true, pdf: true) ? 0 : 1) }
+    RunLoop.main.run()
+}
+if CommandLine.arguments.contains("--document-live-test") {
+    Task { @MainActor in exit(await runDocumentChecks(port: 0, live: true) ? 0 : 1) }
+    RunLoop.main.run()
+}
+
 if CommandLine.arguments.contains("--prompt-self-test") {
     exit(runPromptChecks() ? 0 : 1)
 }

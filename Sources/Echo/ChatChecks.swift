@@ -1,6 +1,7 @@
 import Foundation
 import OpenAI
 import AppKit
+import CoreText
 
 @MainActor
 func runPromptRequestChecks(port: Int) async -> Bool {
@@ -315,6 +316,15 @@ func runImageChecks(port: Int, live: Bool = false) async -> Bool {
         panel.selectChatReference(1)
         guard panel.chatReference != nil, panel.chatReferenceNotice == nil else { return false }
         panel.cancelChatReference()
+        panel.configure(entries: [ClipEntry(kind: .files([path]))])
+        panel.inputMode = .chat
+        panel.query = ""
+        panel.selectChatReference(1)
+        guard panel.chatReference != nil, panel.chatReferenceNotice == nil,
+              QuickPanelViewModel.imageFile(in: [path]) == path,
+              QuickPanelViewModel.imageFile(in: [path, path]) == nil else { return false }
+        panel.cancelChatReference()
+
         let message = try ChatState.imageMessage("Describe the color", path: path)
         let payload = try JSONSerialization.jsonObject(with: JSONEncoder().encode(ChatQuery(messages: [message], model: "deepseek-flash"))) as! [String: Any]
         let content = (payload["messages"] as! [[String: Any]])[0]["content"] as! [[String: Any]]
@@ -326,7 +336,7 @@ func runImageChecks(port: Int, live: Bool = false) async -> Bool {
         }, modelName: { "deepseek-flash" }, makeWeb: { fatalError("Image must not invoke web tools") }, readPrompt: {
             live ? "请识别图片主要颜色，回答必须以 VISION_OK 开头，只用一句中文。" : "Custom image system prompt"
         })
-        state.send("Describe the color", image: image)
+        state.send("Describe the color", imagePath: path)
         for _ in 0..<1800 {
             if !state.busy { break }
             try? await Task.sleep(nanoseconds: 100_000_000)
@@ -349,4 +359,64 @@ func runImageChecks(port: Int, live: Bool = false) async -> Bool {
         print("PASS image request, PNG MIME, custom system prompt and streamed answer")
         return true
     } catch { print("FAIL image checks: \(type(of: error))"); return false }
+}
+
+
+@MainActor
+func runDocumentChecks(port: Int, live: Bool = false, pdf: Bool = false) async -> Bool {
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent("echo-document-\(UUID().uuidString).\(pdf ? "pdf" : "txt")")
+    defer { try? FileManager.default.removeItem(at: path) }
+    do {
+        try Data("Echo test document. The project code is ORCHID-742. Budget is 360 yuan.".utf8).write(to: path)
+        if pdf {
+            var box = CGRect(x: 0, y: 0, width: 600, height: 400)
+            guard let context = CGContext(path as CFURL, mediaBox: &box, nil) else { return false }
+            context.beginPDFPage(nil)
+            context.textPosition = CGPoint(x: 30, y: 300)
+            let font = CTFontCreateWithName("Helvetica" as CFString, 18, nil)
+            let text = NSAttributedString(string: "Project code: ORCHID-742. Budget: 360 yuan.", attributes: [NSAttributedString.Key(kCTFontAttributeName as String): font])
+            CTLineDraw(CTLineCreateWithAttributedString(text), context)
+            context.endPDFPage()
+            context.closePDF()
+        }
+        guard DocumentUpload.purpose(for: URL(fileURLWithPath: "/tmp/a.pdf")) == "rich_layout_recognition",
+              DocumentUpload.purpose(for: URL(fileURLWithPath: "/tmp/a.json")) == nil,
+              DocumentUpload.purpose(for: URL(fileURLWithPath: "/tmp/a.epub")) == nil,
+              QuickPanelViewModel.imageFile(in: [URL(fileURLWithPath: "/tmp/a.gif")]) == nil else { return false }
+        let panel = QuickPanelViewModel()
+        panel.configure(entries: [ClipEntry(kind: .files([path]))])
+        panel.inputMode = .chat
+        panel.query = ""
+        panel.selectChatReference(1)
+        guard panel.chatReference != nil else { return false }
+        panel.cancelChatReference()
+        panel.configure(entries: [ClipEntry(kind: .files([path, path]))])
+        panel.inputMode = .chat
+        panel.query = ""
+        panel.selectChatReference(1)
+        guard panel.chatReference == nil else { return false }
+        if !live {
+            let large = path.appendingPathExtension("txt")
+            try Data(count: 10_000_001).write(to: large)
+            defer { try? FileManager.default.removeItem(at: large) }
+            do {
+                _ = try await DocumentUpload(endpoint: URL(string: "http://127.0.0.1:1/files")!, key: "mock").upload(large)
+                return false
+            } catch ChatFailure.documentLimit { }
+            do { _ = try ChatState.imageMessage("test", path: large); return false }
+            catch ChatFailure.imageLimit { }
+        }
+        let state = ChatState(modelName: { "deepseek-flash" }, readPrompt: { "Start your answer with DOC_OK. Answer briefly." }, makeReader: {
+            if live { return try URLReader.configured() }
+            return URLReader(endpoint: URL(string: "http://127.0.0.1:\(port)/v1/chat/completions")!, key: "mock")
+        }, makeUploader: {
+            if live { return try DocumentUpload.configured() }
+            return DocumentUpload(endpoint: URL(string: "http://127.0.0.1:\(port)/files")!, key: "mock")
+        })
+        state.send("What is the project code?", documentPath: path)
+        while state.busy { try? await Task.sleep(nanoseconds: 100_000_000) }
+        guard state.errorKey == nil, state.answer.contains("DOC_OK"), state.answer.contains("ORCHID-742") else { print("FAIL document: \(state.errorKey ?? state.answer)"); return false }
+        print("PASS single document, multi-file rejection, custom system prompt and file_id answer: \(state.answer)")
+        return true
+    } catch { print("FAIL document: \(type(of: error))"); return false }
 }

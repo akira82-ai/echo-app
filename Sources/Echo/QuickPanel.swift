@@ -526,12 +526,19 @@ final class QuickPanelViewModel: ObservableObject {
 
     var showsChatChoices: Bool { chatReference == nil && query.isEmpty }
 
+    static func imageFile(in paths: [URL]) -> URL? {
+        guard paths.count == 1, let path = paths.first, path.isFileURL,
+              ["png", "jpg", "jpeg", "webp"].contains(path.pathExtension.lowercased()) else { return nil }
+        return path
+    }
+
     func selectChatReference(_ number: Int) {
         guard isChat, chatReference == nil, query.isEmpty else { return }
         guard let item = chatPage.first(where: { $0.displayNumber == number }) else {
             chatReferenceNotice = "chat.reference.missing"; return
         }
-        if case .files = item.entry.kind {
+        if case .files(let paths) = item.entry.kind,
+           paths.count != 1 || (Self.imageFile(in: paths) == nil && paths.first.flatMap({ DocumentUpload.purpose(for: $0) }) == nil) {
             chatReferenceNotice = "chat.reference.unsupported"; return
         }
         chat.reset()
@@ -562,7 +569,15 @@ final class QuickPanelViewModel: ObservableObject {
         let image: ImageRef?
         if let reference = chatReference, case .image(let value) = reference.entry.kind { image = value }
         else { image = nil }
-        chat.send(query, reference: context, image: image)
+        let imagePath: URL?
+        if let reference = chatReference, case .files(let paths) = reference.entry.kind {
+            imagePath = Self.imageFile(in: paths)
+        } else { imagePath = nil }
+        let documentPath: URL?
+        if let reference = chatReference, case .files(let paths) = reference.entry.kind, imagePath == nil {
+            documentPath = paths.count == 1 ? paths.first : nil
+        } else { documentPath = nil }
+        chat.send(query, reference: context, image: image, imagePath: imagePath, documentPath: documentPath)
     }
 
     @Published private(set) var calculation: Calculation = .empty
@@ -1233,7 +1248,7 @@ func runQuickPanelInputChecks() -> Bool {
                    "Backspace returns to the same frozen page")
     model.selectChatReference(5)
     checkReference(model.chatReference == nil && model.chatReferenceNotice == "chat.reference.missing", "missing index reports error")
-    model.configure(entries: [ClipEntry(kind: .files([URL(fileURLWithPath: "/tmp/example.txt")]))])
+    model.configure(entries: [ClipEntry(kind: .files([URL(fileURLWithPath: "/tmp/example.unsupported")]))])
     model.inputMode = .chat
     model.selectChatReference(1)
     checkReference(model.chatReference == nil && model.chatReferenceNotice == "chat.reference.unsupported", "file references are rejected")

@@ -12,7 +12,24 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def do_POST(self):
-        body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+        raw = self.rfile.read(int(self.headers['Content-Length']))
+        if self.path == '/files':
+            assert raw.index(b'name="purpose"') < raw.index(b'name="file"')
+            assert b'user_data' in raw and b'3600' in raw and b'ORCHID-742' in raw
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'{"id":"file-api-test"}')
+            return
+        body = json.loads(raw)
+        parts = body.get('messages', [{}])[-1].get('content')
+        if isinstance(parts, list) and any(p.get('type') == 'file' for p in parts):
+            assert len(body['messages']) == 2 and body['messages'][0]['content'].startswith('Start your answer with DOC_OK.')
+            assert parts[1]['file_id'] == 'file-api-test' and body['tools'] == []
+            self.send_response(200)
+            self.end_headers()
+            result = {'choices':[{'delta':{'content':'DOC_OK ORCHID-742'},'finish_reason':'stop'}]}
+            self.wfile.write(('data: '+json.dumps(result)+'\n\ndata: [DONE]\n\n').encode())
+            return
         if self.path.startswith('/v1/tools/'):
             self.send_response(500 if body.get('query') == 'fail' or '/unreadable' in body.get('url', '') else 200)
             self.end_headers()
@@ -99,7 +116,7 @@ if __name__ == '__main__':
     server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
-        for flag in ('--image-self-test', '--url-self-test', '--chat-self-test'):
+        for flag in ('--document-self-test', '--image-self-test', '--url-self-test', '--chat-self-test'):
             result = subprocess.run([str(root / '.build/debug/Echo'), flag, str(server.server_port)], cwd=root)
             if result.returncode:
                 raise SystemExit(result.returncode)

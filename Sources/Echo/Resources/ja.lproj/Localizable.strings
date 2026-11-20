@@ -153,7 +153,7 @@
 "chat.reference.placeholder" = "質問を入力、または 1–5 で参照";
 "chat.reference.commandPlaceholder" = "処理の指示を入力";
 "chat.reference.missing" = "この番号の項目はありません。選び直してください。";
-"chat.reference.unsupported" = "ファイルは未対応です。テキストか画像を選んでください。";
+"chat.reference.unsupported" = "画像、PDF、Word、PowerPoint、表計算、テキストなどのファイルを 1 件選んでください。";
 "chat.reference.instruction" = "指示を入力して Return で送信。";
 "chat.reference.privacy" = "選択した内容と指示をモデルに送信します。";
 "chat.reference.help" = "先頭で削除、または選択行をクリックして選び直せます。";
@@ -245,8 +245,14 @@
 
 "chat.imageRead" = "画像を読み込めませんでした。もう一度コピーして試してください。";
 
-"chat.imageLimit" = "20 MiB 以下、各辺 8192 ピクセル以下の画像を選んでください。";
+"chat.imageLimit" = "10 MB 以下、各辺 8192 ピクセル以下の画像を選んでください。";
 
 "chat.imageModel" = "画像には deepseek-flash が必要です。設定で切り替えてください。";
 
 "chat.imageRejected" = "この画像は処理できません。別の画像か、画像内のテキストを試してください。";
+
+"chat.documentRead" = "文書を読み取れませんでした。破損やパスワードを確認するか、本文をコピーしてください。";
+
+"chat.documentLimit" = "10 MB 以下の文書を選んでください。";
+
+"chat.documentLoading" = "文書をアップロード・解析中…";
