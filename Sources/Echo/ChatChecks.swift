@@ -405,6 +405,26 @@ func runDocumentChecks(port: Int, live: Bool = false, pdf: Bool = false) async -
             } catch ChatFailure.documentLimit { }
             do { _ = try ChatState.imageMessage("test", path: large); return false }
             catch ChatFailure.imageLimit { }
+            try Data(count: 10_000_000).write(to: large)
+            let upload = DocumentUpload(endpoint: URL(string: "http://127.0.0.1:\(port)/files")!, key: "mock")
+            guard try await upload.upload(URL(fileURLWithPath: large.path)) == "file-api-test" else { return false }
+            for route in ["files-fail", "files-error"] {
+                do {
+                    _ = try await DocumentUpload(endpoint: URL(string: "http://127.0.0.1:\(port)/\(route)")!, key: "mock").upload(path)
+                    return false
+                } catch ChatFailure.documentRead { }
+            }
+            let cancelled = ChatState(modelName: { "deepseek-flash" }, makeReader: { fatalError("Cancelled upload must not generate") }, makeUploader: {
+                DocumentUpload(endpoint: URL(string: "http://127.0.0.1:\(port)/files-slow")!, key: "mock")
+            })
+            cancelled.send("test", documentPath: path)
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            cancelled.reset()
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            guard !cancelled.busy, cancelled.answer.isEmpty, cancelled.errorKey == nil else { return false }
+            let missing = path.appendingPathExtension("missing.txt")
+            do { _ = try await upload.upload(missing); return false } catch ChatFailure.documentRead { }
+            print("PASS exact 10 MB, oversized rejection, missing file, HTTP/body errors and upload cancellation")
         }
         let state = ChatState(modelName: { "deepseek-flash" }, readPrompt: { "Start your answer with DOC_OK. Answer briefly." }, makeReader: {
             if live { return try URLReader.configured() }

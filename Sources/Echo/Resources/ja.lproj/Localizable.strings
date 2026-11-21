@@ -256,3 +256,13 @@
 "chat.documentLimit" = "10 MB 以下の文書を選んでください。";
 
 "chat.documentLoading" = "文書をアップロード・解析中…";
+
+// Clipboard image preview
+"preview.open" = "画像をプレビュー（⌘Y）";
+"preview.close" = "プレビューを閉じる";
+"preview.title" = "画像プレビュー";
+"preview.fit" = "ウインドウに合わせる";
+"preview.enlarge" = "拡大表示";
+"preview.failed" = "元の画像を読み込めません。削除された可能性があります。";
+"preview.local" = "ローカルプレビュー";
+"preview.dismiss" = "Escで閉じる";

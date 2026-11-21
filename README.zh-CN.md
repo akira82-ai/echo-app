@@ -37,6 +37,7 @@ https://github.com/user-attachments/assets/2fa21d5d-e4a0-42c7-bee8-ceb0c1b1ccef
 
 ## 特性
 
+- **图片细节，先看再用** — 点击剪贴板图片缩略图，或选中图片后按 `⌘Y`，在本地预览原图。支持适应窗口、放大滚动；按 `Esc` 返回剪贴板面板。
 - **复制过，随手找回** — 文本、图片、Finder 文件自动收录。按下 `⌘\`，搜一下、选一条，接着用。
 - **摘录到笔记，少一步整理** — 将复制的富文本直接粘贴为 Markdown，保留标题、链接、列表等常见结构，转换全在本地完成。
 - **多条素材，一次粘贴** — 最多选取 5 条文本，按你的顺序合并粘贴。整理摘录、拼接资料，少几次来回切换。
@@ -129,7 +130,7 @@ Echo 使用自签名，未经 Apple 公证。先尝试打开，再到「系统�
 
 在最新 [Release](https://github.com/akira82-ai/echo-app/releases/latest) 下载 `Echo.dmg`，打开后将 Echo 拖入「应用程序」。也可下载 ZIP。
 
-当前版本：**2.21.0（build 38）**。
+当前版本：**2.22.0（build 39）**。
 
 Release 使用 `Echo Self-Sign` 自签名，未经 Apple Developer ID 签名或公证。首次启动若被 macOS 拦截，尝试打开后，前往「系统设置 → 隐私与安全性」，点击「仍要打开」并确认。
 

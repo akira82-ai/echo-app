@@ -74,6 +74,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
     private var keyMonitor: Any?
     private var conversionTask: Task<Void, Never>?
     private var conversionID: UUID?
+    private var imagePreview: ImagePreviewController?
 
     private init(viewModel: QuickPanelViewModel = QuickPanelViewModel()) {
         self.viewModel = viewModel
@@ -146,6 +147,7 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 隐藏面板。
     func hide() {
+        closeImagePreview(restoreFocus: false)
         viewModel.chat.reset()
         conversionID = nil
         conversionTask?.cancel()
@@ -174,6 +176,17 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 处理一次按键。返回 nil 表示吞掉该事件,返回 event 表示放行。
     private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
+        if imagePreview != nil {
+            guard event.window === panel || event.window === imagePreview?.window else { return event }
+            if event.type == .keyDown {
+                let commandY = event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command
+                    && event.charactersIgnoringModifiers?.lowercased() == "y"
+                if event.keyCode == 53 || commandY { closeImagePreview() }
+                // Preview owns keyboard input; never paste/delete or edit the search behind it.
+                return event.keyCode == 48 ? event : nil
+            }
+            return event
+        }
         guard event.window === panel, panel?.isKeyWindow == true else { return event }
         if viewModel.isConverting {
             if event.type == .keyDown && event.keyCode == 53 { hide() }
@@ -260,6 +273,11 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
                 return nil
             }
         }
+        if event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command,
+           event.charactersIgnoringModifiers?.lowercased() == "y" {
+            if let entry = viewModel.selectedEntry() { showImagePreview(entry) }
+            return nil
+        }
         switch event.keyCode {
         case 126:  // ↑
             viewModel.moveUp()
@@ -321,6 +339,25 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
         }
     }
 
+    func showImagePreview(_ entry: ClipEntry) {
+        guard imagePreview == nil, let panel, case .image(let ref) = entry.kind,
+              !viewModel.isConverting else { return }
+        if let item = viewModel.pageItems.first(where: { $0.id == entry.id }) {
+            viewModel.selectedDisplayIndex = item.displayNumber
+        }
+        let preview = ImagePreviewController(parent: panel, ref: ref) { [weak self] in
+            self?.closeImagePreview()
+        }
+        imagePreview = preview
+        preview.show()
+    }
+
+    private func closeImagePreview(restoreFocus: Bool = true) {
+        guard let preview = imagePreview else { return }
+        imagePreview = nil
+        preview.close(restoreFocus: restoreFocus)
+    }
+
     // MARK: - 选中处理
 
     private func handleSelected(
@@ -378,7 +415,12 @@ final class QuickPanelController: NSObject, NSWindowDelegate {
 
     /// 失焦即关:面板失去 key 状态时自动关闭(零打扰)。
     func windowDidResignKey(_ notification: Notification) {
-        hide()
+        // A child preview temporarily takes key status. Defer until the transfer completes.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if NSApp.keyWindow === self.panel || NSApp.keyWindow === self.imagePreview?.window { return }
+            self.hide()
+        }
     }
 
     // MARK: - Panel 工厂
@@ -1906,7 +1948,7 @@ struct QuickPanelView: View {
                 .foregroundStyle(palette.textTertiary)
                 .frame(width: 22, alignment: .center)
             VStack(alignment: .leading, spacing: 3) {
-                previewContent(for: item.entry.kind)
+                previewContent(for: item.entry)
                 if let source = item.entry.browserSource {
                     Text("\(source.browserName) · \(source.url.absoluteString)")
                         .font(.system(size: 10))
@@ -1945,8 +1987,8 @@ struct QuickPanelView: View {
     /// 根据类型渲染预览:文本/图片缩略图/文件图标。
     /// 设计稿:缩略图 32×32 圆角6 + 深色底;文件图标 32×32 圆角7 + green-soft 色底框。
     @ViewBuilder
-    private func previewContent(for kind: ClipEntry.Kind) -> some View {
-        switch kind {
+    private func previewContent(for entry: ClipEntry) -> some View {
+        switch entry.kind {
         case .text(let payload):
             Text(payload.normalizedText.previewString(maxLines: 1))
                 .font(.system(size: 13))
@@ -1956,13 +1998,20 @@ struct QuickPanelView: View {
         case .image(let ref):
             HStack(spacing: 14) {
                 // 缩略图:32×32 圆角6 + 深色底 #2a2f3d + 边框
-                Image(nsImage: ref.thumbnail)
+                Button {
+                    QuickPanelController.shared.showImagePreview(entry)
+                } label: {
+                    Image(nsImage: ref.thumbnail)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 32, height: 32)
                     .background(palette.thumbnailBackground)
                     .cornerRadius(6)
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(palette.border, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .help(L10n.text("preview.open"))
+                .accessibilityLabel(L10n.text("preview.open"))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.text("quick.imagePreview"))
                         .foregroundStyle(colorScheme == .dark ? palette.textPrimary : palette.textSecondary)
@@ -2153,5 +2202,58 @@ extension URL {
             p = "~" + p.dropFirst(home.count)
         }
         return p
+    }
+}
+
+extension QuickPanelController {
+    /// Exercises real window routing without reading or changing the user's clipboard.
+    @MainActor static func runImagePreviewChecks() async -> Bool {
+        let controller = QuickPanelController.shared
+        let model = controller.viewModel
+        let image = NSImage(size: NSSize(width: 720, height: 2400))
+        let ref = ImageRef(diskPath: URL(fileURLWithPath: "/nonexistent/echo-preview-test.png"),
+                           thumbnail: image, contentHash: "preview-test", sizeText: "720 × 2400")
+        let entry = ClipEntry(kind: .image(ref))
+        model.configure(entries: [entry])
+        let host = NSHostingController(rootView: QuickPanelView(viewModel: model, onSelected: { _ in }))
+        let panel = makePanel(contentViewController: host)
+        controller.panel = panel
+        panel.delegate = controller
+        NSApp.activate(ignoringOtherApps: true)
+        panel.makeKeyAndOrderFront(nil)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        panel.makeKey()
+        var passed = true
+        func check(_ condition: Bool, _ name: String) {
+            print("\(condition ? "PASS" : "FAIL") preview: \(name)")
+            passed = passed && condition
+        }
+        func key(_ code: UInt16, _ characters: String, modifiers: NSEvent.ModifierFlags = []) -> NSEvent {
+            NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: modifiers,
+                             timestamp: 0, windowNumber: (controller.imagePreview?.window ?? panel).windowNumber,
+                             context: nil, characters: characters, charactersIgnoringModifiers: characters,
+                             isARepeat: false, keyCode: code)!
+        }
+        controller.showImagePreview(entry)
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        check(controller.imagePreview?.window.isVisible == true, "opens local image window")
+        let query = model.query
+        check(controller.handleKeyEvent(key(36, "\r")) == nil && controller.imagePreview != nil,
+              "Return cannot paste through preview")
+        check(controller.handleKeyEvent(key(53, "\u{1b}")) == nil, "first Escape is consumed")
+        check(controller.imagePreview == nil && panel.isVisible && model.query == query,
+              "first Escape preserves parent and query")
+        controller.showImagePreview(entry)
+        check(controller.handleKeyEvent(key(16, "y", modifiers: .command)) == nil && controller.imagePreview == nil,
+              "Command-Y closes preview")
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        check(controller.handleKeyEvent(key(16, "y", modifiers: .command)) == nil && controller.imagePreview != nil,
+              "Command-Y opens selected image")
+        controller.closeImagePreview()
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        check(controller.handleKeyEvent(key(53, "\u{1b}")) == nil && controller.panel == nil,
+              "next Escape hides main panel")
+        controller.hide()
+        return passed
     }
 }

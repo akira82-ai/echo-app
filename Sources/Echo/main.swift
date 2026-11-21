@@ -8,6 +8,13 @@ if let index = CommandLine.arguments.firstIndex(of: "--copy-self-test"),
     application.run()
 }
 
+if CommandLine.arguments.contains("--preview-self-test") {
+    let application = NSApplication.shared
+    application.setActivationPolicy(.accessory)
+    Task { @MainActor in exit(await QuickPanelController.runImagePreviewChecks() ? 0 : 1) }
+    application.run()
+}
+
 if CommandLine.arguments.contains("--input-self-test") {
     let nativePassed = runModeSearchChecks()
     let panelPassed = runQuickPanelInputChecks()

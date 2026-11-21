@@ -256,3 +256,13 @@
 "chat.documentLimit" = "先选一份 10 MB 以内的文档吧。";
 
 "chat.documentLoading" = "正在上传并解析文档…";
+
+// Clipboard image preview
+"preview.open" = "预览图片（⌘Y）";
+"preview.close" = "关闭预览";
+"preview.title" = "图片预览";
+"preview.fit" = "适应窗口";
+"preview.enlarge" = "放大查看";
+"preview.failed" = "原图无法读取，可能已被清理。";
+"preview.local" = "本地预览";
+"preview.dismiss" = "Esc 关闭";

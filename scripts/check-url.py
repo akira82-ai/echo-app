@@ -13,12 +13,17 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         raw = self.rfile.read(int(self.headers['Content-Length']))
-        if self.path == '/files':
+        if self.path.startswith('/files'):
             assert raw.index(b'name="purpose"') < raw.index(b'name="file"')
-            assert b'user_data' in raw and b'3600' in raw and b'ORCHID-742' in raw
-            self.send_response(200)
+            assert b'user_data' in raw and b'3600' in raw
+            if self.path == '/files-slow':
+                time.sleep(.4)
+            self.send_response(503 if self.path == '/files-fail' else 200)
             self.end_headers()
-            self.wfile.write(b'{"id":"file-api-test"}')
+            try:
+                self.wfile.write(b'{"error":{"code":"unavailable"}}' if self.path == '/files-error' else b'{"id":"file-api-test"}')
+            except (BrokenPipeError, ConnectionResetError):
+                pass
             return
         body = json.loads(raw)
         parts = body.get('messages', [{}])[-1].get('content')

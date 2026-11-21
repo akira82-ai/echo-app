@@ -37,6 +37,7 @@ https://github.com/user-attachments/assets/2fa21d5d-e4a0-42c7-bee8-ceb0c1b1ccef
 
 ## Features
 
+- **See the details before you paste.** — Click a clipboard image thumbnail or press `⌘Y` on the selected image for a local preview. Fit it to the window or enlarge and scroll; `Esc` returns to the clipboard panel.
 - **Copied it? Find it again.** — Text, images, and Finder files are captured automatically. Press `⌘\`, search, pick an item, and keep going.
 - **From clipping to notes, with less cleanup.** — Paste copied rich text as Markdown, keeping common structures such as headings, links, and lists. Conversion happens entirely on your Mac.
 - **Several clips. One paste.** — Combine up to five text items in the order you choose. Gather excerpts and piece together notes with fewer trips between apps.
@@ -135,7 +136,7 @@ Requires **macOS 13 Ventura or later**. Current prebuilt packages are for **Appl
 
 Download `Echo.dmg` from the latest [Release](https://github.com/akira82-ai/echo-app/releases/latest), open it, and drag Echo to Applications. A ZIP is also available.
 
-Current version: **2.21.0 (build 38)**.
+Current version: **2.22.0 (build 39)**.
 
 Releases use `Echo Self-Sign`, rather than Apple Developer ID signing or notarization. If macOS blocks the first launch, attempt to open Echo, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
 

@@ -256,3 +256,13 @@
 "chat.documentLimit" = "Choose a document under 10 MB.";
 
 "chat.documentLoading" = "Uploading and parsing the document…";
+
+// Clipboard image preview
+"preview.open" = "Preview image (⌘Y)";
+"preview.close" = "Close preview";
+"preview.title" = "Image preview";
+"preview.fit" = "Fit to window";
+"preview.enlarge" = "Enlarge";
+"preview.failed" = "The original image is unavailable. It may have been removed.";
+"preview.local" = "Local preview";
+"preview.dismiss" = "Esc to close";
